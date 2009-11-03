@@ -190,11 +190,11 @@ $graph->scale->week->SetStyle(WEEKSTYLE_FIRSTDAY);
 //$graph->scale->day->SetStyle(DAYSTYLE_SHORTDATE2);
 
 // This configuration variable is obsolete
-//$jpLocale = dPgetConfig( 'jpLocale' );
-//if ($jpLocale) {
-//	$graph->scale->SetDateLocale( $jpLocale );
-//}
-$graph->scale->SetDateLocale( $AppUI->user_locale );
+$jpLocale = dPgetConfig( 'jpLocale' );
+if ($jpLocale) {
+	$graph->scale->SetDateLocale( $jpLocale );
+}
+//$graph->scale->SetDateLocale('en');
 
 if ($start_date && $end_date) {
 	$graph->SetDateRange( $start_date, $end_date );
@@ -210,6 +210,7 @@ $graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
 
 // Use TTF font if it exists
 // try commenting out the following two lines if gantt charts do not display
+
 if (is_file( TTF_DIR."arialbd.ttf" ))
 	$graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
 $graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
