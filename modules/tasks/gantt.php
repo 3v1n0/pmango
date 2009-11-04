@@ -52,9 +52,7 @@
 ---------------------------------------------------------------------------
 */
 
-if (!strstr(PHP_OS, 'WIN')) {
-	define('TTF_DIR', '/usr/share/fonts/truetype/ttf-dejavu/');
-}
+define('TTF_DIR', "{$dPconfig['root_dir']}/fonts/Droid/");
 
 include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
 include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
@@ -184,6 +182,12 @@ $end_date   = dPgetParam( $_GET, 'finish_date', $project_end );
 $count = 0;
 
 $graph = new GanttGraph($width);
+
+$graph->SetUserFont1('DroidSans.ttf', 'DroidSans-Bold.ttf');
+$graph->SetUserFont2('DroidSerif-Regular.ttf', 'DroidSerif-Bold.ttf',
+                     'DroidSerif-Italic.ttf', 'DroidSerif-BoldItalic.ttf');
+$graph->SetUserFont3('DroidSansMono.ttf');
+
 $graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY | GANTT_HWEEK);
 //$graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY);
 
@@ -203,25 +207,13 @@ if ($start_date && $end_date) {
 	$graph->SetDateRange( $start_date, $end_date );
 }
 
-if (strstr(PHP_OS, 'WIN')) {
-	$graph->scale->actinfo->SetFont(FF_ARIAL);
-} else {
-	$graph->scale->actinfo->SetFont(FF_DV_SANSSERIF);
-}
 $graph->scale->actinfo->vgrid->SetColor('gray');
 $graph->scale->actinfo->SetColor('darkgray');
 $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task', UI_OUTPUT_RAW)),array(200));
+$graph->scale->actinfo->SetFont(FF_USERFONT);
 
 $graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
-
-// Use TTF font if it exists
-// try commenting out the following two lines if gantt charts do not display
-
-if (strstr(PHP_OS, 'WIN')) {
-	$graph->scale->tableTitle->SetFont(FF_ARIAL, FS_BOLD, 12);
-} else {
-	$graph->scale->tableTitle->SetFont(FF_DV_SANSSERIF, FS_BOLD, 12);
-}
+$graph->scale->tableTitle->SetFont(FF_USERFONT1, FS_BOLD, 12);
 
 $graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
 $graph->scale->tableTitle->Show(true);
@@ -393,17 +385,9 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	$startdate = new CDate($start);
 	$bar = new GanttBar($row++, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.4 : 0.15);//se padre sarebbe meglio 1
 	$bar->progress->Set($progress/100);
-	if (strstr(PHP_OS, 'WIN')) {
-		$bar->title->SetFont(FF_ARIAL, FS_NORMAL, 8);
-	} else {
-		$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
-	}
+	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
     if (!CTask::isLeafSt($a["task_id"])) {
-		if (strstr(PHP_OS, 'WIN')) {
-			$bar->title->SetFont(FF_ARIAL, FS_NORMAL, 8);
-		} else {
-			$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
-		}
+		$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
 		$bar->rightMark->Show();
         $bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
         $bar->rightMark->SetWidth(3);
@@ -451,11 +435,8 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 }
 $today = date("y-m-d");
 $vline = new GanttVLine($today, $AppUI->_('Today', UI_OUTPUT_RAW));
-if (strstr(PHP_OS, 'WIN')) {
-	$vline->title->SetFont(FF_ARIAL, FS_NORMAL, 10);
-} else {
-	$vline->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 10);
-}
+$vline->title->SetFont(FF_USERFONT3, FS_NORMAL, 9);
+
 $graph->Add($vline);
 $graph->Stroke();
 ?>
