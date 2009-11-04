@@ -203,10 +203,10 @@ if ($start_date && $end_date) {
 	$graph->SetDateRange( $start_date, $end_date );
 }
 
-if (strstr(PHP_OS, 'Linux')) {
-	$graph->scale->actinfo->SetFont(FF_DV_SANSSERIF);
-} else if (strstr(PHP_OS, 'WIN')) {
+if (strstr(PHP_OS, 'WIN')) {
 	$graph->scale->actinfo->SetFont(FF_ARIAL);
+} else {
+	$graph->scale->actinfo->SetFont(FF_DV_SANSSERIF);
 }
 $graph->scale->actinfo->vgrid->SetColor('gray');
 $graph->scale->actinfo->SetColor('darkgray');
@@ -217,10 +217,10 @@ $graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
 // Use TTF font if it exists
 // try commenting out the following two lines if gantt charts do not display
 
-if (strstr(PHP_OS, 'Linux')) {
-	$graph->scale->tableTitle->SetFont(FF_DV_SANSSERIF, FS_BOLD, 12);
-} else if (strstr(PHP_OS, 'WIN')) {
+if (strstr(PHP_OS, 'WIN')) {
 	$graph->scale->tableTitle->SetFont(FF_ARIAL, FS_BOLD, 12);
+} else {
+	$graph->scale->tableTitle->SetFont(FF_DV_SANSSERIF, FS_BOLD, 12);
 }
 
 $graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
@@ -393,16 +393,16 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	$startdate = new CDate($start);
 	$bar = new GanttBar($row++, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.4 : 0.15);//se padre sarebbe meglio 1
 	$bar->progress->Set($progress/100);
-	if (strstr(PHP_OS, 'Linux')) {
-		$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
-	} else if (strstr(PHP_OS, 'WIN')) {
+	if (strstr(PHP_OS, 'WIN')) {
 		$bar->title->SetFont(FF_ARIAL, FS_NORMAL, 8);
+	} else {
+		$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
 	}
     if (!CTask::isLeafSt($a["task_id"])) {
-		if (strstr(PHP_OS, 'Linux')) {
-			$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
-		} else if (strstr(PHP_OS, 'WIN')) {
+		if (strstr(PHP_OS, 'WIN')) {
 			$bar->title->SetFont(FF_ARIAL, FS_NORMAL, 8);
+		} else {
+			$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
 		}
 		$bar->rightMark->Show();
         $bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
@@ -451,10 +451,10 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 }
 $today = date("y-m-d");
 $vline = new GanttVLine($today, $AppUI->_('Today', UI_OUTPUT_RAW));
-if (strstr(PHP_OS, 'Linux')) {
-	$vline->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 10);
-} else if (strstr(PHP_OS, 'WIN')) {
+if (strstr(PHP_OS, 'WIN')) {
 	$vline->title->SetFont(FF_ARIAL, FS_NORMAL, 10);
+} else {
+	$vline->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 10);
 }
 $graph->Add($vline);
 $graph->Stroke();

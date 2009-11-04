@@ -137,10 +137,10 @@ $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Project Name', UI_OUTPUT_
 $tableTitle = ($proFilter == '-1') ? $AppUI->_('All Projects') : $projectStatus[$proFilter];
 $graph->scale->tableTitle->Set($tableTitle);
 
-if (strstr(PHP_OS, 'Linux')) {
-	$graph->scale->tableTitle->SetFont(FF_DV_SANSSERIF, FS_BOLD, 12);
-} else if (strstr(PHP_OS, 'WIN')) {
+if (strstr(PHP_OS, 'WIN')) {
 	$graph->scale->tableTitle->SetFont(FF_ARIAL, FS_BOLD, 12);
+} else {
+	$graph->scale->tableTitle->SetFont(FF_DV_SANSSERIF, FS_BOLD, 12);
 }
 $graph->scale->SetTableTitleBackground("#eeeeee");
 $graph->scale->tableTitle->Show(true);
