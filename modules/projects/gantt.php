@@ -52,6 +52,9 @@
 ---------------------------------------------------------------------------
 */
 
+if (!strstr(PHP_OS, 'WIN')) {
+	define('TTF_DIR', '/usr/share/fonts/truetype/ttf-dejavu/');
+}
 
 include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
 include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
@@ -134,10 +137,11 @@ $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Project Name', UI_OUTPUT_
 $tableTitle = ($proFilter == '-1') ? $AppUI->_('All Projects') : $projectStatus[$proFilter];
 $graph->scale->tableTitle->Set($tableTitle);
 
-// Use TTF font if it exists
-// try commenting out the following two lines if gantt charts do not display
-if (is_file( TTF_DIR."arialbd.ttf" ))
-	$graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
+if (strstr(PHP_OS, 'Linux')) {
+	$graph->scale->tableTitle->SetFont(FF_DV_SANSSERIF, FS_BOLD, 12);
+} else if (strstr(PHP_OS, 'WIN')) {
+	$graph->scale->tableTitle->SetFont(FF_ARIAL, FS_BOLD, 12);
+}
 $graph->scale->SetTableTitleBackground("#eeeeee");
 $graph->scale->tableTitle->Show(true);
 

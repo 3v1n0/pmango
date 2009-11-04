@@ -52,6 +52,10 @@
 ---------------------------------------------------------------------------
 */
 
+if (!strstr(PHP_OS, 'WIN')) {
+	define('TTF_DIR', '/usr/share/fonts/truetype/ttf-dejavu/');
+}
+
 include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
 include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
 
@@ -179,7 +183,6 @@ $end_date   = dPgetParam( $_GET, 'finish_date', $project_end );
 
 $count = 0;
 
-
 $graph = new GanttGraph($width);
 $graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY | GANTT_HWEEK);
 //$graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY);
@@ -199,9 +202,12 @@ if ($jpLocale) {
 if ($start_date && $end_date) {
 	$graph->SetDateRange( $start_date, $end_date );
 }
-if (is_file( TTF_DIR."arialbd.ttf" )){
+
+if (strstr(PHP_OS, 'Linux')) {
+	$graph->scale->actinfo->SetFont(FF_DV_SANSSERIF);
+} else if (strstr(PHP_OS, 'WIN')) {
 	$graph->scale->actinfo->SetFont(FF_ARIAL);
-}
+}
 $graph->scale->actinfo->vgrid->SetColor('gray');
 $graph->scale->actinfo->SetColor('darkgray');
 $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task', UI_OUTPUT_RAW)),array(200));
@@ -211,8 +217,12 @@ $graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
 // Use TTF font if it exists
 // try commenting out the following two lines if gantt charts do not display
 
-if (is_file( TTF_DIR."arialbd.ttf" ))
-	$graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
+if (strstr(PHP_OS, 'Linux')) {
+	$graph->scale->tableTitle->SetFont(FF_DV_SANSSERIF, FS_BOLD, 12);
+} else if (strstr(PHP_OS, 'WIN')) {
+	$graph->scale->tableTitle->SetFont(FF_ARIAL, FS_BOLD, 12);
+}
+
 $graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
 $graph->scale->tableTitle->Show(true);
 
@@ -383,12 +393,16 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	$startdate = new CDate($start);
 	$bar = new GanttBar($row++, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.4 : 0.15);//se padre sarebbe meglio 1
 	$bar->progress->Set($progress/100);
-	if (is_file( TTF_DIR."arialbd.ttf" )) {
-		$bar->title->SetFont(FF_ARIAL,FS_NORMAL, 8);
+	if (strstr(PHP_OS, 'Linux')) {
+		$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
+	} else if (strstr(PHP_OS, 'WIN')) {
+		$bar->title->SetFont(FF_ARIAL, FS_NORMAL, 8);
 	}
     if (!CTask::isLeafSt($a["task_id"])) {
-    	if (is_file( TTF_DIR."arialbd.ttf" )){
-        	$bar->title->SetFont(FF_ARIAL,FS_BOLD, 8);
+		if (strstr(PHP_OS, 'Linux')) {
+			$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
+		} else if (strstr(PHP_OS, 'WIN')) {
+			$bar->title->SetFont(FF_ARIAL, FS_NORMAL, 8);
 		}
 		$bar->rightMark->Show();
         $bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
@@ -437,8 +451,10 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 }
 $today = date("y-m-d");
 $vline = new GanttVLine($today, $AppUI->_('Today', UI_OUTPUT_RAW));
-if (is_file( TTF_DIR."arialbd.ttf" )) {
-	$vline->title->SetFont(FF_ARIAL,FS_BOLD,12);
+if (strstr(PHP_OS, 'Linux')) {
+	$vline->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 10);
+} else if (strstr(PHP_OS, 'WIN')) {
+	$vline->title->SetFont(FF_ARIAL, FS_NORMAL, 10);
 }
 $graph->Add($vline);
 $graph->Stroke();
