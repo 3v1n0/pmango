@@ -20,7 +20,7 @@ Index: modules/tasks/tasks.class.php
 +		$mine_found = false;
 +
 +		foreach ($a['task_assigned_users'] as $u) {
-+			if ($u['user_id'] == $a['user_id']) {
++			if ($u['user_id'] == $AppUI->user_id) {
 +				$mine_found = true;
 +				break;
 +			}
@@ -52,7 +52,7 @@ Index: modules/tasks/tasks.class.php
 +		$mine_found = false;
 +
 +		foreach ($a['task_assigned_users'] as $u) {
-+			if ($a['user_id'] == $u['user_id']) {
++			if ($u['user_id'] == $AppUI->user_id) {
 +				$mine_found = true;
 +				break;
 +			}
@@ -126,7 +126,7 @@ Index: modules/tasks/tasks.php
 +					<input type='checkbox' name='show_mine' <?php echo $showMine ? 'checked="checked"' : '';?> />
  				</td>
  				<td>
-+					<?php echo $AppUI->_('Tasks I\'m assinged to'); ?></td>
++					<?php echo $AppUI->_('My tasks only'); ?></td>
 +				</td>
 +				<td>
  				<?php echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$AppUI->_('Explode tasks').": ";?>

@@ -1825,7 +1825,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 		$mine_found = false;
 
 		foreach ($a['task_assigned_users'] as $u) {
-			if ($u['user_id'] == $a['user_id']) {
+			if ($u['user_id'] == $AppUI->user_id) {
 				$mine_found = true;
 				break;
 			}
@@ -2039,7 +2039,7 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 		$mine_found = false;
 
 		foreach ($a['task_assigned_users'] as $u) {
-			if ($a['user_id'] == $u['user_id']) {
+			if ($u['user_id'] == $AppUI->user_id) {
 				$mine_found = true;
 				break;
 			}

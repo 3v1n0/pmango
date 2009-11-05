@@ -632,7 +632,7 @@ function showFullProject() {
 					<input type='checkbox' name='show_mine' <?php echo $showMine ? 'checked="checked"' : '';?> />
 				</td>
 				<td>
-					<?php echo $AppUI->_('Tasks I\'m assinged to'); ?></td>
+					<?php echo $AppUI->_('My tasks only'); ?></td>
 				</td>
 				<td>
 				<?php echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$AppUI->_('Explode tasks').": ";?>
