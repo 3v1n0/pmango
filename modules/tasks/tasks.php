@@ -165,14 +165,17 @@ $task_sort_type2 = dPgetParam( $_GET, 'task_sort_type2', '' );
 $child_task = dPgetParam( $_GET, 'child_task', '' );
 $task_sort_order1 = intval( dPgetParam( $_GET, 'task_sort_order1', 0 ) );
 $task_sort_order2 = intval( dPgetParam( $_GET, 'task_sort_order2', 0 ) );
+
 if (isset($_POST['show_task_options'])) {
 	$AppUI->setState('TaskListShowIncomplete', dPgetParam($_POST, 'show_incomplete', 0));
+	$AppUI->setState('TaskListShowMine', dPgetParam($_POST, 'show_mine', 0));
 	$AppUI->setState('ExplodeTasks', dPgetParam($_POST, 'explode_tasks', '1'));
 	$AppUI->setState('PersonsRoles', dPgetParam($_POST, 'roles', 'N'));
 	$AppUI->setState('StartDate', dPgetParam($_POST, 'show_sdate', $db_start_date[0]['project_start_date']));
 	$AppUI->setState('EndDate', dPgetParam($_POST, 'show_edate', $db_start_date[0]['project_finish_date']));
 }
 $showIncomplete = $AppUI->getState('TaskListShowIncomplete', 0);
+$showMine = $AppUI->getState('TaskListShowMine', 0);
 $explodeTasks = $AppUI->getState('ExplodeTasks', '1');
 $roles = $AppUI->getState('PersonsRoles', 'N');
 $StartDate = $AppUI->getState('StartDate', $db_start_date[0]['project_start_date']);
@@ -626,6 +629,12 @@ function showFullProject() {
 					<?php echo $AppUI->_('Incomplete tasks only'); ?></td>
 				</td>
 				<td>
+					<input type='checkbox' name='show_mine' <?php echo $showMine ? 'checked="checked"' : '';?> />
+				</td>
+				<td>
+					<?php echo $AppUI->_('Tasks I\'m assinged to'); ?></td>
+				</td>
+				<td>
 				<?php echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$AppUI->_('Explode tasks').": ";?>
 				</td>
 				<td>
@@ -874,12 +883,12 @@ foreach ($projects as $k => $p) {//echo $p['project_id']." "."$tnums<br>";
 				else
 			    	$is_opened = in_array($t["task_id"], $tasks_opened);
 			    if ($tview) 
-					showTaskActual( $t, 0, $is_opened,'','', $canEdit, $showIncomplete, $roles, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ));
+					showTaskActual( $t, 0, $is_opened,'','', $canEdit, $showIncomplete, $showMine, $roles, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ));
 				else{
-					if($min_view) showTaskPlanned( $t, 0, $is_opened,'','', $canEdit, $showIncomplete, $roles, true, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ));
-					else showTaskPlanned( $t, 0, $is_opened,'','', $canEdit, $showIncomplete, $roles, false, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ));}
+					if($min_view) showTaskPlanned( $t, 0, $is_opened,'','', $canEdit, $showIncomplete, $showMine, $roles, true, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ));
+					else showTaskPlanned( $t, 0, $is_opened,'','', $canEdit, $showIncomplete, $showMine, $roles, false, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ));}
 				if($is_opened){
-				    findchild( $p['tasks'], $t["task_id"],'', $tview, $explodeTasks, $canEdit, $showIncomplete, $roles, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ), $min_view);
+				    findchild( $p['tasks'], $t["task_id"],'', $tview, $explodeTasks, $canEdit, $showIncomplete, $showMine, $roles, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ), $min_view);
 				}
 			}
 		}
@@ -892,7 +901,7 @@ foreach ($projects as $k => $p) {//echo $p['project_id']." "."$tnums<br>";
 			        closeOpenedTask($p['tasks'][$i]["task_id"]);
 			    }
 			    if(in_array($p['tasks'][$i]["task_parent"], $tasks_opened)){// Child tasks
-		    		showTaskPlanned( $p['tasks'][$i], 1, false,'',true,$canEdit,$showIncomplete,$roles, false, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ));
+		    		showTaskPlanned( $p['tasks'][$i], 1, false,'',true,$canEdit,$showIncomplete,$showMine,$roles, false, $start_date->format( FMT_TIMESTAMP_DATE ), $end_date->format( FMT_TIMESTAMP_DATE ));
 			    }
 			}
 		}

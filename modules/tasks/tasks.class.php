@@ -1813,13 +1813,27 @@ function closeOpenedTask($task_id){
 
 //This kludgy function echos children tasks as threads
 
-function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false, $notOpen = false, $canEdit, $showIncomplete = false, $roles, $taskview=true, $sdate, $edate) {//echo "^".$canEdit;
+function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false, $notOpen = false, $canEdit, $showIncomplete = false, $showMine = false, $roles, $taskview=true, $sdate, $edate) {//echo "^".$canEdit;
 	global $AppUI, $dPconfig, $done, $query_string, $userAlloc, $showEditCheckbox;
 	global $tasks_opened;
 	global $tasks_closed;
 	
 	if ($showIncomplete && intval(CTask::getPr($a["task_id"]) >= 100))
 		return '';
+
+	if ($showMine) {
+		$mine_found = false;
+
+		foreach ($a['task_assigned_users'] as $u) {
+			if ($u['user_id'] == $a['user_id']) {
+				$mine_found = true;
+				break;
+			}
+		}
+
+		if (!$mine_found)
+			return '';
+	}
 
 	$obj = new CTask();
 	$te = $obj->getEffort($a['task_id']);
@@ -2011,7 +2025,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 	echo $s;
 }
 
-function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, $notOpen = false, $canEdit, $showIncomplete = false,$roles, $sdate, $edate) {
+function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, $notOpen = false, $canEdit, $showIncomplete = false,$showMine = false,$roles, $sdate, $edate) {
 	global $AppUI, $dPconfig, $done, $query_string, $userAlloc, $showEditCheckbox;
 	
 	$obj = new CTask();//echo $re;
@@ -2020,6 +2034,20 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 	$tpr = intval( $obj->getProgress($a['task_id'],$te));//$showIncomplete=false;
 	if ($showIncomplete && intval($tpr) >= 100)
 		return '';
+
+	if ($showMine) {
+		$mine_found = false;
+
+		foreach ($a['task_assigned_users'] as $u) {
+			if ($a['user_id'] == $u['user_id']) {
+				$mine_found = true;
+				break;
+			}
+		}
+
+		if (!$mine_found)
+			return '';
+	}
 		
 	$tc = $obj->getBudget($a['task_id']);
     $now = new CDate();
@@ -2243,7 +2271,7 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 	echo $s;
 }
 
-function findchild( &$tarr, $parent, $level=0, $tview, $explodeTasks = false, $canEdit, $showIncomplete = false, $roles, $start, $end, $min_view = false){
+function findchild( &$tarr, $parent, $level=0, $tview, $explodeTasks = false, $canEdit, $showIncomplete = false, $showMine = false, $roles, $start, $end, $min_view = false){
 	GLOBAL $projects;
 	global $tasks_opened;
 	global $tasks_closed;
@@ -2258,13 +2286,13 @@ function findchild( &$tarr, $parent, $level=0, $tview, $explodeTasks = false, $c
 			else
 		    	$is_opened = in_array($tarr[$x]["task_id"], $tasks_opened);
 		    if ($tview)
-				showTaskActual( $tarr[$x], $level, $is_opened,'','',$canEdit, $showIncomplete, $roles, $start, $end);
+				showTaskActual( $tarr[$x], $level, $is_opened,'','',$canEdit, $showIncomplete, $showMine, $roles, $start, $end);
 			else{
-				if($min_view) showTaskPlanned( $tarr[$x], $level, $is_opened,'','',$canEdit, $showIncomplete, $roles, true, $start, $end);
-				else showTaskPlanned( $tarr[$x], $level, $is_opened,'','',$canEdit, $showIncomplete, $roles, false, $start, $end);
+				if($min_view) showTaskPlanned( $tarr[$x], $level, $is_opened,'','',$canEdit, $showIncomplete, $showMine, $roles, true, $start, $end);
+				else showTaskPlanned( $tarr[$x], $level, $is_opened,'','',$canEdit, $showIncomplete, $showMine, $roles, false, $start, $end);
 				}
 			if($is_opened) {// || !$tarr[$x]["task_dynamic"]){
-			    findchild( $tarr, $tarr[$x]["task_id"], $level, $tview, $explodeTasks,$canEdit, $showIncomplete, $roles, $start, $end);
+			    findchild( $tarr, $tarr[$x]["task_id"], $level, $tview, $explodeTasks,$canEdit, $showIncomplete, $showMine, $roles, $start, $end);
 			}
 		}
 	}
