@@ -93,7 +93,7 @@ natsort($projFilter);
 // months to scroll
 $scroll_date = 1;
 
-$display_option = dPgetParam( $_POST, 'display_option', 'this_month' );
+$display_option = dPgetParam( $_POST, 'display_option', 'all' );
 
 // format dates
 $df = $AppUI->getPref('SHDATEFORMAT');
