@@ -1,0 +1,159 @@
+Index: modules/tasks/gantt.php
+===================================================================
+--- modules/tasks/gantt.php	(revisione 81)
++++ modules/tasks/gantt.php	(revisione 86)
+@@ -50,10 +50,12 @@
+  Foundation Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA.
+ 
+ ---------------------------------------------------------------------------
+-*/
+-
++*/
++
++define('TTF_DIR', "{$dPconfig['root_dir']}/fonts/Droid/");
++
+ include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
+-include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
++include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
+ 
+ $project_id = defVal( @$_REQUEST['project_id'], 0 );
+ $f = defVal( @$_REQUEST['f'], 0 );
+@@ -177,10 +179,15 @@
+ 
+ $end_date   = dPgetParam( $_GET, 'finish_date', $project_end );
+ 
+-$count = 0;
++$count = 0;
++
++$graph = new GanttGraph($width);
++
++$graph->SetUserFont1('DroidSans.ttf', 'DroidSans-Bold.ttf');
++$graph->SetUserFont2('DroidSerif-Regular.ttf', 'DroidSerif-Bold.ttf',
++                     'DroidSerif-Italic.ttf', 'DroidSerif-BoldItalic.ttf');
++$graph->SetUserFont3('DroidSansMono.ttf');
+ 
+-
+-$graph = new GanttGraph($width);
+ $graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY | GANTT_HWEEK);
+ //$graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY);
+ 
+@@ -198,21 +205,16 @@
+ 
+ if ($start_date && $end_date) {
+ 	$graph->SetDateRange( $start_date, $end_date );
+-}
+-if (is_file( TTF_DIR."arialbd.ttf" )){
+-	$graph->scale->actinfo->SetFont(FF_ARIAL);
+-}
++}
++
+ $graph->scale->actinfo->vgrid->SetColor('gray');
+ $graph->scale->actinfo->SetColor('darkgray');
+-$graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task', UI_OUTPUT_RAW)),array(200));
++$graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task', UI_OUTPUT_RAW)),array(200));
++$graph->scale->actinfo->SetFont(FF_USERFONT);
+ 
+ $graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
++$graph->scale->tableTitle->SetFont(FF_USERFONT1, FS_BOLD, 12);
+ 
+-// Use TTF font if it exists
+-// try commenting out the following two lines if gantt charts do not display
+-
+-if (is_file( TTF_DIR."arialbd.ttf" ))
+-	$graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
+ $graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
+ $graph->scale->tableTitle->Show(true);
+ 
+@@ -382,14 +384,10 @@
+ 	$enddate = new CDate($end);
+ 	$startdate = new CDate($start);
+ 	$bar = new GanttBar($row++, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.4 : 0.15);//se padre sarebbe meglio 1
+-	$bar->progress->Set($progress/100);
+-	if (is_file( TTF_DIR."arialbd.ttf" )) {
+-		$bar->title->SetFont(FF_ARIAL,FS_NORMAL, 8);
+-	}
+-    if (!CTask::isLeafSt($a["task_id"])) {
+-    	if (is_file( TTF_DIR."arialbd.ttf" )){
+-        	$bar->title->SetFont(FF_ARIAL,FS_BOLD, 8);
+-		}
++	$bar->progress->Set($progress/100);
++	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
++    if (!CTask::isLeafSt($a["task_id"])) {
++		$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
+ 		$bar->rightMark->Show();
+         $bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
+         $bar->rightMark->SetWidth(3);
+@@ -437,9 +435,8 @@
+ }
+ $today = date("y-m-d");
+ $vline = new GanttVLine($today, $AppUI->_('Today', UI_OUTPUT_RAW));
+-if (is_file( TTF_DIR."arialbd.ttf" )) {
+-	$vline->title->SetFont(FF_ARIAL,FS_BOLD,12);
+-}
++$vline->title->SetFont(FF_USERFONT3, FS_NORMAL, 9);
++
+ $graph->Add($vline);
+ $graph->Stroke();
+ ?>
+Index: modules/projects/gantt.php
+===================================================================
+--- modules/projects/gantt.php	(revisione 81)
++++ modules/projects/gantt.php	(revisione 86)
+@@ -52,6 +52,7 @@
+ ---------------------------------------------------------------------------
+ */
+ 
++define('TTF_DIR', "{$dPconfig['root_dir']}/fonts/Droid/");
+ 
+ include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
+ include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
+@@ -110,7 +111,11 @@
+ //$showTaskGantt = dPgetParam( $_GET, 'showTaskGantt', '0' );
+ 
+ $graph = new GanttGraph($width);
+-$graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY | GANTT_HWEEK);
++$graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY | GANTT_HWEEK);
++
++$graph->SetUserFont1('DroidSans.ttf', 'DroidSans-Bold.ttf');
++$graph->SetUserFont2('DroidSerif-Regular.ttf', 'DroidSerif-Bold.ttf',
++                     'DroidSerif-Italic.ttf', 'DroidSerif-BoldItalic.ttf');
+ 
+ $graph->SetFrame(false);
+ $graph->SetBox(true, array(0,0,0), 2);
+@@ -125,7 +130,7 @@
+ 	$graph->SetDateRange( $start_date, $end_date );
+ }
+ 
+-//$graph->scale->actinfo->SetFont(FF_ARIAL);
++$graph->scale->actinfo->SetFont(FF_USERFONT1);
+ $graph->scale->actinfo->vgrid->SetColor('gray');
+ $graph->scale->actinfo->SetColor('darkgray');
+ $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Project Name', UI_OUTPUT_RAW)),array(200));
+@@ -134,10 +139,7 @@
+ $tableTitle = ($proFilter == '-1') ? $AppUI->_('All Projects') : $projectStatus[$proFilter];
+ $graph->scale->tableTitle->Set($tableTitle);
+ 
+-// Use TTF font if it exists
+-// try commenting out the following two lines if gantt charts do not display
+-if (is_file( TTF_DIR."arialbd.ttf" ))
+-	$graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
++$graph->scale->tableTitle->SetFont(FF_USERFONT1, FS_BOLD, 12);
+ $graph->scale->SetTableTitleBackground("#eeeeee");
+ $graph->scale->tableTitle->Show(true);
+ 
+@@ -246,7 +248,7 @@
+         $bar = new GanttBar($row++, array($name), $start, $p["project_finish_date"], $cap, 0.6);
+         $bar->progress->Set($progress/100);
+ 
+-        $bar->title->SetFont(FF_FONT1,FS_NORMAL,10);
++        $bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 10);
+         $bar->SetFillColor("#".$p['project_color_identifier']);
+         $bar->SetPattern(BAND_SOLID,"#".$p['project_color_identifier']);
+ 	
+@@ -317,4 +319,4 @@
+ $vline = new GanttVLine($today, $AppUI->_('Today', UI_OUTPUT_RAW));
+ $graph->Add($vline);
+ $graph->Stroke();
+-?>
+\ No newline at end of file
++?>

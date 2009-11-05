@@ -1,0 +1,121 @@
+Index: modules/tasks/gantt.php
+===================================================================
+--- modules/tasks/gantt.php	(revisione 81)
++++ modules/tasks/gantt.php	(copia locale)
+@@ -50,10 +50,14 @@
+  Foundation Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA.
+ 
+ ---------------------------------------------------------------------------
+-*/
+-
++*/
++
++if (!strstr(PHP_OS, 'WIN')) {
++	define('TTF_DIR', '/usr/share/fonts/truetype/ttf-dejavu/');
++}
++
+ include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
+-include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
++include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
+ 
+ $project_id = defVal( @$_REQUEST['project_id'], 0 );
+ $f = defVal( @$_REQUEST['f'], 0 );
+@@ -198,10 +202,12 @@
+ 
+ if ($start_date && $end_date) {
+ 	$graph->SetDateRange( $start_date, $end_date );
++}
++if (strstr(PHP_OS, 'WIN')) {
++	$graph->scale->actinfo->SetFont(FF_ARIAL);
++} else {
++	$graph->scale->actinfo->SetFont(FF_DV_SANSSERIF);
+ }
+-if (is_file( TTF_DIR."arialbd.ttf" )){
+-	$graph->scale->actinfo->SetFont(FF_ARIAL);
+-}
+ $graph->scale->actinfo->vgrid->SetColor('gray');
+ $graph->scale->actinfo->SetColor('darkgray');
+ $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task', UI_OUTPUT_RAW)),array(200));
+@@ -210,9 +216,13 @@
+ 
+ // Use TTF font if it exists
+ // try commenting out the following two lines if gantt charts do not display
++
++if (strstr(PHP_OS, 'WIN')) {
++	$graph->scale->tableTitle->SetFont(FF_ARIAL, FS_BOLD, 12);
++} else {
++	$graph->scale->tableTitle->SetFont(FF_DV_SANSSERIF, FS_BOLD, 12);
++}
+ 
+-if (is_file( TTF_DIR."arialbd.ttf" ))
+-	$graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
+ $graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
+ $graph->scale->tableTitle->Show(true);
+ 
+@@ -382,13 +392,17 @@
+ 	$enddate = new CDate($end);
+ 	$startdate = new CDate($start);
+ 	$bar = new GanttBar($row++, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.4 : 0.15);//se padre sarebbe meglio 1
+-	$bar->progress->Set($progress/100);
+-	if (is_file( TTF_DIR."arialbd.ttf" )) {
+-		$bar->title->SetFont(FF_ARIAL,FS_NORMAL, 8);
++	$bar->progress->Set($progress/100);
++	if (strstr(PHP_OS, 'WIN')) {
++		$bar->title->SetFont(FF_ARIAL, FS_NORMAL, 8);
++	} else {
++		$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
+ 	}
+-    if (!CTask::isLeafSt($a["task_id"])) {
+-    	if (is_file( TTF_DIR."arialbd.ttf" )){
+-        	$bar->title->SetFont(FF_ARIAL,FS_BOLD, 8);
++    if (!CTask::isLeafSt($a["task_id"])) {
++		if (strstr(PHP_OS, 'WIN')) {
++			$bar->title->SetFont(FF_ARIAL, FS_NORMAL, 8);
++		} else {
++			$bar->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 8);
+ 		}
+ 		$bar->rightMark->Show();
+         $bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
+@@ -437,8 +451,10 @@
+ }
+ $today = date("y-m-d");
+ $vline = new GanttVLine($today, $AppUI->_('Today', UI_OUTPUT_RAW));
+-if (is_file( TTF_DIR."arialbd.ttf" )) {
+-	$vline->title->SetFont(FF_ARIAL,FS_BOLD,12);
++if (strstr(PHP_OS, 'WIN')) {
++	$vline->title->SetFont(FF_ARIAL, FS_NORMAL, 10);
++} else {
++	$vline->title->SetFont(FF_DV_SANSSERIF, FS_NORMAL, 10);
+ }
+ $graph->Add($vline);
+ $graph->Stroke();
+Index: modules/projects/gantt.php
+===================================================================
+--- modules/projects/gantt.php	(revisione 81)
++++ modules/projects/gantt.php	(copia locale)
+@@ -52,6 +52,9 @@
+ ---------------------------------------------------------------------------
+ */
+ 
++if (!strstr(PHP_OS, 'WIN')) {
++	define('TTF_DIR', '/usr/share/fonts/truetype/ttf-dejavu/');
++}
+ 
+ include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
+ include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
+@@ -134,10 +137,11 @@
+ $tableTitle = ($proFilter == '-1') ? $AppUI->_('All Projects') : $projectStatus[$proFilter];
+ $graph->scale->tableTitle->Set($tableTitle);
+ 
+-// Use TTF font if it exists
+-// try commenting out the following two lines if gantt charts do not display
+-if (is_file( TTF_DIR."arialbd.ttf" ))
+-	$graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
++if (strstr(PHP_OS, 'WIN')) {
++	$graph->scale->tableTitle->SetFont(FF_ARIAL, FS_BOLD, 12);
++} else {
++	$graph->scale->tableTitle->SetFont(FF_DV_SANSSERIF, FS_BOLD, 12);
++}
+ $graph->scale->SetTableTitleBackground("#eeeeee");
+ $graph->scale->tableTitle->Show(true);
+ 

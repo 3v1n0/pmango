@@ -1,0 +1,22 @@
+Index: modules/tasks/gantt.php
+===================================================================
+--- modules/tasks/gantt.php	(revisione 76)
++++ modules/tasks/gantt.php	(copia locale)
+@@ -189,12 +189,11 @@
+ $graph->scale->week->SetStyle(WEEKSTYLE_FIRSTDAY);
+ //$graph->scale->day->SetStyle(DAYSTYLE_SHORTDATE2);
+ 
+-// This configuration variable is obsolete
+-//$jpLocale = dPgetConfig( 'jpLocale' );
+-//if ($jpLocale) {
+-//	$graph->scale->SetDateLocale( $jpLocale );
+-//}
+-$graph->scale->SetDateLocale( $AppUI->user_locale );
++// This configuration variable is obsolete, it should be set to ''
++$jpLocale = dPgetConfig( 'jpLocale' );
++if ($jpLocale) {
++	$graph->scale->SetDateLocale( $jpLocale );
++}
+ 
+ if ($start_date && $end_date) {
+ 	$graph->SetDateRange( $start_date, $end_date );
