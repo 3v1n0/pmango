@@ -211,37 +211,33 @@ function showFullProject() {
 
 </form>
 
-<? if (isset($_REQUEST['sdate']) && isset($_REQUEST['edate'])) { ?>
 <tr>
 	<td align="center" valign="bottom" colspan="7">
 		<?php echo "<a href='javascript:showThisMonth()'>".$AppUI->_('show this month')."</a> : <a href='javascript:showFullProject()'>".$AppUI->_('show full project')."</a><br>"; ?>
 	</td>
 </tr>
-<? } ?>
 
 </table>
 
-<? if (isset($_REQUEST['sdate']) && isset($_REQUEST['edate'])) { ?>
 <table cellspacing="0" cellpadding="0" border="1" align="center">
 <tr>
 	<td>
 <?php 
-	if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )) {
-		$src =
-		  "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id" .
-		  ( $display_option == 'all' ? '' :
-			'&start_date=' . $start_date->format( "%Y-%m-%d" ) . '&finish_date=' . $end_date->format( "%Y-%m-%d" ) ) .
-		  "&width=' + ((navigator.appName=='Netscape'?window.innerWidth:document.body.offsetWidth)*0.95) + '&showLabels=".$showLabels."&showWork=".$showWork;
+if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )) {
+	$src =
+	  "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id" .
+	  ( $display_option == 'all' ? '' :
+		'&start_date=' . $start_date->format( "%Y-%m-%d" ) . '&finish_date=' . $end_date->format( "%Y-%m-%d" ) ) .
+	  "&width=' + ((navigator.appName=='Netscape'?window.innerWidth:document.body.offsetWidth)*0.95) + '&showLabels=".$showLabels."&showWork=".$showWork;
 
-		echo "<script>document.write('<img src=\"$src\">')</script>";
-	} else {
-		echo $AppUI->_( "No tasks to display" );
-	}
+	echo "<script>document.write('<img src=\"$src\">')</script>";
+} else {
+	echo $AppUI->_( "No tasks to display" );
+}
 ?>
 	</td>
 </tr>
 </table>
-<? } ?>
 <br />
 <?php 
 // reset the php memory limit to the original php.ini value
