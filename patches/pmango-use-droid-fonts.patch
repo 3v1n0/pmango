@@ -1,7 +1,7 @@
 Index: modules/tasks/gantt.php
 ===================================================================
---- modules/tasks/gantt.php	(revisione 81)
-+++ modules/tasks/gantt.php	(revisione 86)
+--- modules/tasks/gantt.php	(revisione 74)
++++ modules/tasks/gantt.php	(copia locale)
 @@ -50,10 +50,12 @@
   Foundation Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA.
  
@@ -37,34 +37,7 @@ Index: modules/tasks/gantt.php
  $graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY | GANTT_HWEEK);
  //$graph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY);
  
-@@ -198,21 +205,16 @@
- 
- if ($start_date && $end_date) {
- 	$graph->SetDateRange( $start_date, $end_date );
--}
--if (is_file( TTF_DIR."arialbd.ttf" )){
--	$graph->scale->actinfo->SetFont(FF_ARIAL);
--}
-+}
-+
- $graph->scale->actinfo->vgrid->SetColor('gray');
- $graph->scale->actinfo->SetColor('darkgray');
--$graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task', UI_OUTPUT_RAW)),array(200));
-+$graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task', UI_OUTPUT_RAW)),array(200));
-+$graph->scale->actinfo->SetFont(FF_USERFONT);
- 
- $graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
-+$graph->scale->tableTitle->SetFont(FF_USERFONT1, FS_BOLD, 12);
- 
--// Use TTF font if it exists
--// try commenting out the following two lines if gantt charts do not display
--
--if (is_file( TTF_DIR."arialbd.ttf" ))
--	$graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
- $graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
- $graph->scale->tableTitle->Show(true);
- 
-@@ -382,14 +384,10 @@
+@@ -381,14 +388,10 @@
  	$enddate = new CDate($end);
  	$startdate = new CDate($start);
  	$bar = new GanttBar($row++, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.4 : 0.15);//se padre sarebbe meglio 1
@@ -83,7 +56,7 @@ Index: modules/tasks/gantt.php
  		$bar->rightMark->Show();
          $bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
          $bar->rightMark->SetWidth(3);
-@@ -437,9 +435,8 @@
+@@ -436,9 +439,8 @@
  }
  $today = date("y-m-d");
  $vline = new GanttVLine($today, $AppUI->_('Today', UI_OUTPUT_RAW));
@@ -97,8 +70,8 @@ Index: modules/tasks/gantt.php
  ?>
 Index: modules/projects/gantt.php
 ===================================================================
---- modules/projects/gantt.php	(revisione 81)
-+++ modules/projects/gantt.php	(revisione 86)
+--- modules/projects/gantt.php	(revisione 74)
++++ modules/projects/gantt.php	(copia locale)
 @@ -52,6 +52,7 @@
  ---------------------------------------------------------------------------
  */
