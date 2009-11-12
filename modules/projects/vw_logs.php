@@ -195,7 +195,7 @@ function showFullProject() {
 <form name="frmFilter" action="./index.php?m=projects&a=view&project_id=<?=$project_id?>&tab=3" method="post">
 <input type='hidden' name='show_log_options' value='1'>
 <tr>
-	<td id="tab_edit_content" align='left'valign="top"  width='50%' style="display: none; border-right: outset #d1d1cd 1px">
+	<td align='left'valign="top"  width='50%' style="border-right: outset #d1d1cd 1px">
 		<table border="0" cellpadding="4" cellspacing="0">
 			<tr align="left">
 

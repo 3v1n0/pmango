@@ -1018,39 +1018,6 @@ class CAppUI {
 }
 
 /**
-* FIXME comment!!!
-*/
-class CTabIcon {
-	var $file = NULL;
-	var $link = NULL;
-	var $isJS = false;
-	var $ifactive = true;
-
-	function CTabIcon($file, $link = '', $is_javascript = false, $if_active = true) {
-		$this->file = $file;
-		$this->link = $link;
-		$this->isJS = $is_javascript;
-		$this->ifactive = true;
-	}
-
-	function getFile() {
-		return $file;
-	}
-
-	function getLink() {
-		return $link;
-	}
-	
-	function isJavascript() {
-		return $isJS;
-	}
-
-	function ifActive() {
-		return $ifactive;
-	}
-}
-
-/**
 * Tabbed box abstract class
 */
 class CTabBox_core {
@@ -1074,7 +1041,7 @@ the active tab, and the selected tab **/
 * @param string Optional javascript method to be used to execute tabs.
 *	Must support 2 arguments, currently active tab, new tab to activate.
 */
-	function CTabBox_core( $baseHRef='', $baseInc='', $active=0, $javascript = null, $tabicon = null) {
+	function CTabBox_core( $baseHRef='', $baseInc='', $active=0, $javascript = null ) {
 		$this->tabs = array();
 		$this->active = $active;
 		$this->baseHRef = ($baseHRef ? "$baseHRef&" : "?");
@@ -1093,9 +1060,8 @@ the active tab, and the selected tab **/
 * @param string File to include
 * @param The display title/name of the tab
 */
-	function add( $file, $title, $translated = false, $tabicon = null) {
-		$this->tabs[] = array( $file, $title, $translated,
-							  (get_class($tabicon) == 'CTabIcon' ? $tabicons : null));
+	function add( $file, $title, $translated = false ) {
+		$this->tabs[] = array( $file, $title, $translated );
 	}
 
 	function isTabbed() {

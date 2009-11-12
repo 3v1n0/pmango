@@ -54,9 +54,9 @@ class CTitleBlock extends CTitleBlock_core {
 
 ##
 ##  This overrides the show function of the CTabBox_core function
-## 
+##
 class CTabBox extends CTabBox_core {
-	function show( $extra='', $js_tabs = false, $edit_button = false) {
+	function show( $extra='', $js_tabs = false ) {
 		GLOBAL $AppUI, $dPconfig, $currentTabId, $currentTabName;
 		$uistyle = $AppUI->getPref( 'UISTYLE' ) ? $AppUI->getPref( 'UISTYLE' ) : $dPconfig['host_style'];
 		if (! $uistyle)
@@ -94,8 +94,8 @@ class CTabBox extends CTabBox_core {
 			echo "</table>\n";
 		} else {
 		// tabbed view
-			$s = '<table width="100%" border="0" cellpadding="0" cellspacing="0">'."\n";
-			$s .= '<tr><td><table border="0" cellpadding="0" cellspacing="0">'."\n";
+			$s = '<table width="100%" border="0" cellpadding="0" cellspacing="0">';
+			$s .= '<tr><td><table border="0" cellpadding="0" cellspacing="0">';
 			
 			if ( count($this->tabs)-1 < $this->active ) {
 				//Last selected tab is not available in this view. eg. Child tasks
@@ -104,9 +104,8 @@ class CTabBox extends CTabBox_core {
 			foreach( $this->tabs as $k => $v ) {
 				$class = ($k == $this->active) ? 'tabon' : 'taboff';
 				$sel = ($k == $this->active) ? 'Selected' : '';
-				$s .= '<td height="28" valign="middle" width="3"><img src="./style/' . $uistyle . '/images/tab'.$sel.'Left.png" width="3" height="28" border="0" alt="" /></td>'."\n";
+				$s .= '<td height="28" valign="middle" width="3"><img src="./style/' . $uistyle . '/images/tab'.$sel.'Left.png" width="3" height="28" border="0" alt="" /></td>';
 				$s .= '<td id="toptab_'.$k.'" valign="middle" nowrap="nowrap"';
-				if ($v[1] == "Tasks TODO") $s .= ' style="opacity: .50;"';
 				if ($js_tabs)
 					$s .= " class=\"$class\"";
 				else
@@ -118,16 +117,12 @@ class CTabBox extends CTabBox_core {
 					$s .= 'javascript:show_tab(' . $k . ')';
 				else
 					$s .= $this->baseHRef.'tab='.$k;
-				$s .='">'.($v[2] ? $v[1] : $AppUI->_($v[1])).'</a>&nbsp;';
-				if ($edit_button && $k == $this->active)
-					$s .= '<img src="./images/icons/pencil.gif" onmouseover="this.style.cursor=\'pointer\';" onclick="displayItemSwitch(\'tab_content\', \'tab_edit_content\');" " border="0" />';
-				
-				$s .= "</td>\n";
-				$s .= '<td valign="middle" width="3"><img src="./style/' . $uistyle . '/images/tab'.$sel.'Right.png" width="3" height="28" border="0" alt="" /></td>'."\n";
-				$s .= '<td width="3" class="tabsp"><img src="./images/shim.gif" height="1" width="3" /></td>'."\n";
+				$s .='">'.($v[2] ? $v[1] : $AppUI->_($v[1])).'</a>&nbsp;</td>';
+				$s .= '<td valign="middle" width="3"><img src="./style/' . $uistyle . '/images/tab'.$sel.'Right.png" width="3" height="28" border="0" alt="" /></td>';
+				$s .= '<td width="3" class="tabsp"><img src="./images/shim.gif" height="1" width="3" /></td>';
 			}
-			$s .= '</table></td></tr>'."\n";
-			$s .= '<tr><td width="100%" colspan="'.(count($this->tabs)*4 + 1).'" class="tabox">'."\n";
+			$s .= '</table></td></tr>';
+			$s .= '<tr><td width="100%" colspan="'.(count($this->tabs)*4 + 1).'" class="tabox">';
 			echo $s;
 			//Will be null if the previous selection tab is not available in the new window eg. Children tasks
 			if ( $this->tabs[$this->active][0] != "" ) {
@@ -140,20 +135,20 @@ class CTabBox extends CTabBox_core {
 			{
 				foreach( $this->tabs as $k => $v ) 
 				{
-					echo '<div class="tab" id="tab_'.$k.'">'."\n";
+					echo '<div class="tab" id="tab_'.$k.'">';
 					$currentTabId = $k;
 					$currentTabName = $v[1];
 					require $this->baseInc.$v[0].'.php';
-					echo '</div>'."\n";
+					echo '</div>';
 					echo '<script language="JavaScript" type="text/javascript">
 <!--
 show_tab('.$this->active.');
 //-->
-</script>'."\n";
+</script>';
 
 				}
 			}
-			echo '</td></tr></table>'."\n";
+			echo '</td></tr></table>';
 		}
 	}
 }

@@ -186,9 +186,7 @@ function delIt() {
 		document.frmDelete.submit();
 	}
 }
-
 <?php } ?>
-}
 </script>
 
 <table border="0" cellpadding="1" cellspacing="0" width="100%" class="std">
@@ -201,16 +199,15 @@ function delIt() {
 </form>
 
 <tr>
-	<td onclick="projectViewSwitch();" style="border: outset #d1d1cd 1px;background-color:#<?php echo $obj->project_color_identifier;?>" onmouseover="this.style.cursor='pointer';" colspan="2">
-	<?php
-		echo '<img id="project_expander_img" src="images/icons/expand.gif" border="0" />&nbsp;';
+	<td style="border: outset #d1d1cd 1px;background-color:#<?php echo $obj->project_color_identifier;?>" colspan="2">
+	<?php 
 		echo '<font color="' . bestColor( $obj->project_color_identifier ) . '"><strong>'
 			. $obj->project_name .'<strong></font>';
 	?>
 	</td>
 </tr>
 
-<tr id="project_infos" style="display: none;">
+<tr>
 	<td width="50%" valign="top"  style="border: outset #d1d1cd 1px">
 		<strong><?php echo $AppUI->_('Base Information');?></strong>
 		<table cellspacing="1" cellpadding="2" border="0" width="100%">
@@ -459,19 +456,16 @@ if ($canViewTask) {
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Planned view)' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Actual view)');
 	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Inactive)' );
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtodo", 'Tasks TODO' );
 }
 //if ($perms->checkModule('files', 'view'))
 //	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_files", 'Files' );
 if ($canViewTask) {
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewwbs", 'WBS' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewgantt", 'Gantt Chart' );
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtasknetwork", 'Tasks Network' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_logs", 'Task Logs' );
 }
 $tabBox->loadExtras($m);
 $f = 'all';
 $min_view = true;
 
-$tabBox->show(null, false, true);
+$tabBox->show();
 ?>
