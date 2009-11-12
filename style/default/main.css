@@ -98,14 +98,27 @@ bordertable {
 }
 
 .button{
-	cursor: hand; 
+	cursor: pointer; 
 	border: 1px solid #000000; 
 	padding: 1; 
 	font-weight: normal;
 	font-family: Osaka,verdana,Sans-Serif;
 	font-size: 8pt; 
 	background-color:#FBDA1E; 
-	color:#006600
+	color:#006600;
+	cursor: inherit;
+}
+
+.button_disabled{
+	cursor: pointer; 
+	border: 1px inset #555; 
+	padding: 1; 
+	font-weight: normal;
+	font-family: Osaka,verdana,Sans-Serif;
+	font-size: 8pt; 
+	background-color:#DFDB1F; 
+	color:#556677;
+	cursor: inherit;
 }
 
 .button2{
@@ -517,4 +530,9 @@ table.tbl td.event {
 
 table.tbl td.event td {
 	background-color: #fff0b0;
+}
+
+/* td info */
+.tab_setting_title {
+	font-weight: bold;
 }

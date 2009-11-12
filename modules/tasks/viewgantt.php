@@ -161,7 +161,7 @@ function showFullProject() {
 
 </script>
 
-<table border="0" cellpadding="4" cellspacing="0" align="center">
+<table id='tab_edit_content' border="0" cellpadding="4" cellspacing="0" align="center" style="display: none">
 
 <form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
 <input type="hidden" name="display_option" value="<?php echo $display_option;?>" />
@@ -178,26 +178,108 @@ function showFullProject() {
 <?php } ?>
 	</td>
 
-	<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'From' );?>:</td>
-	<td align="left" nowrap="nowrap">
-		<input type="hidden" name="sdate" value="<?php echo $start_date->format( FMT_TIMESTAMP_DATE );?>" />
-		<input type="text" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" disabled="disabled" />
-		<a href="javascript:popCalendar('sdate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
+	<td align='left' valign="top" style="border-right: solid transparent 20px;">
+		<table border="0" cellspacing="0">
+			<tr>
+				<td class="tab_setting_title"><?php echo $AppUI->_('Show');?>:</td>
+				<td align="left">
+					<input type='radio' id='whole_project' name='time_interval' checked="checked" onclick="showFullProject();" />
+					<label for="whole_project"><?php echo $AppUI->_('Whole Project'); ?></label>
+				</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					<input type='radio' id='from_start' name='time_interval' onclick="showThisMonth();" />
+					<label for="from_start"><?php echo $AppUI->_('From Start'); ?></label>
+				</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					<input type='radio' id='to_end' name='time_interval' />
+					<label for="to_end"><?php echo $AppUI->_('To End'); ?></label>
+				</td>
+			</tr>
+		</table>
 	</td>
 
-	<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'To' );?>:</td>
-	<td align="left" nowrap="nowrap">
-		<input type="hidden" name="edate" value="<?php echo $end_date->format( FMT_TIMESTAMP_DATE );?>" />
-		<input type="text" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" disabled="disabled" />
-		<a href="javascript:popCalendar('edate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
-	<!--<td valign="top">
-		<input type="checkbox" name="showLabels" <?php //echo (($showLabels==1) ? "checked=true" : "");?>><?php //echo $AppUI->_( 'Show captions' );?>
+	<td align='left' valign="top" style="border-right: solid transparent 20px;">
+		<table border="0" cellspacing="0">
+			<tr>
+				<td class="tab_setting_title"><?php echo $AppUI->_('Draw');?>:</td>
+				<td align="left">
+					<input type='checkbox' id='show_deps' name='show_dependencies' checked="true" />
+					<label for="show_deps"><?php echo $AppUI->_('Dependencies'); ?></label>
+				</td>
+			</tr>
+			<tr>
+				<td class="tab_setting_title">&nbsp;</td>
+				<td>
+					<input type='checkbox' id='show_bw' name='show_bw'" />
+					<label for="show_bw"><?php echo $AppUI->_('Printable BW colors'); ?></label>
+				</td>
+			</tr>
+			<tr>				<td class="tab_setting_title">
+					<?php echo $AppUI->_('Size').": ";?>
+				</td>
+				<td>&nbsp;
+					<select name="image_size" class="text" onchange=""> <!-- add custom inputs onchange -->
+						<option value="1" selected="selected">Default</option>
+						<option value="2" >Custom</option>
+						<option value="3" >Fit in Window</option>
+					</select>
+				</td>
+			</tr>
+		</table>
 	</td>
-	<td valign="top">
-		<input type="checkbox" name="showWork" <?php //echo (($showWork==1) ? "checked=true" : "");?>><?php //echo $AppUI->_( 'Show work instead of duration' );?>
-	</td>-->	
-	<td align="left">
-		<input type="button" class="button" value="<?php echo $AppUI->_( 'draw' );?>" onclick='document.editFrm.display_option.value="custom";if (document.editFrm.edate.value < document.editFrm.sdate.value) alert("Start date must before end date"); else submit();'>
+
+	<td align='left' valign="top" style="border-right: solid transparent 20px">
+		<table border="0" cellspacing="0">
+			<tr>
+				<td class="tab_setting_title">
+					<?php echo $AppUI->_('From');?>:
+				</td>
+				<td>
+					<input type="hidden" name="sdate" value="<?php echo $start_date->format( FMT_TIMESTAMP_DATE );?>" />
+					<input type="text" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" disabled="disabled" />
+					<a href="javascript:popCalendar('sdate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
+				</td>
+			</tr>
+			<tr>
+				<td class="tab_setting_title">
+					<?php echo $AppUI->_( 'To' );?>:
+				</td>
+				<td align="left" nowrap="nowrap">
+				    <input type="hidden" name="edate" value="<?php echo $end_date->format( FMT_TIMESTAMP_DATE );?>" />
+					<input type="text" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" disabled="disabled" />
+					<a href="javascript:popCalendar('edate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
+				<!--<td valign="top">
+					<input type="checkbox" name="showLabels" <?php //echo (($showLabels==1) ? "checked=true" : "");?>><?php //echo $AppUI->_( 'Show captions' );?>
+					</td>
+					<td valign="top">
+						<input type="checkbox" name="showWork" <?php //echo (($showWork==1) ? "checked=true" : "");?>><?php //echo $AppUI->_( 'Show work instead of duration' );?>
+					</td>-->
+				</td>
+			</tr>
+			<tr>				<td class="tab_setting_title">
+					<?php echo $AppUI->_('Explode tasks').": ";?>
+				</td>
+				<td>&nbsp;
+					<select name="explode_tasks" class="text"> <!-- TODO FIXME dynamic! -->
+						<option value="1" >Level 1</option>
+						<option value="2" selected="selected">Level 2</option>
+						<option value="3" >Level 3</option>
+						<option value="4" >Level 4</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+	</td>
+
+	<input type="hidden" name="reset_level" value="1" />
+	<td valign="bottom" align="left"> 
+		<input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>" onclick='document.editFrm.display_option.value="custom";if (document.editFrm.edate.value < document.editFrm.sdate.value) alert("Start date must before end date"); else submit();'>
 	</td>
 
 	<td align="right" valign="top" width="20">
@@ -211,14 +293,61 @@ function showFullProject() {
 
 </form>
 
-<tr>
-	<td align="center" valign="bottom" colspan="7">
-		<?php echo "<a href='javascript:showThisMonth()'>".$AppUI->_('show this month')."</a> : <a href='javascript:showFullProject()'>".$AppUI->_('show full project')."</a><br>"; ?>
-	</td>
-</tr>
-
 </table>
 
+<form id='tab_content' name='pdf_options' method='POST' action='<?php echo $query_string; ?>'>
+	<table id='' width='100%' border='0' cellpadding='1' cellspacing='0'>
+		<tr align="right">
+			<td align="right">
+			
+			</td>
+		</tr>
+		<tr>
+			<td align="right">
+			<?if ($_POST['make_pdf']=="true")	{
+				include('modules/report/makePDF.php');
+
+				$task_level=$explodeTasks;
+				$q  = new DBQuery;
+				$q->addQuery('projects.project_name');
+				$q->addTable('projects');
+				$q->addWhere("project_id = $project_id ");
+				$name = $q->loadList();
+				
+				$q  = new DBQuery;
+				$q->addTable('groups');
+				$q->addTable('projects');
+				$q->addQuery('groups.group_name');
+				$q->addWhere("projects.project_group = groups.group_id and projects.project_id = '$project_id'");
+				$group = $q->loadList();
+				
+				foreach ($group as $g){
+					$group_name=$g['group_name'];
+				}
+				
+				$pdf = PM_headerPdf($name[0]['project_name'],'P',1,$group_name);
+				PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_opened, $roles, $tview, $start_date, $end_date, $showIncomplete); //TODO show mine!
+				if ($tview) $filename=PM_footerPdf($pdf, $name[0]['project_name'], 2);
+				else $filename=PM_footerPdf($pdf, $name[0]['project_name'], 1);
+				?>
+				<a href="<?echo $filename;?>"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a><?
+			}?>
+			
+			
+				<input type="hidden" name="make_pdf" value="false" />
+				<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF ' );?>" onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
+			<? if($tview==0){?>
+				<input type="hidden" name="addreport" value="-1" />
+				<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>" onclick='document.pdf_options.addreport.value="1"; document.pdf_options.submit();'><?}
+			else{?>
+				<input type="hidden" name="addreport" value="-1" />
+				<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>" onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'><?}?>
+			</td>
+		</tr>
+	</table>
+</form>
+
+<br />
 <table cellspacing="0" cellpadding="0" border="1" align="center">
 <tr>
 	<td>
