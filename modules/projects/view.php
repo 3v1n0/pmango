@@ -199,15 +199,16 @@ function delIt() {
 </form>
 
 <tr>
-	<td style="border: outset #d1d1cd 1px;background-color:#<?php echo $obj->project_color_identifier;?>" colspan="2">
+	<td onclick="projectViewSwitch();" style="border: outset #d1d1cd 1px;background-color:#<?php echo $obj->project_color_identifier;?>" onmouseover="this.style.cursor='pointer';" colspan="2">
 	<?php 
+		echo '<img id="project_expander_img" src="images/icons/expand.gif" border="0" />&nbsp;';
 		echo '<font color="' . bestColor( $obj->project_color_identifier ) . '"><strong>'
 			. $obj->project_name .'<strong></font>';
 	?>
 	</td>
 </tr>
 
-<tr>
+<tr id="project_infos" style="display: none;">
 	<td width="50%" valign="top"  style="border: outset #d1d1cd 1px">
 		<strong><?php echo $AppUI->_('Base Information');?></strong>
 		<table cellspacing="1" cellpadding="2" border="0" width="100%">
