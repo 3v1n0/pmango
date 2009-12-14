@@ -88,7 +88,7 @@ $font_bold = "DroidSans-Bold.ttf";
 $font_normal = "DroidSans.ttf";
 
 $font = $font_bold;
-$font_size = 12;
+$font_size = 32;
 $text = "TaskBox";
 
 $multiplier = 1.0;
@@ -120,7 +120,7 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 		$txtimg_size['w'] = max($txtimg_size['w'], $lsize['w']);
 		$txtimg_size['h'] += $lsize['h'] + $vspace;
 		$lsize['top'] = $txtimg_size['h']-$lsize['h'];
-		
+
 		$line_size[] = $lsize;
 	}
 	
@@ -146,7 +146,7 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 		$font_color = imagecolorallocate($timg, 0, 0, 0);
 		imagettftext($timg, $font_size, 0, $padding, $font_size, $font_color, $font, $text_lines[$i]);
 
-		if ($decoration == "underlined")
+		if ($decoration == "underline")
 			imageline($timg, $padding, $lsize['h']-1, $padding + $lsize['w'] - $hspace, $lsize['h']-1, $font_color);
 			
 		imagecopy($txtimg, $timg, 0, $lsize['top'], 0, 0, imagesx($timg), imagesy($timg));		
@@ -250,8 +250,8 @@ $size = $maxsize;
 //$tbx = $image;
 
 $tbx = generateTextImg("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA\n2009.10.22\nNA\n2/9");
-$tbx = generateTextImg("Test\nGggggA\n2009.10.22\nNA\n2/9", null, "underlined", "right");
-$tbx = buildImgRectangle($tbx, 1, "right");
+$tbx = generateTextImg("Test\nGggggA\n2009.10.22\nNA\n2/9", null, "underline", "right");
+//$tbx = buildImgRectangle($tbx, 1, "right");
 
 /*
 $tbx = buildTextRectangle("1.1");
