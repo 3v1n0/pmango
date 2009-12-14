@@ -88,7 +88,7 @@ $font_bold = "DroidSans-Bold.ttf";
 $font_normal = "DroidSans.ttf";
 
 $font = $font_bold;
-$font_size = 15;
+$font_size = 12;
 $text = "TaskBox";
 
 $multiplier = 1.0;
@@ -106,7 +106,7 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 	
 	$txtimg = null;
 	$vspace = intval($font_size * 20 / 100);
-	$hspace = 2;
+	$hspace = 0;
 	$line_size = array();
 	$txtimg_size = null;
 	
@@ -114,8 +114,8 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 
 	foreach ($text_lines as $line) {
 		$lsize = getTextSize($line);
-		$lsize['h']++;
-		$lsize['w']++;
+		//$lsize['h']++;
+		//$lsize['w'] += $hspace*2;
 		
 		$txtimg_size['w'] = max($txtimg_size['w'], $lsize['w']);
 		$txtimg_size['h'] += $lsize['h'] + $vspace;
@@ -131,16 +131,23 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 	for ($i = 0; $i < count($text_lines); $i++) {
 		$lsize = $line_size[$i];
 
-		$timg = imagecreatetruecolor($lsize['w'], $lsize['h']);
+		$timg = imagecreatetruecolor($txtimg_size['w'], $lsize['h']);
 		//imageantialias($timg, true);
+		imagefilledrectangle($timg, 0, 0, $txtimg_size['w'], $lsize['h'], $background_color);
+		
+		if ($align == "center") {
+			$padding = intval(($txtimg_size['w'] - $lsize['w']) / 2);
+		} else if ($align == "right") {
+			$padding = $txtimg_size['w'] - $lsize['w'] - $hspace/2 + 1;
+		} else /*($align == "left") */ {
+			$padding = $hspace/2 - 1;
+		}
 		
 		$font_color = imagecolorallocate($timg, 0, 0, 0);
-
-		imagefilledrectangle($timg, 0, 0, $lsize['w'], $lsize['h'], $background_color);
-		imagettftext($timg, $font_size, 0, $hspace, $font_size, $font_color, $font, $text_lines[$i]);
+		imagettftext($timg, $font_size, 0, $padding, $font_size, $font_color, $font, $text_lines[$i]);
 
 		if ($decoration == "underlined")
-			imageline($timg, 2, $lsize['h']-1, $lsize['w'], $lsize['h']-1, $font_color);
+			imageline($timg, $padding, $lsize['h']-1, $padding + $lsize['w'] - $hspace, $lsize['h']-1, $font_color);
 			
 		imagecopy($txtimg, $timg, 0, $lsize['top'], 0, 0, imagesx($timg), imagesy($timg));		
 		imagedestroy($timg);
@@ -149,7 +156,7 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 	return $txtimg;
 }
 
-function buildRectangle($text) {
+function buildTextRectangle($text, $align = "left") {
 	global $font, $font_size, $bordersize, $minsize, $maxsize, $size;
 
 	$w = $size['w'];
@@ -186,10 +193,51 @@ function buildRectangle($text) {
 	return $tbx;
 }
 
+function buildImgRectangle($img, $padding = 0, $align = "left") {
+	global $bordersize, $minsize, $maxsize, $size;
+
+	$w = $size['w'];
+	$h = $size['h'];
+	$b = $bordersize; //intval($bordersize * $multiplier);
+
+	if ($size['h'] == 0)
+		$h = imagesx($img) + intval(imagesx($img) * 10 / 100) + $padding * 2; // * $multiplier
+		
+/*
+		 print_r($txt_size); echo $w."x$h";
+*/
+
+	// Check bigger image!
+
+	$tbx = imagecreate($w, $h);
+//	$tbx = imagecreatetruecolor($w, $h);
+//	imageantialias($tbx, true);
+
+	$background_color = imagecolorallocate($tbx, 255, 255, 255); # = 0xFFFFFF
+	$border_color = imagecolorallocate($tbx, 0, 0, 0); # = 0x000000
+
+	imagefilledrectangle($tbx, 0, 0, $w-1, $h-1, $border_color);
+	imagefilledrectangle($tbx, $b, $b, $w-$b-1, $h-$b-1, $background_color);
+
+	if ($align == "center") {
+		$imgX = intval((imagesx($tbx) - imagesx($img)) / 2);
+	} else if ($align == "right") {
+		$imgX = imagesx($tbx) - imagesx($img) - $bordersize - $padding + 1;
+	} else {
+		$imgX = $bordersize + $padding - 1;
+	}
+	
+	$imgY = intval((imagesy($tbx) - imagesy($img)) / 2);
+
+	imagecopy($tbx, $img, $imgX, $imgY, 0, 0, imagesx($img), imagesy($img));
+
+	return $tbx;
+}
+
 
 
 $size = $minsize;
-$tbx = buildRectangle("1.1");
+$tbx = buildTextRectangle("1.1");
 
 
 $size = $maxsize;
@@ -202,7 +250,13 @@ $size = $maxsize;
 //$tbx = $image;
 
 $tbx = generateTextImg("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA\n2009.10.22\nNA\n2/9");
-$tbx = generateTextImg("Test\nGggggA\n2009.10.22\nNA\n2/9", null, "underlined");
+$tbx = generateTextImg("Test\nGggggA\n2009.10.22\nNA\n2/9", null, "underlined", "right");
+$tbx = buildImgRectangle($tbx, 1, "right");
+
+/*
+$tbx = buildTextRectangle("1.1");
+$tbx = buildImgRectangle($tbx, 0, "left");
+*/
 
 header("Content-type: image/png");
 
