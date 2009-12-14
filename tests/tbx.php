@@ -83,44 +83,6 @@ echo "$text = $txtW x $txtH\n";print_r($txtbox);echo "\n";
 	return array('w' => $txtW, 'h' => $txtH);
 }
 
-function generateTextImg($text, $maxlen = 0, $style = null/*, $maxsize, $align = "left"*/) {
-	global $font, $font_size;
-	
-	$vspace = intval($font_size * 20 / 100);
-	$img = null;
-	$oldimg = null;
-	
-	foreach (explode("\n", $text) as $line) {
-		$lsize = getTextSize($line);
-		$timg = imagecreatetruecolor(++$lsize['w'], ++$lsize['h']);
-		//imageantialias($timg, true);
-		
-		$background_color = imagecolorallocate($timg, 255, 255, 255);
-		$font_color = imagecolorallocate($timg, 0, 0, 0);
-
-		imagefilledrectangle($timg, 0, 0, $lsize['w'], $lsize['h'], $background_color);
-		imagettftext($timg, $font_size, 0, 2, $font_size, $font_color, $font, $line);
-		imageline($timg, 2, $lsize['h']-1, $lsize['w'], $lsize['h']-1, $font_color);
-
-		$isize['w'] = max($isize['w'], $lsize['w']);
-
-		if ($oldimg == null) {
-			$img = $timg;
-			$oldimg = $img;
-		} else {
-			$isize['h'] = imagesy($oldimg) + $lsize['h'] + $vspace;
-			$img = imagecreatetruecolor($isize['w'], $isize['h']);
-			imagefilledrectangle($img, 0, 0, $isize['w'], $isize['h'], $background_color);
-			imagecopy($img, $oldimg, 0, 0, 0, 0, imagesx($oldimg), imagesy($oldimg));
-			imagecopy($img, $timg, 0, $isize['h']-$lsize['h'], 0, 0, imagesx($timg), imagesy($timg));
-			imagedestroy($oldimg);
-			$oldimg = $img;
-		}
-	}
-	
-	return $img;
-}
-
 putenv('GDFONTPATH=' . realpath('../fonts/Droid'));
 $font_bold = "DroidSans-Bold.ttf";
 $font_normal = "DroidSans.ttf";
@@ -139,6 +101,54 @@ $minsize['w'] += intval(($minsize['w']/100) * 50);
 $minsize['h'] += intval(($minsize['h']/100) * 50);
 $maxsize['w'] = $minsize['w'] * 3;
 
+function generateTextImg($text, $style = "normal", $decoration = null, $align = "left", $maxlen = 0) {
+	global $font, $font_size;
+	
+	$vspace = intval($font_size * 20 / 100);
+	$img = null;
+	$oldimg = null;
+	$line_size = array();
+	$txtimg = null;
+	$img_size = null;
+	
+	$text_lines = explode("\n", $text);
+
+	foreach ($text_lines as $line) {
+		$lsize = getTextSize($line);
+		$lsize['h']++;
+		$lsize['w']++;
+		
+		$img_size['w'] = max($img_size['w'], $lsize['w']);
+		$img_size['h'] += $lsize['h'] + $vspace;
+		$lsize['top'] = $img_size['h']-$lsize['h'];
+		
+		$line_size[] = $lsize;
+	}
+	
+	$img = imagecreatetruecolor($img_size['w'], $img_size['h']);
+	$background_color = imagecolorallocate($img, 255, 255, 255);
+	imagefilledrectangle($img, 0, 0, $img_size['w'], $img_size['h'], $background_color);
+	
+	for ($i = 0; $i < count($text_lines); $i++) {
+		$lsize = $line_size[$i];
+
+		$timg = imagecreatetruecolor($lsize['w'], $lsize['h']);
+		//imageantialias($timg, true);
+		
+		$font_color = imagecolorallocate($timg, 0, 0, 0);
+
+		imagefilledrectangle($timg, 0, 0, $lsize['w'], $lsize['h'], $background_color);
+		imagettftext($timg, $font_size, 0, 2, $font_size, $font_color, $font, $text_lines[$i]);
+
+		if ($decoration == "underlined")
+			imageline($timg, 2, $lsize['h']-1, $lsize['w'], $lsize['h']-1, $font_color);
+			
+		imagecopy($img, $timg, 0, $lsize['top'], 0, 0, imagesx($timg), imagesy($timg));		
+		imagedestroy($timg);
+	}
+	
+	return $img;
+}
 
 function buildRectangle($text) {
 	global $font, $font_size, $bordersize, $minsize, $maxsize, $size;
@@ -192,7 +202,8 @@ $size = $maxsize;
 //imagecopy($image, $tbx,220,330,0,0, $w, $h);
 //$tbx = $image;
 
-$tbx = generateTextImg("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA");
+$tbx = generateTextImg("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA\n2009.10.22\nNA\n2/9");
+$tbx = generateTextImg("Test\nGggggA\n2009.10.22\nNA\n2/9", null, "underlined");
 
 header("Content-type: image/png");
 
