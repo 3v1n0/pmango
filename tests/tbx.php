@@ -83,10 +83,10 @@ echo "$text = $txtW x $txtH\n";print_r($txtbox);echo "\n";
 	return array('w' => $txtW, 'h' => $txtH);
 }
 
-function generateTextImg($text/*, $maxsize, $align = "left"*/) {
+function generateTextImg($text, $maxlen = 0, $style = null/*, $maxsize, $align = "left"*/) {
 	global $font, $font_size;
 	
-	$space = intval($font_size * 20 / 100);
+	$vspace = intval($font_size * 20 / 100);
 	$img = null;
 	$oldimg = null;
 	
@@ -108,11 +108,12 @@ function generateTextImg($text/*, $maxsize, $align = "left"*/) {
 			$img = $timg;
 			$oldimg = $img;
 		} else {
-			$isize['h'] = imagesy($oldimg) + $lsize['h'] + $space;
+			$isize['h'] = imagesy($oldimg) + $lsize['h'] + $vspace;
 			$img = imagecreatetruecolor($isize['w'], $isize['h']);
 			imagefilledrectangle($img, 0, 0, $isize['w'], $isize['h'], $background_color);
 			imagecopy($img, $oldimg, 0, 0, 0, 0, imagesx($oldimg), imagesy($oldimg));
 			imagecopy($img, $timg, 0, $isize['h']-$lsize['h'], 0, 0, imagesx($timg), imagesy($timg));
+			imagedestroy($oldimg);
 			$oldimg = $img;
 		}
 	}
