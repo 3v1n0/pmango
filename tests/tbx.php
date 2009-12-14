@@ -104,12 +104,11 @@ $maxsize['w'] = $minsize['w'] * 3;
 function generateTextImg($text, $style = "normal", $decoration = null, $align = "left", $maxlen = 0) {
 	global $font, $font_size;
 	
-	$vspace = intval($font_size * 20 / 100);
-	$img = null;
-	$oldimg = null;
-	$line_size = array();
 	$txtimg = null;
-	$img_size = null;
+	$vspace = intval($font_size * 20 / 100);
+	$hspace = 2;
+	$line_size = array();
+	$txtimg_size = null;
 	
 	$text_lines = explode("\n", $text);
 
@@ -118,16 +117,16 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 		$lsize['h']++;
 		$lsize['w']++;
 		
-		$img_size['w'] = max($img_size['w'], $lsize['w']);
-		$img_size['h'] += $lsize['h'] + $vspace;
-		$lsize['top'] = $img_size['h']-$lsize['h'];
+		$txtimg_size['w'] = max($txtimg_size['w'], $lsize['w']);
+		$txtimg_size['h'] += $lsize['h'] + $vspace;
+		$lsize['top'] = $txtimg_size['h']-$lsize['h'];
 		
 		$line_size[] = $lsize;
 	}
 	
-	$img = imagecreatetruecolor($img_size['w'], $img_size['h']);
-	$background_color = imagecolorallocate($img, 255, 255, 255);
-	imagefilledrectangle($img, 0, 0, $img_size['w'], $img_size['h'], $background_color);
+	$txtimg = imagecreatetruecolor($txtimg_size['w'], $txtimg_size['h']);
+	$background_color = imagecolorallocate($txtimg, 255, 255, 255);
+	imagefilledrectangle($txtimg, 0, 0, $txtimg_size['w'], $txtimg_size['h'], $background_color);
 	
 	for ($i = 0; $i < count($text_lines); $i++) {
 		$lsize = $line_size[$i];
@@ -138,16 +137,16 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 		$font_color = imagecolorallocate($timg, 0, 0, 0);
 
 		imagefilledrectangle($timg, 0, 0, $lsize['w'], $lsize['h'], $background_color);
-		imagettftext($timg, $font_size, 0, 2, $font_size, $font_color, $font, $text_lines[$i]);
+		imagettftext($timg, $font_size, 0, $hspace, $font_size, $font_color, $font, $text_lines[$i]);
 
 		if ($decoration == "underlined")
 			imageline($timg, 2, $lsize['h']-1, $lsize['w'], $lsize['h']-1, $font_color);
 			
-		imagecopy($img, $timg, 0, $lsize['top'], 0, 0, imagesx($timg), imagesy($timg));		
+		imagecopy($txtimg, $timg, 0, $lsize['top'], 0, 0, imagesx($timg), imagesy($timg));		
 		imagedestroy($timg);
 	}
 	
-	return $img;
+	return $txtimg;
 }
 
 function buildRectangle($text) {
