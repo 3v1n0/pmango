@@ -80,15 +80,15 @@ function getTextSize($text) {
 //echo "$text = $txtW x $txtH\n";print_r($txtbox);echo "\n";
 
 
-	return array('w' => $txtW, 'h' => $txtH);
+	return array('w' => $txtW, 'h' => $txtH, 'low' => $txtbox[3]);
 }
 
 putenv('GDFONTPATH=' . realpath('../fonts/Droid'));
 $font_bold = "DroidSans-Bold.ttf";
 $font_normal = "DroidSans.ttf";
 
-$font = $font_bold;
-$font_size = 32;
+$font = $font_normal;
+$font_size = 40;
 $text = "TaskBox";
 
 $multiplier = 1.0;
@@ -131,7 +131,7 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 	for ($i = 0; $i < count($text_lines); $i++) {
 		$lsize = $line_size[$i];
 
-		$timg = imagecreatetruecolor($txtimg_size['w'], $lsize['h']);
+		$timg = imagecreatetruecolor($txtimg_size['w'], $lsize['h']+1);
 		//imageantialias($timg, true);
 		imagefilledrectangle($timg, 0, 0, $txtimg_size['w'], $lsize['h'], $background_color);
 
@@ -148,13 +148,15 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 		$txtX = $padding;
 		$txtY = $font_size; //intval($font_size + (imagesy($timg) - $lsize['h'])/2);
 
-		if ($lsize['h'] < $font_size)
+		if ($lsize['h'] <= $font_size)
 				$txtY -= ($font_size - $lsize['h']) + 1;
 
 		imagettftext($timg, $font_size, 0, $txtX, $txtY, $font_color, $font, $text_lines[$i]);
 
-		if ($decoration == "underline")
-			imageline($timg, $padding, $lsize['h']-1, $padding + $lsize['w'] - $hspace, $lsize['h']-1, $font_color);
+		if ($decoration == "underline") {
+			$lineY = $lsize['h']-$lsize['low'];
+			imageline($timg, $padding, $lineY, $padding + $lsize['w'] - $hspace, $lineY, $font_color);
+		}
 
 		imagecopy($txtimg, $timg, 0, $lsize['top'], 0, 0, imagesx($timg), imagesy($timg));
 		imagedestroy($timg);
