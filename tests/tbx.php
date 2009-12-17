@@ -22,7 +22,7 @@ function getTextSize($text) {
 	$txtH = abs(max($txtbox[5], $txtbox[7])) + abs(max($txtbox[1], $txtbox[3]));
 
 
-echo "$text = $txtW x $txtH\n";print_r($txtbox);echo "\n";
+//echo "$text = $txtW x $txtH\n";print_r($txtbox);echo "\n";
 
 
 	return array('w' => $txtW, 'h' => $txtH, 'low' => $txtbox[3]/* + $txtbox[0] fixes guuuu*/);
@@ -36,10 +36,18 @@ $maxsize['w'] = $minsize['w'] * 3;
 function getFixedText($text, $maxlen /*$trim_type*/) {
 	global $font, $font_size;
 
-	// Always truncate the text... To be improved
+	$tsize = getTextSize($text);
+
+	if ($tsize['w'] < $maxlen)
+		return $text;
 
 	do {
-		$text = substr($text, 0, -1);
+		if ($tsize['w'] > $maxlen*2 + 2) {
+			$cut = strlen($text)/2;
+		} else {
+			$cut = -1;
+		}
+		$text = substr($text, 0, $cut);
 		$tsize = getTextSize($text."...");
 	}
 	while ($tsize['w'] >= $maxlen && strlen($text) > 1);
