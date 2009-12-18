@@ -36,26 +36,25 @@ $maxsize['w'] = $minsize['w'] * 3;
 function getFixedText($text, $maxlen /*$trim_type*/) {
 	global $font, $font_size;
 
-	$tsize = getTextSize($text);
+	$tsize = getTextSize(strip_tags($text));
 
 	if ($tsize['w'] < $maxlen)
 		return $text;
 
-	do {
-		if ($tsize['w'] > $maxlen*2 + 2) {
+	while ($tsize['w'] >= $maxlen && strlen($text) > 1) {
+		$cut = -1;
+
+		if ($tsize['w'] > $maxlen*2 + 2)
 			$cut = strlen($text)/2;
-		} else {
-			$cut = -1;
-		}
+
 		$text = substr($text, 0, $cut);
-		$tsize = getTextSize($text."...");
+		$tsize = getTextSize(strip_tags($text)."...");
 	}
-	while ($tsize['w'] >= $maxlen && strlen($text) > 1);
 
 	return $text."...";
 }
 
-function generateTextImg($text, $style = "normal", $decoration = null, $align = "left", $maxlen = 0) {
+function getTextBlock($text, $style = "normal", $decoration = null, $align = "left", $maxlen = 0) {
 	global $font, $font_size;
 
 	$txtimg = null;
@@ -64,14 +63,40 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 	$line_size = array();
 	$txtimg_size = null;
 
-	$text_lines = explode("\n", $text);
-
-	foreach ($text_lines as $line) {
-		$lsize = getTextSize($line);
+	foreach (explode("\n", $text) as $line) {
+		$stripped_line = strip_tags($line);
+		$lsize = getTextSize($stripped_line);
 
 		if ($maxlen > 0 && $lsize['w'] >= $maxlen) {
 			$line = getFixedText($line, $maxlen);
-			$lsize = getTextSize($line);
+			$stripped_line = strip_tags($line);
+			$lsize = getTextSize($stripped_line);
+		}
+
+		if ($decoration == "underline") {
+			$start = strpos($line, "<u>");
+			$end = strpos($line, "</u>");
+
+			if ($start !== false) {
+//				echo "$line -> ".$end."\n";
+				if ($end === false)
+					$end = strlen($line);
+//echo $end." \n";
+//				echo "Checking ".substr($line, 0, $start)."\n";
+				if ($start == 0) {
+					$underline['start'] = 0;
+				} else {
+//					echo "Checking ".substr($line, 0, $start)."\n";
+					$tsize = getTextSize(substr($line, 0, $start));
+					$underline['start'] = $tsize['w'];
+				}
+
+//				echo "Checking ".substr($line, $start+3, $end-3-$start)."\n";
+				$tsize = getTextSize(substr($line, $start+3, $end-3-$start));
+				$underline['end'] = $underline['start']+$tsize['w']-3;
+//print_r($underline);
+				$lsize['u'][] = $underline;
+			}
 		}
 
 		$txtimg_size['w'] = max($txtimg_size['w'], $lsize['w']);
@@ -90,7 +115,7 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 
 	for ($i = 0; $i < count($lines); $i++) {
 		$lsize = $line_size[$i];
-		$text = $lines[$i];
+		$text = strip_tags($lines[$i]);
 
 		$timg = imagecreatetruecolor($txtimg_size['w'], $lsize['h']+1);
 		//imageantialias($timg, true);
@@ -115,10 +140,12 @@ function generateTextImg($text, $style = "normal", $decoration = null, $align = 
 		// FIXME: afaasj at 14px
 		imagettftext($timg, $font_size, 0, $txtX, $txtY, $font_color, $font, $text);
 
-		if ($decoration == "underline") {
+		if ($decoration == "underline" && isset($lsize['u'])) {
 			// FIXME: text like "ggguuuu"
 			$lineY = $lsize['h']-$lsize['low'];
-			imageline($timg, $padding, $lineY, $padding + $lsize['w'] /*- $hspace*/, $lineY, $font_color);
+			//imageline($timg, $padding, $lineY, $padding + $lsize['w'] /*- $hspace*/, $lineY, $font_color);
+			foreach ($lsize['u'] as $underlined)
+				imageline($timg, $padding + $underlined['start'], $lineY, $padding + $underlined['end'] /*- $hspace*/, $lineY, $font_color);
 			//imageline($timg, $padding, $lineY+1, $padding + $lsize['w'] - $hspace, $lineY+1, $font_color);
 		}
 
@@ -210,6 +237,8 @@ function buildImgRectangle($img, $padding = 0, $align = "left") {
 
 	imagecopy($tbx, $img, $imgX, $imgY, 0, 0, imagesx($img), imagesy($img));
 
+	// imagedestroy($img) ??
+
 	return $tbx;
 }
 
@@ -230,9 +259,9 @@ $tbx = buildTextRectangle("meeeeeeeee");
 //imagecopy($image, $tbx,220,330,0,0, $w, $h);
 //$tbx = $image;
 
-//$tbx = generateTextImg("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA\n2009.10.22\nNA\n2/9");
-$tbx = generateTextImg("Test\nGggggA\n2009.10.22\nNA\nmeeeeeeee\nFuuuuuuuuasgsauuasFaV\nafaasj\nph\nmmmmmmmmmmmmmmmmmmmmeeeeeee\nguuuuu",
-						null, "underline", "left", $maxsize['w']);
+//$tbx = getTextBlock("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA\n2009.10.22\nNA\n2/9");
+$tbx = getTextBlock("<u>Testaaaaaaaaaaaaa</u>\nGg<u>gg</u>gA\n20<u>09.10</u>.22\nNA\n<u>m</u>ee<u>e</u>eeeee\nF<u>u</u>uuuuuuuasgsauuasFaV\nafaasj\nph\n<u>mmmmmmmmmmmmmmmmmmmmeeeeeee</u>\nguuuuu",
+						null, "underline", "right", $maxsize['w']);
 
 $tbx = buildImgRectangle($tbx, 3, "left");
 
