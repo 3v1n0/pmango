@@ -79,15 +79,20 @@ function getTextBlock($text, $style = "normal", $align = "left", $maxlen = 0) {
 			$end = @strpos($line, "</u>", $pre_end+1);
 
 			if ($start !== false) {
+				if ($end === false)
+					$end = strlen($line);
+
 				if ($start == 0) {
 					$underline['start'] = 0;
 				} else {
 					$tsize = getTextSize(strip_tags(substr($line, 0, $start)));
 					$underline['start'] = $tsize['w'];
+					//FIXME
+//					$pre_size = getTextSize(strip_tags(substr($line, 0, $start)));
+//					//$underline['start'] = $tsize['w'];
+//					$part_size = getTextSize(strip_tags(substr($line, 0, $end)));
+//					$underline['start'] += $pre_size['w'];
 				}
-
-				if ($end === false)
-					$end = strlen($line);
 
 				$tsize = getTextSize(substr($line, $start+3, $end-3-$start));
 				$underline['end'] = $underline['start']+$tsize['w']-3;
@@ -258,7 +263,7 @@ $tbx = buildTextRectangle("meeeeeeeee");
 //$tbx = $image;
 
 //$tbx = getTextBlock("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA\n2009.10.22\nNA\n2/9");
-$tbx = getTextBlock("<u>Te</u>sta<u>aaaaaaaaaaaa</u>\nGg<u>gg</u>gA\n20<u>09.10</u>.22\nNA\n<u>m</u>ee<u>e</u>eeeee\nF<u>u</u>uuuuuuuasgsauuasFaV\nafaasj\nph\n<u>mmmmmmmmmmmmmmmmmmmmeeeeeee</u>\nguuuuu",
+$tbx = getTextBlock("T<u>e</u>sta<u>aaaaaaaaaaaa</u>\nGg<u>gg</u>gA\n20<u>09.10</u>.22\nNA\n<u>m</u>ee<u>e</u>eeeee\nF<u>u</u>uuuuuuuasgsauuasFaV\nafaasj\nph\n<u>mmmmmmmmmmmmmmmmmmmmeeeeeee</u>\nguuuuu",
 						null, "center", $maxsize['w']);
 
 $tbx = buildImgRectangle($tbx, 3, "left");
