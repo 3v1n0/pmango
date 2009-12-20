@@ -13,7 +13,6 @@ $bordersize = 1;
 $minsize = array('w' => 0, 'h' => 0);
 $maxsize = array('w' => 0, 'h' => 0);
 
-
 function getTextSize($text) {
 	global $font, $font_size;
 
@@ -87,11 +86,21 @@ function getTextBlock($text, $style = "normal", $align = "left", $maxlen = 0) {
 				} else {
 					$tsize = getTextSize(strip_tags(substr($line, 0, $start)));
 					$underline['start'] = $tsize['w'];
-					//FIXME
+					
+					// XXX code below tries to fix the underline pos
 //					$pre_size = getTextSize(strip_tags(substr($line, 0, $start)));
-//					//$underline['start'] = $tsize['w'];
-//					$part_size = getTextSize(strip_tags(substr($line, 0, $end)));
-//					$underline['start'] += $pre_size['w'];
+//					$part_size = getTextSize(substr($line, $start+3, $end-3-$start));
+//					$full_size = getTextSize(strip_tags(substr($line, 0, $end)));
+//					
+//					$underline['start'] += $full_size['w'] - ($pre_size['w'] + $part_size['w']);
+
+//					//echo "checking part [$start - $end]:".substr($line, $start+3, $end-3-$start)."\n";
+//					//print_r($part_size);
+//					//echo " vs full: [0 - $end]".strip_tags(substr($line, 0, $end))." | ".substr($line, 0, $end)."\n";
+//					//print_r($full_size);
+//					//echo " vs pre [0 - $start]:".strip_tags(substr($line, 0, $start))." | ".substr($line, 0, $start)."\n";
+//					//print_r($pre_size);
+//					//echo "\nStandard pos: ${underline['start']}";
 				}
 
 				$tsize = getTextSize(substr($line, $start+3, $end-3-$start));
