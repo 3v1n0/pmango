@@ -10,6 +10,11 @@ $text = "TaskBox";
 
 $multiplier = 1.0;
 $bordersize = 1;
+
+$font_color = "#000000";
+$border_color = "#000000";
+$background_color = "#FFFFFF";
+
 $minsize = array('w' => 0, 'h' => 0);
 $maxsize = array('w' => 0, 'h' => 0);
 
@@ -53,7 +58,28 @@ function getFixedText($text, $maxlen /*$trim_type*/) {
 	return $text."...";
 }
 
-function getTextBlock($text, $style = "normal", $align = "left", $maxlen = 0) {
+function hex2dec($hex) {
+	$color = str_replace('#', '', $hex);
+	$ret = array(
+		'r' => hexdec(substr($color, 0, 2)),
+		'g' => hexdec(substr($color, 2, 2)),
+		'b' => hexdec(substr($color, 4, 2))
+	);
+                
+  return $ret;
+}
+
+function newColorBlock($width, $height, $color) {
+	$img = imagecreate($width, $height);
+	$bgcolor = hex2dec($color);
+	
+	$bg = imagecolorallocate($img, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
+	imagefilledrectangle($img, 0, 0, $width-1, $height-1, $bg);
+	
+	return $img;
+}
+
+function newTextBlock($text, $style = "normal", $align = "left", $maxlen = 0) {
 	global $font, $font_size;
 
 	$txtimg = null;
@@ -87,7 +113,7 @@ function getTextBlock($text, $style = "normal", $align = "left", $maxlen = 0) {
 					$tsize = getTextSize(strip_tags(substr($line, 0, $start)));
 					$underline['start'] = $tsize['w'];
 					
-					// XXX code below tries to fix the underline pos
+					// XXX code below tries to fix the intermediate underline position
 //					$pre_size = getTextSize(strip_tags(substr($line, 0, $start)));
 //					$part_size = getTextSize(substr($line, $start+3, $end-3-$start));
 //					$full_size = getTextSize(strip_tags(substr($line, 0, $end)));
@@ -208,7 +234,7 @@ function buildTextRectangle($text, $align = "left") {
 	return $tbx;
 }
 
-function buildImgRectangle($img, $padding = 0, $align = "left") {
+function newBlock($img, $align = "left", $padding = 1) {
 	global $bordersize, $minsize, $maxsize, $size;
 
 	$w = $size['w'];
@@ -216,7 +242,7 @@ function buildImgRectangle($img, $padding = 0, $align = "left") {
 	$b = $bordersize; //intval($bordersize * $multiplier);
 
 	if ($size['h'] == 0)
-		$h = imagesy($img) + intval(imagesy($img) * 5 / 100); // * $multiplier
+		$h = imagesy($img) ;//+ intval(imagesy($img) * 5 / 100); // * $multiplier
 
 	$h += $padding*2 + $bordersize*2;
 	$w += $padding*2 + $bordersize*2;
@@ -225,7 +251,7 @@ function buildImgRectangle($img, $padding = 0, $align = "left") {
 		 print_r($txt_size); echo $w."x$h";
 */
 
-	// Check bigger image!
+	// XXX Check bigger image!
 
 	$tbx = imagecreate($w, $h);
 //	$tbx = imagecreatetruecolor($w, $h);
@@ -245,13 +271,57 @@ function buildImgRectangle($img, $padding = 0, $align = "left") {
 		$imgX = $bordersize + $padding;
 	}
 
-	$imgY = intval((imagesy($tbx) - imagesy($img)) / 2);
+	$imgY = intval((imagesy($tbx) - imagesy($img)) / 2); //valign = middle
 
 	imagecopy($tbx, $img, $imgX, $imgY, 0, 0, imagesx($img), imagesy($img));
 
 	// imagedestroy($img) ??
 
 	return $tbx;
+}
+
+function boxHorizontalMerge($main, $child/*, $space = 0*/) {
+	global $bordersize, $background_color /*,$border_color*/;
+	
+//	foreach(func_get_args() as $arg) {}
+
+	$w = imagesx($main) + imagesx($child) - $bordersize;
+	$h = max(imagesy($main), imagesy($child));
+	
+	$box = imagecreate($w, $h);
+	
+//	$bc = imagecolorallocate($box, $border_color['r'], $border_color['g'], $border_color['b']);
+	$bgcolor = hex2dec($background_color);
+	$bg = imagecolorallocate($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
+	
+	imagefilledrectangle($box, 0, 0, $w-1, $h-1, $bg);
+//	imagefilledrectangle($box, $bordersize, $bordersize, $w-$bordersize-1, $h-$bordersize-1, $bg);
+	
+	imagecopy($box, $main, 0, 0, 0, 0, imagesx($main), imagesy($main));
+	imagecopy($box, $child, imagesx($main)-$bordersize, 0, 0, 0, imagesx($child), imagesy($child));
+	
+	//destroy child?
+	
+	return $box;
+}
+
+function boxPackEnd($top, $bottom) {
+	global $bordersize, $background_color;
+	
+	$w = max(imagesx($top), imagesx($bottom));
+	$h = imagesy($top) + imagesx($bottom) - $bordersize;
+	
+	$box = imagecreate($w, $h);
+	
+	$bgcolor = hex2dec($background_color);
+	$bg = imagecolorallocate($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
+	
+	imagefilledrectangle($box, 0, 0, $w-1, $h-1, $bg);
+	
+	imagecopy($box, $top, 0, 0, 0, 0, imagesx($top), imagesy($top));
+	imagecopy($box, $bottom, (imagesx($top)-imagesx($bottom))/2, imagesy($top)-$bordersize, 0, 0, imagesx($bottom), imagesy($bottom));
+	
+	return $box;
 }
 
 
@@ -271,16 +341,28 @@ $tbx = buildTextRectangle("meeeeeeeee");
 //imagecopy($image, $tbx,220,330,0,0, $w, $h);
 //$tbx = $image;
 
-//$tbx = getTextBlock("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA\n2009.10.22\nNA\n2/9");
-$tbx = getTextBlock("T<u>e</u>sta<u>aaaaaaaaaaaa</u>\nGg<u>gg</u>gA\n20<u>09.10</u>.22\nNA\n<u>m</u>ee<u>e</u>eeeee\nF<u>u</u>uuuuuuuasgsauuasFaV\nafaasj\nph\n<u>mmmmmmmmmmmmmmmmmmmmeeeeeee</u>\nguuuuu",
-						null, "center", $maxsize['w']);
+//$tbx = newTextBlock("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA\n2009.10.22\nNA\n2/9");
+$tbx = newTextBlock("T<u>e</u>sta<u>aaaaaaaaaaaa</u>\nGg<u>gg</u>gA\n20<u>09.10</u>.22\nNA\n<u>m</u>ee<u>e</u>eeeee\nF<u>u</u>uuuuuuuasgsauuasFaV\nafaasj\nph\n<u>mmmmmmmmmmmmmmmmmmmmeeeeeee</u>\nguuuuu",
+						null, "center", $size['w']);
+$size = $minsize;
+$a = newBlock(newTextBlock("Left"), "center");
+$b = newBlock(newTextBlock("cnt"), "center");
+$c = newBlock(newTextBlock("Right"), "center");
 
-$tbx = buildImgRectangle($tbx, 3, "left");
+$tbx = boxHorizontalMerge($a, $b);
+$tbx = boxHorizontalMerge($tbx, $c);
+
+////Progress
+$size['h'] = 0;
+$size['w'] = imagesx($tbx)-$bordersize*2;
+$color = newColorBlock($size['w']/4, 10, "#BBBBBB");
+$box = newBlock($color, "left", 0);
+
+$tbx = boxPackEnd($tbx, $box);
 
 
-//$size = $minsize;
 //$tbx = generateTextImg("1.1.");
-//$tbx = buildImgRectangle($tbx, 3, "center");
+//$tbx = newBlock($tbx, 3, "center");
 
 
 header("Content-type: image/png");
