@@ -87,16 +87,18 @@ abstract class ImgBlock {
 
 class BorderedBlock extends ImgBlock {
 	private $pBorder;
-	private $pPadding;
+	private $pHPadding;
+	private $pVPadding;
 	private $pAlign;
 	private $pContent;
 	
-	public function BorderedBlock($content, $size = 1, $padding = 1, $align = "center") {
+	public function BorderedBlock($content, $size = 1, $hpad = 1, $vpad = 0, $align = "center") {
 		parent::ImgBlock();
 		$this->setContent($content);
 		$this->setBorderColor($color);
 		$this->setBorder($size);
-		$this->setPadding($padding);
+		$this->setHPadding($hpad);
+		$this->setVPadding($vpad);
 		$this->setAlign($align);
 	}
 	
@@ -113,7 +115,16 @@ class BorderedBlock extends ImgBlock {
 	}
 	
 	public function setPadding($padding) {
-		$this->pPadding = $padding;
+		$this->setHPadding($padding);
+		$this->setHPadding($padding);
+	}
+	
+	public function setHPadding($padding) {
+		$this->pHPadding = intval($padding);
+	}
+	
+	public function setVPadding($padding) {
+		$this->pVPadding = intval($padding);
 	}
 	
 	public function setBorder($b) {
@@ -133,18 +144,18 @@ class BorderedBlock extends ImgBlock {
 	}
 	
 	public function getWidth() {
-		return $this->pContent->getWidth() + $this->pPadding*2 + $this->pBorder*2;
+		return $this->pContent->getWidth() + $this->pHPadding*2 + $this->pBorder*2;
 	}
 	
 	public function getHeight() {
-		return $this->pContent->getHeight() + $this->pPadding*2 + $this->pBorder*2;
+		return $this->pContent->getHeight() + $this->pVPadding*2 + $this->pBorder*2;
 	}
 	
 	public function setMaxWidth($w) {
 		parent::setMaxWidth($w);
 		
 		if (isset($this->pContent)) {
-			$contentW = $w - $this->pPadding*2 - $this->pBorder*2;
+			$contentW = $w - $this->pHPadding*2 - $this->pBorder*2;
 			if ($contentW < 0) $contentW = 1;
 			
 			$this->pContent->setMaxWidth($contentW);
@@ -155,7 +166,7 @@ class BorderedBlock extends ImgBlock {
 		parent::setMinHeight($h);
 		
 		if (isset($this->pContent)) {
-			$contentH = $h - $this->pPadding*2 - $this->pBorder*2;
+			$contentH = $h - $this->pVPadding*2 - $this->pBorder*2;
 			if ($contentH < 0) $contentH = 1;
 			
 			$this->pContent->setMaxHeight($contentH);
@@ -163,25 +174,10 @@ class BorderedBlock extends ImgBlock {
 	}
 	
 	public function getImage() {
-		global $bordersize, $minsize, $maxsize, $size;
 
-//		$w = $this->pContent->getWidth();
-//		$h = $this->pContent->getHeight();
-
-/*
-		if ($this->pContent->getMaxWidth() > 0)
-			$w = $this->pContent->getMaxWidth();
-			
-		if ($this->pContent->getMaxHeight() > 0)
-			$h = $this->pContent->getMaxHeight();//imagesy($img) ;//+ intval(imagesy($img) * 5 / 100); // * $multiplier
-*/
 		$b = $this->pBorder; //intval($bordersize * $multiplier);
 		$w = $this->getWidth();
 		$h = $this->getHeight();
-	
-	/*
-			 print_r($txt_size); echo $w."x$h";
-	*/
 	
 		// XXX Check bigger image!
 	
@@ -200,9 +196,9 @@ class BorderedBlock extends ImgBlock {
 		if ($this->pAlign == "center") {
 			$imgX = intval((imagesx($blk) - $this->pContent->getWidth()) / 2);
 		} else if ($this->pAlign == "right") {
-			$imgX = $w - $this->pContent->getWidth() - $this->pContent->pBorder - $this->pPadding;
+			$imgX = $w - $this->pContent->getWidth() - $this->pContent->pBorder - $this->pHPadding;
 		} else {
-			$imgX = $this->pContent->pBorder + $this->pPadding;
+			$imgX = $this->pContent->pBorder + $this->pHPadding;
 		}
 
 		$imgY = intval(($h - $this->pContent->getHeight()) / 2); //valign = middle
