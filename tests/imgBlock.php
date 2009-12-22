@@ -3,11 +3,24 @@
 function hex2dec($hex) {
 	$color = str_replace('#', '', $hex);
 	
-	return array(
-		'r' => hexdec(substr($color, 0, 2)),
-		'g' => hexdec(substr($color, 2, 2)),
-		'b' => hexdec(substr($color, 4, 2))
-	);
+	$rgba = array ('r' => 0, 'g' => 0, 'b' => 0, 'a' => 255);
+	
+	if (strlen($color) == 3) {
+		$rgba['r'] = hexdec($color[0].$color[0]);
+		$rgba['g'] = hexdec($color[1].$color[1]);
+		$rgba['b'] = hexdec($color[2].$color[2]);
+	} 
+	
+	if (strlen($color) == 6 || strlen($color) == 8) {
+			$rgba['r'] = hexdec(substr($color, 0, 2));
+			$rgba['g'] = hexdec(substr($color, 2, 2));
+			$rgba['b'] = hexdec(substr($color, 4, 2));
+			
+			if (strlen($color) == 8)
+				$rgba['a'] = hexdec(substr($color, 4, 2));
+	}
+	
+	return $rgba;
 }
 
 abstract class ImgBlock {
@@ -77,7 +90,17 @@ abstract class ImgBlock {
 	public function getBgColor() {
 		return $this->pBgColor;
 	}
+
+	public function setWidth($w) {
+		$this->setMinWidth($w);
+		$this->setMaxWidth($w);
+	}
 	
+	public function setHeight($h) {
+		$this->setMinHeight($h);
+		$this->setMaxHeight($h);
+	}
+
 	public abstract function getHeight();
 	public abstract function getWidth();
 	
@@ -155,10 +178,21 @@ class BorderedBlock extends ImgBlock {
 		parent::setMaxWidth($w);
 		
 		if (isset($this->pContent)) {
-			$contentW = $w - $this->pHPadding*2 - $this->pBorder*2;
+			$contentW = intval($w) - $this->pHPadding*2 - $this->pBorder*2;
 			if ($contentW < 0) $contentW = 1;
 			
 			$this->pContent->setMaxWidth($contentW);
+		}
+	}
+	
+	public function setMinWidth($w) {
+		parent::setMinWidth($w);
+		
+		if (isset($this->pContent)) {
+			$contentW = intval($w) - $this->pHPadding*2 - $this->pBorder*2;
+			if ($contentW < 0) $contentW = 1;
+			
+			$this->pContent->setMinWidth($contentW);
 		}
 	}
 	
@@ -178,7 +212,7 @@ class BorderedBlock extends ImgBlock {
 		
 		if (isset($this->pContent)) {
 			$contentH = $h - $this->pVPadding*2 - $this->pBorder*2;
-//			if ($contentH < 0) $contentH = 1;
+			if ($contentH < 0) $contentH = 1;
 			
 			$this->pContent->setMinHeight($contentH);
 		}
@@ -208,7 +242,7 @@ class BorderedBlock extends ImgBlock {
 		imagefilledrectangle($blk, $b, $b, $w-$b-1, $h-$b-1, $background_color);
 	
 		if ($this->pAlign == "center") {
-			$imgX = intval((imagesx($blk) - $this->pContent->getWidth()) / 2);
+			$imgX = intval(($w - $this->pContent->getWidth()) / 2);
 		} else if ($this->pAlign == "right") {
 			$imgX = $w - $this->pContent->getWidth() - $this->pContent->pBorder - $this->pHPadding;
 		} else {
@@ -259,6 +293,23 @@ class TextBlock extends ImgBlock {
 	public function setMaxWidth($w) {
 		parent::setMaxWidth($w);
 		
+		if (isset($this->pText) && $this->getWidth() > $this->getMaxWidth())
+			$this->processText();
+	}
+	
+	public function setMinWidth($w) {
+		parent::setMinWidth($w);
+		
+		if (!isset($this->pText))
+			return;
+		
+		if ($this->pTextWidth < $this->getMinWidth())
+			$this->pTextWidth = $this->getMinWidth();
+	}
+	
+	public function setMaxHeight($h) { //TODO finish!
+		parent::setMaxHeight($h);
+		
 		if (isset($this->pText))
 			$this->processText();
 	}
@@ -271,13 +322,6 @@ class TextBlock extends ImgBlock {
 		
 		if ($this->pTextHeight < $this->getMinHeight())
 			$this->pTextHeight = $this->getMinHeight();
-	}
-	
-	public function setMaxHeight($h) { //TODO finish!
-		parent::setMaxHeight($h);
-		
-		if (isset($this->pText))
-			$this->processText();
 	}
 	
 	public function getWidth() {
@@ -372,6 +416,9 @@ class TextBlock extends ImgBlock {
 		
 		if ($this->pTextHeight < $this->getMinHeight())
 			$this->pTextHeight = $this->getMinHeight();
+		
+		if ($this->pTextWidth < $this->getMinWidth())
+			$this->pTextWidth = $this->getMinWidth();
 	}
 	
 	public function getImage() {
@@ -535,7 +582,7 @@ class HorizontalBoxBlock extends ImgBlock {
 			$block = new BorderedBlock($block, $this->pBorders, $padding);
 		}
 		
-		$this->pBlocks[] = $block;
+		$this->pBlocks[] = /*XXX clone  ?*/ $block;
 		
 		if ($this->getMaxWidth() > 0)
 			$this->setMaxWidth($this->getMaxWidth());
@@ -582,17 +629,19 @@ class HorizontalBoxBlock extends ImgBlock {
 	
 	public function setMaxWidth($w) {
 		parent::setMaxWidth($w);
-	
-		if (!isset($this->pBlocks) || !count($this->pBlocks))
-			return;
-			
-		if ($this->getMerge())
-			$contentW = $w / count($this->pBlocks);
-		else
-			$contentW = ($w - $this->pSpace) / count($this->pBlocks);
 		
+		$count = count($this->pBlocks);
+	
+		if (!isset($this->pBlocks) || !$count || $this->getWidth() <= $this->getMaxWidth())
+			 return;
+		
+		$contentW = ($w - ($this->getMerge() ? 0 : $this->pSpace)) / $count;
+	
 		foreach ($this->pBlocks as $block) {
+			$contentW = ($w - $used_space) / $count;
 			$block->setMaxWidth($contentW);
+			$used_space += $block->getWidth() + ($this->getMerge() ? 0 : $this->pSpace);
+			$count--;
 		}
 	}
 	
@@ -655,44 +704,45 @@ $blk = new BorderedBlock($blk, 5, 10);
 //$blk->setMaxWidth(29);
 //echo $blk->getWidth()." ".$blk->getContent()->getWidth()."\n"; 
 
-//$blk->setMaxWidth($blk->getWidth()/2);
-//$blk->setMaxWidth($blk->getWidth()*2);
-//
-//$blk = new HorizontalBoxBlock(2);
-//$blk->setSpace(15);
-//$blk->setMerge(true);
-////$blk->setHomogeneous(true); //TODO
-//
-//
-//$a = new TextBlock("12 d", $font_normal, $font_size);
-////$a->setMaxWidth(10);
-////echo $a->getWidth()."\n";
-//$b = new TextBlock("40 ph", $font_normal, $font_size);
-//$c = new TextBlock("<u>1350 €</u>", $font_normal, $font_size);
-//$d = new TextBlock("uhuhuhuhuh", $font_normal, $font_size);
-//$f = new TextBlock("mmmmmm", $font_normal, $font_size);
-////print_r($f->getTextBox());
-//$e = new TextBlock("prrr", $font_normal, $font_size);
-//$g = new TextBlock("gggph", $font_normal, $font_size);
-////$blk->setMaxWidth(230);
-//
-//$blk->addBlock($a);
-//$blk->addBlock($b);
-//$blk->addBlock($c);
-//$blk->addBlock($d);
-//$blk->addBlock($f);
-//$blk->addBlock($g);
-////$blk->addBlock($e);
+$blk->setMaxWidth($blk->getWidth()/2);
+$blk->setMaxWidth($blk->getWidth()*2);
+
+$blk = new HorizontalBoxBlock(2);
+$blk->setSpace(2);
+$blk->setMerge(true); //XXX if not merged should use a better align 
+//$blk->setHomogeneous(true); //TODO
+
+
+$a = new TextBlock("12 d", $font_normal, $font_size);
+//$a->setMaxWidth(10);
+//echo $a->getWidth()."\n";
+$b = new TextBlock("<u>40 ph</u>", $font_normal, $font_size);
+$c = new TextBlock("<u>1350 €</u>", $font_normal, $font_size);
+$d = new TextBlock("uhuhuhuhuh", $font_normal, $font_size);
+$f = new TextBlock("mmmmmm", $font_normal, $font_size);
+//print_r($f->getTextBox());
+$e = new TextBlock("prrr", $font_normal, $font_size);
+$g = new TextBlock("gggph", $font_normal, $font_size);
+//$blk->setMaxWidth(230);
+
+$blk->addBlock($a);
+$blk->addBlock($b);
+$blk->addBlock($c);
+$blk->addBlock($d);
+$blk->addBlock($f);
+$blk->addBlock($g);
+//$blk->addBlock($e);
 
 $blk = new BorderedBlock($blk, 5, 0);
 $blk->setBorderColor("#BBBBBB");
-//$blk->setMaxWidth(300);
+$blk->setMaxWidth(349);
+//print_r($blk);
 //
 //$blk = new BorderedBlock($blk, 5, 0);
 //$blk->setBorderColor("#333333");
 //
 //$blk = new BorderedBlock($blk, 5, 0);
-//$blk->setBorderColor("#aaaaaa");
+//$blk->setBorderColor("#ff00ff");
 
 header("Content-type: image/png");
 imagepng($blk->getImage());
