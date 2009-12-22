@@ -5,7 +5,7 @@ $font_bold = "DroidSans-Bold.ttf";
 $font_normal = "DroidSans.ttf";
 
 $font = $font_normal;
-$font_size = 14;
+$font_size = 12;
 $text = "TaskBox";
 
 $multiplier = 1.0;
@@ -29,15 +29,15 @@ function getTextSize($text) {
 //echo "$text = $txtW x $txtH\n";print_r($txtbox);echo "\n";
 
 
-	return array('w' => $txtW, 'h' => $txtH, 'low' => $txtbox[3]/* + $txtbox[0] fixes guuuu*/);
+	return array('w' => $txtW, 'h' => $txtH, 'box' => $txtbox/* + $txtbox[0] fixes guuuu*/);
 }
 
-$minsize = getTextSize("3.3.");
+$minsize = getTextSize("3.3.3");
 $minsize['w'] += intval(($minsize['w']/100) * 50);
 $minsize['h'] += intval(($minsize['h']/100) * 50);
 $maxsize['w'] = $minsize['w'] * 3;
 
-function getFixedText($text, $maxlen /*$trim_type*/) {
+function getFixedText($text, $maxlen /*$trim_func*/) {
 	global $font, $font_size;
 
 	$tsize = getTextSize(strip_tags($text));
@@ -170,10 +170,13 @@ function newTextBlock($text, $style = "normal", $align = "left", $maxlen = 0) {
 		$font_color = imagecolorallocate($timg, 0, 0, 0);
 
 		$txtX = $padding;
-		$txtY = $font_size; //intval($font_size + (imagesy($timg) - $lsize['h'])/2);
+		$txtY = $font_size ; //+ $lsize['box'][0] - $lsize['box'][1]
+							//intval($font_size + (imagesy($timg) - $lsize['h'])/2);
 
 		if ($lsize['h'] <= $font_size)
-				$txtY -= ($font_size - $lsize['h']) + 1;
+				$txtY -= ($font_size - $lsize['h'] - $lsize['box'][0]) + 1;
+//		else //XXX moves up the "gggph" text
+//				$txtY += $lsize['box'][1];
 
 		// FIXME: afaasj at 14px
 		imagettftext($timg, $font_size, 0, $txtX, $txtY, $font_color, $font, $text);
@@ -182,7 +185,7 @@ function newTextBlock($text, $style = "normal", $align = "left", $maxlen = 0) {
 			// FIXME: text like "ggguuuu"
 			// imageline($timg, $padding, $lineY, $padding + $lsize['w'] /*- $hspace*/, $lineY, $font_color);
 
-			$lineY = $lsize['h']-$lsize['low'];
+			$lineY = $lsize['h']-$lsize['box'][3]-1;
 			foreach ($lsize['u'] as $underlined)
 				imageline($timg, $padding + $underlined['start'], $lineY, $padding + $underlined['end'] /*- $hspace*/, $lineY, $font_color);
 		}
@@ -331,8 +334,8 @@ function boxPackEnd($top, $bottom) {
 
 
 $size = $maxsize;
-$tbx = buildTextRectangle("1.1\nsafkjasf\nafgklkajg\nkhjsfahjakfjafa\n");
-$tbx = buildTextRectangle("meeeeeeeee");
+//$tbx = buildTextRectangle("1.1\nsafkjasf\nafgklkajg\nkhjsfahjakfjafa\n");
+//$tbx = buildTextRectangle("meeeeeeeee");
 //getTextSize("1.1\nUUUU");
 //getTextSize("1.1"); exit;
 
@@ -342,12 +345,13 @@ $tbx = buildTextRectangle("meeeeeeeee");
 //$tbx = $image;
 
 //$tbx = newTextBlock("Test\naasfa\nPoooo\nNuuuuu\nNooo\nMeee\nNu\nNuuuuuu\nBarababBab\nGggggA\n2009.10.22\nNA\n2/9");
-$tbx = newTextBlock("T<u>e</u>sta<u>aaaaaaaaaaaa</u>\nGg<u>gg</u>gA\n20<u>09.10</u>.22\nNA\n<u>m</u>ee<u>e</u>eeeee\nF<u>u</u>uuuuuuuasgsauuasFaV\nafaasj\nph\n<u>mmmmmmmmmmmmmmmmmmmmeeeeeee</u>\nguuuuu",
-						null, "center", $size['w']);
+//$tbx = newTextBlock("T<u>e</u>sta<u>aaaaaaaaaaaa</u>\nGg<u>gg</u>gA\n20<u>09.10</u>.22\nNA\n<u>m</u>ee<u>e</u>eeeee\nF<u>u</u>uuuuuuuasgsauuasFaV\nafaasj\nph\n<u>mmmmmmmmmmmmmmmmmmmmeeeeeee</u>\nguuuuu",
+//						null, "center", $size['w']);
+
 $size = $minsize;
-$a = newBlock(newTextBlock("Left"), "center");
-$b = newBlock(newTextBlock("cnt"), "center");
-$c = newBlock(newTextBlock("Right"), "center");
+$a = newBlock(newTextBlock("12 d"), "center");
+$b = newBlock(newTextBlock("40 ph"), "center");
+$c = newBlock(newTextBlock("1350 €"), "center");
 
 $tbx = boxHorizontalMerge($a, $b);
 $tbx = boxHorizontalMerge($tbx, $c);
@@ -364,30 +368,54 @@ $tbx = boxPackEnd($tbx, $box);
 //$tbx = generateTextImg("1.1.");
 //$tbx = newBlock($tbx, 3, "center");
 
-
 header("Content-type: image/png");
 
 imagepng($tbx);
 imagedestroy($tbx);
 
+/*
+ * 
+class ImgBlock {
+	abstract function setBorder();
+	
+	abstract function getHeight();
+	abstract function getWidth();
+	
+	abstract function getImage();
+}
 
-//class ImgBox {
-//	private $pBorder;
-//	private $pFont;
-//	private $pFontSize;
-//	private $pPadding;
-//	private $pMinSize;
-//	private $pMaxSize;
-//	private $img;
-//
-//	public function ImgBox($border_size, $font, $font_size, $padding/* $multiplier, $colors... */) {
-//		$pBorder = $border_size;
-//		$pFont = $font;
-//		$pFontSize = $font_size;
-//		$pPadding = $padding;
-//	}
-//
-//}
+class TextBlock extends ImgBlock {
+	
+}
+
+class ColorBlock extends ImgBlock {
+	
+}
+
+*/
+
+/*
+class ImgBox {
+	private $pBorder;
+	private $pFont;
+	private $pFontSize;
+	private $pPadding;
+	private $pMinSize;
+	private $pMaxSize;
+	private $img;
+
+	public function ImgBox($border_size, $font, $font_size, $padding) { // $multiplier, $colors... 
+		$pBorder = $border_size;
+		$pFont = $font;
+		$pFontSize = $font_size;
+		$pPadding = $padding;
+	}
+	
+	public function addLine() {}
+	public function addLine() {}
+
+}
+*/
 
 //include ("../lib/jpgraph/src/jpgraph.php");
 
