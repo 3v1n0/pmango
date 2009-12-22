@@ -562,15 +562,15 @@ class HorizontalBoxBlock extends ImgBlock {
 	private $pSpace;
 	private $pBorders;
 	private $pMerge;
-//	private $pBoxWidth;
-//	private $pBoxHeight;
+	private $pHomogeneous;
 	
-	public function HorizontalBoxBlock($borders = 0, $space = 0, $merge = false) {
+	public function HorizontalBoxBlock($borders = 0, $space = 0, $merge = false, $homogeneous = false) {
 		parent::ImgBlock();
 		$this->pBlocks = array();
 		$this->pSpace = $space;
 		$this->pBorders = $borders;
 		$this->pMerge = $merge;
+		$this->pHomogeneous = $homogeneous;
 	}
 	
 	public function addBlock($block) {
@@ -599,8 +599,16 @@ class HorizontalBoxBlock extends ImgBlock {
 		}
 	}
 	
-	private function getMerge() {
+	public function getMerge() {
 		return $this->pMerge && $this->pBorders > 0; 
+	}
+	
+	public function setHomogeneous($h) {
+		$this->pHomogeneous = $h;
+	}
+	
+	public function getHomogeneous() {
+		return $this->pHomogeneous;
 	}
 	
 	public function setSpace($s) {
@@ -636,13 +644,53 @@ class HorizontalBoxBlock extends ImgBlock {
 			 return;
 		
 		$contentW = ($w - ($this->getMerge() ? 0 : $this->pSpace)) / $count;
-	
+		
+		if ($this->getHomogeneous()) {
+			foreach ($this->pBlocks as $block) {
+				$block->setWidth($contentW);
+			}
+		} else {
+			foreach ($this->pBlocks as $block) {
+				$contentW = ($w - $used_space) / $count;
+				$block->setMaxWidth($contentW);
+				$used_space += $block->getWidth() + ($this->getMerge() ? 0 : $this->pSpace);
+				$count--;
+			}
+		}
+		
+	/*
+		if ($this->getMerge())
+			$used_space = 0; 
+		else
+			$this->pSpace;
+			
+		$changed = array();
 		foreach ($this->pBlocks as $block) {
 			$contentW = ($w - $used_space) / $count;
+//			echo "I'm already using $used_space px; I can use $contentW pixels for content\n"; 
+			$pre = $block->getWidth();
 			$block->setMaxWidth($contentW);
+			
+			if ($pre > $block->getWidth())
+				$changed[] = $block;
+			
 			$used_space += $block->getWidth() + ($this->getMerge() ? 0 : $this->pSpace);
 			$count--;
 		}
+		
+		if ($used_space < $w) {
+			if ($this->getMerge())
+				$contentW = ($w - $used_space) / count($changed);
+ 			else
+				$contentW = ($w - $used_space - $this->pSpace) / count($changed);
+			
+			$count = count($changed);
+			foreach ($changed as $block) {
+				$block->setMaxWidth($block->getMaxWidth()+$contentW);
+			}
+		}
+		
+		*/
 	}
 	
 	public function setMinHeight($h) {
@@ -708,9 +756,9 @@ $blk->setMaxWidth($blk->getWidth()/2);
 $blk->setMaxWidth($blk->getWidth()*2);
 
 $blk = new HorizontalBoxBlock(2);
-$blk->setSpace(2);
+$blk->setSpace(5);
 $blk->setMerge(true); //XXX if not merged should use a better align 
-//$blk->setHomogeneous(true); //TODO
+$blk->setHomogeneous(true);
 
 
 $a = new TextBlock("12 d", $font_normal, $font_size);
@@ -735,7 +783,7 @@ $blk->addBlock($g);
 
 $blk = new BorderedBlock($blk, 5, 0);
 $blk->setBorderColor("#BBBBBB");
-$blk->setMaxWidth(349);
+$blk->setMaxWidth(300);
 //print_r($blk);
 //
 //$blk = new BorderedBlock($blk, 5, 0);
