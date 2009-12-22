@@ -490,26 +490,45 @@ class ColorBlock extends ImgBlock {
 class HorizontalBoxBlock extends ImgBlock {
 	private $pBlocks;
 	private $pSpace;
+	private $pBorders;
+	private $pMerge;
 //	private $pBoxWidth;
 //	private $pBoxHeight;
 	
-	public function HorizontalBoxBlock($space = 0) {
+	public function HorizontalBoxBlock($borders = 0, $space = 0, $merge = false) {
 		parent::ImgBlock();
 		$this->pBlocks = array();
 		$this->pSpace = $space;
+		$this->pBorders = $borders;
+		$this->pMerge = $merge;
 	}
 	
 	public function addBlock($block) {
 //		if (!is_subclass_of($bloc, "ImgBlock"))
 //			return;
-//echo "adding file\n";
-		//$block->setBorder($this->getBorder());
-		$block = new BorderedBlock($block, 2, 0);
+
+		if ($this->pBorders > 0) {
+			$padding = $this->pMerge ? $this->pSpace : 0;
+			$block = new BorderedBlock($block, $this->pBorders, $padding);
+		}
+		
 		$this->pBlocks[] = $block;
 		
 		if ($this->getMaxWidth() > 0)
 			$this->setMaxWidth($this->getMaxWidth());
-		/// XXX compute the size while adding.
+	}
+	
+	public function setMerge($m) {
+		$this->pMerge = $m;
+		
+		if ($this->pMerge && $this->pBorders > 0) {
+			foreach ($this->pBlocks as $block)
+				$w += $block->setPadding($this->pSpace);
+		}
+	}
+	
+	private function getMerge() {
+		return $this->pMerge && $this->pBorders > 0; 
 	}
 	
 	public function setSpace($s) {
@@ -519,11 +538,14 @@ class HorizontalBoxBlock extends ImgBlock {
 	
 	public function getWidth() {
 		$w = 0;
+		$xtra = ($this->getMerge()) ? 0 : $this->pSpace;
 		
 		foreach ($this->pBlocks as $block)
-			$w += $block->getWidth() + $this->pSpace;
-			
-		return $w - $this->pSpace;
+			$w += $block->getWidth() + $xtra;
+		
+		$xtra += $this->GetMerge() ? $this->pBorders*2 : 0;
+		
+		return $w - $xtra;
 	}
 	
 	public function getHeight() {
@@ -540,8 +562,11 @@ class HorizontalBoxBlock extends ImgBlock {
 	
 		if (!isset($this->pBlocks) || !count($this->pBlocks))
 			return;
-		
-		$contentW = ($w - $this->pSpace) / count($this->pBlocks);
+			
+		if ($this->getMerge())
+			$contentW = $w / count($this->pBlocks);
+		else
+			$contentW = ($w - $this->pSpace) / count($this->pBlocks);
 		
 		foreach ($this->pBlocks as $block) {
 			$block->setMaxWidth($contentW);
@@ -563,9 +588,11 @@ class HorizontalBoxBlock extends ImgBlock {
 		$xPos = 0;
 		$yPos = 0;
 		
+		$xtraX = $this->getMerge() ? (-1)*$this->pBorders : $this->pSpace;
+		
 		foreach ($this->pBlocks as $block) {
 			imagecopy($box, $block->getImage(), $xPos, $yPos, 0, 0, $block->getWidth(), $block->getHeight());
-			$xPos += $block->getWidth() + $this->pSpace;
+			$xPos += $block->getWidth() + $xtraX;
 			
 		}
 		
@@ -595,9 +622,10 @@ $blk->setMaxWidth(29);
 //$blk->setMaxWidth($blk->getWidth()/2);
 //$blk->setMaxWidth($blk->getWidth()*2);
 
-$blk = new HorizontalBoxBlock();
-$blk->setSpace($font_size);
-$blk->setMaxWidth(210);
+$blk = new HorizontalBoxBlock(2);
+$blk->setSpace(15);
+$blk->setMerge(true);
+
 
 $a = new TextBlock("12 d", $font_normal, $font_size);
 //$a->setMaxWidth(10);
@@ -606,7 +634,7 @@ $b = new TextBlock("40 ph", $font_normal, $font_size);
 $c = new TextBlock("1350 €", $font_normal, $font_size);
 $d = new TextBlock("uhuh", $font_normal, $font_size);
 $f = new TextBlock("mmmmmm", $font_normal, $font_size);
-
+$blk->setMaxWidth(230);
 
 $blk->addBlock($a);
 $blk->addBlock($b);
@@ -616,7 +644,7 @@ $blk->addBlock($c);
 
 $blk = new BorderedBlock($blk, 5, 0);
 $blk->setBorderColor("#BBBBBB");
-$blk->setMaxWidth(200);
+//$blk->setMaxWidth(200);
 //
 //$blk = new BorderedBlock($blk, 5, 0);
 //$blk->setBorderColor("#333333");
