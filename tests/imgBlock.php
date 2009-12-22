@@ -163,7 +163,7 @@ class BorderedBlock extends ImgBlock {
 	}
 	
 	public function setMaxHeight($h) {
-		parent::setMinHeight($h);
+		parent::setMaxHeight($h);
 		
 		if (isset($this->pContent)) {
 			$contentH = $h - $this->pVPadding*2 - $this->pBorder*2;
@@ -173,11 +173,25 @@ class BorderedBlock extends ImgBlock {
 		}
 	}
 	
+	public function setMinHeight($h) {
+		parent::setMinHeight($h);
+		
+		if (isset($this->pContent)) {
+			$contentH = $h - $this->pVPadding*2 - $this->pBorder*2;
+//			if ($contentH < 0) $contentH = 1;
+			
+			$this->pContent->setMinHeight($contentH);
+		}
+	}
+	
 	public function getImage() {
 
 		$b = $this->pBorder; //intval($bordersize * $multiplier);
 		$w = $this->getWidth();
 		$h = $this->getHeight();
+		
+//		if ($this->getMinHeight() > 0 && $this->getHeight() < $this->getMinHeight())
+//			$h = $this->getMinHeight(); // Border doesn't work
 	
 		// XXX Check bigger image!
 	
@@ -252,8 +266,11 @@ class TextBlock extends ImgBlock {
 	public function setMinHeight($h) {
 		parent::setMinHeight($h);
 		
-		if (isset($this->pText))
-			$this->processText();
+		if (!isset($this->pText))
+			return;
+		
+		if ($this->pTextHeight < $this->getMinHeight())
+			$this->pTextHeight = $this->getMinHeight();
 	}
 	
 	public function setMaxHeight($h) { //TODO finish!
@@ -339,6 +356,11 @@ class TextBlock extends ImgBlock {
 			
 			if ($this->pTextHeight > $this->getMaxHeight() && $this->getMaxHeight() > 0) {
 				$this->pTextHeight -= $lsize['h'] + $vspace;
+				
+				if ($this->pTextHeight == 0) {
+					$this->pTextHeight = $lsize['h'] + $vspace;
+				}
+				
 				break;
 			}
 	
@@ -347,6 +369,9 @@ class TextBlock extends ImgBlock {
 		}
 	
 		$this->pTextHeight += $hspace*2;
+		
+		if ($this->pTextHeight < $this->getMinHeight())
+			$this->pTextHeight = $this->getMinHeight();
 	}
 	
 	public function getImage() {
@@ -385,6 +410,8 @@ class TextBlock extends ImgBlock {
 	//		else //XXX moves up the "gggph" text
 	//				$txtY += $lsize['box'][1];
 	
+			// Move up text like "prrrrrrr"
+	
 			// FIXME: afaasj at 14px
 			imagettftext($timg, $this->pFontSize, 0, $txtX, $txtY, $font_color, $this->pFont, $text);
 	
@@ -415,7 +442,7 @@ class TextBlock extends ImgBlock {
 		$txtW = abs(max($txtbox[2], $txtbox[4])) + abs(max($txtbox[0], $txtbox[6]));
 		$txtH = abs(max($txtbox[5], $txtbox[7])) + abs(max($txtbox[1], $txtbox[3]));
 	
-	//echo "$text = $txtW x $txtH\n";print_r($txtbox);echo "\n";
+//	echo "$text = $txtW x $txtH\n";print_r($txtbox);echo "\n";
 	
 		return array('w' => $txtW, 'h' => $txtH, 'box' => $txtbox);
 	}
@@ -512,6 +539,8 @@ class HorizontalBoxBlock extends ImgBlock {
 		
 		if ($this->getMaxWidth() > 0)
 			$this->setMaxWidth($this->getMaxWidth());
+		
+		$this->setMinHeight($this->getHeight());
 	}
 	
 	public function setMerge($m) {
@@ -534,12 +563,10 @@ class HorizontalBoxBlock extends ImgBlock {
 	
 	public function getWidth() {
 		$w = 0;
-		$xtra = ($this->getMerge()) ? 0 : $this->pSpace;
+		$xtra = ($this->getMerge()) ? (-1)*$this->pBorders : $this->pSpace;
 		
 		foreach ($this->pBlocks as $block)
 			$w += $block->getWidth() + $xtra;
-		
-		$xtra += $this->GetMerge() ? $this->pBorders*2 : 0;
 		
 		return $w - $xtra;
 	}
@@ -569,6 +596,17 @@ class HorizontalBoxBlock extends ImgBlock {
 		}
 	}
 	
+	public function setMinHeight($h) {
+		parent::setMinHeight($h);
+		
+		if (!isset($this->pBlocks))
+			return;
+		
+		foreach ($this->pBlocks as $block) {
+			$block->setMinHeight($h);
+		}
+	}
+	
 	public function getImage() {
 		
 		$w = $this->getWidth();
@@ -587,6 +625,8 @@ class HorizontalBoxBlock extends ImgBlock {
 		$xtraX = $this->getMerge() ? (-1)*$this->pBorders : $this->pSpace;
 		
 		foreach ($this->pBlocks as $block) {
+			//$block->setMaxHeight($this->getHeight); //XXX doesn't work
+			
 			imagecopy($box, $block->getImage(), $xPos, $yPos, 0, 0, $block->getWidth(), $block->getHeight());
 			$xPos += $block->getWidth() + $xtraX;
 			
@@ -608,7 +648,7 @@ class HorizontalBoxBlock extends ImgBlock {
 putenv('GDFONTPATH=' . realpath('../fonts/Droid'));
 $font_bold = "DroidSans-Bold.ttf";
 $font_normal = "DroidSans.ttf";
-$font_size = 18;
+$font_size = 12;
 
 $blk = new TextBlock("Testttttttttttttt\nfff\nassda\n<u>ssssssss</u>\nff<u>a</u>jslkafd<u>deee</u>", $font_normal, $font_size);
 $blk = new BorderedBlock($blk, 5, 10);
@@ -621,6 +661,7 @@ $blk->setMaxWidth(29);
 $blk = new HorizontalBoxBlock(2);
 $blk->setSpace(15);
 $blk->setMerge(true);
+//$blk->setHomogeneous(true); //TODO
 
 
 $a = new TextBlock("12 d", $font_normal, $font_size);
@@ -628,19 +669,22 @@ $a = new TextBlock("12 d", $font_normal, $font_size);
 //echo $a->getWidth()."\n";
 $b = new TextBlock("40 ph", $font_normal, $font_size);
 $c = new TextBlock("1350 €", $font_normal, $font_size);
-$d = new TextBlock("uhuh", $font_normal, $font_size);
+$d = new TextBlock("uhuhuhuhuh", $font_normal, $font_size);
 $f = new TextBlock("mmmmmm", $font_normal, $font_size);
-$blk->setMaxWidth(230);
+//print_r($f->getTextBox());
+$e = new TextBlock("prrr", $font_normal, $font_size);
+//$blk->setMaxWidth(230);
 
 $blk->addBlock($a);
 $blk->addBlock($b);
 $blk->addBlock($c);
-//$blk->addBlock($d);
-//$blk->addBlock($f);
+$blk->addBlock($d);
+$blk->addBlock($f);
+//$blk->addBlock($e);
 
 $blk = new BorderedBlock($blk, 5, 0);
 $blk->setBorderColor("#BBBBBB");
-//$blk->setMaxWidth(200);
+//$blk->setMaxWidth(300);
 //
 //$blk = new BorderedBlock($blk, 5, 0);
 //$blk->setBorderColor("#333333");
