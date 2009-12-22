@@ -405,7 +405,7 @@ class TextBlock extends ImgBlock {
 			$txtY = $this->pFontSize ; //+ $lsize['box'][0] - $lsize['box'][1]
 								//intval($font_size + (imagesy($timg) - $lsize['h'])/2);
 	
-			if ($lsize['h'] <= $this->pFontSize)
+			if ($lsize['h'] <= $this->pFontSize && count($this->pTextLines) > 1) //XXX renable it and check the multline
 					$txtY -= ($this->pFontSize - $lsize['h'] - $lsize['box'][0]) + 1;
 	//		else //XXX moves up the "gggph" text
 	//				$txtY += $lsize['box'][1];
@@ -650,37 +650,39 @@ $font_bold = "DroidSans-Bold.ttf";
 $font_normal = "DroidSans.ttf";
 $font_size = 12;
 
-$blk = new TextBlock("Testttttttttttttt\nfff\nassda\n<u>ssssssss</u>\nff<u>a</u>jslkafd<u>deee</u>", $font_normal, $font_size);
+$blk = new TextBlock("Testttttttttttttt\n<u>mmmm</u>\ngggpph\nprrr\nfff\nassda\n<u>ssssssss</u>\nff<u>a</u>jslkafd<u>deee</u>", $font_normal, $font_size);
 $blk = new BorderedBlock($blk, 5, 10);
-$blk->setMaxWidth(29);
+//$blk->setMaxWidth(29);
 //echo $blk->getWidth()." ".$blk->getContent()->getWidth()."\n"; 
 
 //$blk->setMaxWidth($blk->getWidth()/2);
 //$blk->setMaxWidth($blk->getWidth()*2);
-
-$blk = new HorizontalBoxBlock(2);
-$blk->setSpace(15);
-$blk->setMerge(true);
-//$blk->setHomogeneous(true); //TODO
-
-
-$a = new TextBlock("12 d", $font_normal, $font_size);
-//$a->setMaxWidth(10);
-//echo $a->getWidth()."\n";
-$b = new TextBlock("40 ph", $font_normal, $font_size);
-$c = new TextBlock("1350 €", $font_normal, $font_size);
-$d = new TextBlock("uhuhuhuhuh", $font_normal, $font_size);
-$f = new TextBlock("mmmmmm", $font_normal, $font_size);
-//print_r($f->getTextBox());
-$e = new TextBlock("prrr", $font_normal, $font_size);
-//$blk->setMaxWidth(230);
-
-$blk->addBlock($a);
-$blk->addBlock($b);
-$blk->addBlock($c);
-$blk->addBlock($d);
-$blk->addBlock($f);
-//$blk->addBlock($e);
+//
+//$blk = new HorizontalBoxBlock(2);
+//$blk->setSpace(15);
+//$blk->setMerge(true);
+////$blk->setHomogeneous(true); //TODO
+//
+//
+//$a = new TextBlock("12 d", $font_normal, $font_size);
+////$a->setMaxWidth(10);
+////echo $a->getWidth()."\n";
+//$b = new TextBlock("40 ph", $font_normal, $font_size);
+//$c = new TextBlock("<u>1350 €</u>", $font_normal, $font_size);
+//$d = new TextBlock("uhuhuhuhuh", $font_normal, $font_size);
+//$f = new TextBlock("mmmmmm", $font_normal, $font_size);
+////print_r($f->getTextBox());
+//$e = new TextBlock("prrr", $font_normal, $font_size);
+//$g = new TextBlock("gggph", $font_normal, $font_size);
+////$blk->setMaxWidth(230);
+//
+//$blk->addBlock($a);
+//$blk->addBlock($b);
+//$blk->addBlock($c);
+//$blk->addBlock($d);
+//$blk->addBlock($f);
+//$blk->addBlock($g);
+////$blk->addBlock($e);
 
 $blk = new BorderedBlock($blk, 5, 0);
 $blk->setBorderColor("#BBBBBB");
