@@ -595,7 +595,7 @@ class HorizontalBoxBlock extends ImgBlock {
 		
 		if ($this->pMerge && $this->pBorders > 0) {
 			foreach ($this->pBlocks as $block)
-				$w += $block->setPadding($this->pSpace);
+				$block->setPadding($this->pSpace);
 		}
 	}
 	
@@ -633,6 +633,184 @@ class HorizontalBoxBlock extends ImgBlock {
 			$h = max($h, $block->getHeight());
 		
 		return $h;
+	}
+	
+	public function setMaxWidth($w) {
+//		parent::setMaxWidth($w);
+//		
+//		$count = count($this->pBlocks);
+//	
+//		if (!isset($this->pBlocks) || !$count || $this->getWidth() <= $this->getMaxWidth())
+//			 return;
+//		
+//		$contentW = ($w - ($this->getMerge() ? 0 : $this->pSpace)) / $count;
+//		
+//		if ($this->getHomogeneous()) {
+//			foreach ($this->pBlocks as $block) {
+//				$block->setWidth($contentW);
+//			}
+//		} else {
+//			foreach ($this->pBlocks as $block) {
+//				$contentW = ($w - $used_space) / $count;
+//				$block->setMaxWidth($contentW);
+//				$used_space += $block->getWidth() + ($this->getMerge() ? 0 : $this->pSpace);
+//				$count--;
+//			}
+//		}
+		
+	/*
+		if ($this->getMerge())
+			$used_space = 0; 
+		else
+			$this->pSpace;
+			
+		$changed = array();
+		foreach ($this->pBlocks as $block) {
+			$contentW = ($w - $used_space) / $count;
+//			echo "I'm already using $used_space px; I can use $contentW pixels for content\n"; 
+			$pre = $block->getWidth();
+			$block->setMaxWidth($contentW);
+			
+			if ($pre > $block->getWidth())
+				$changed[] = $block;
+			
+			$used_space += $block->getWidth() + ($this->getMerge() ? 0 : $this->pSpace);
+			$count--;
+		}
+		
+		if ($used_space < $w) {
+			if ($this->getMerge())
+				$contentW = ($w - $used_space) / count($changed);
+ 			else
+				$contentW = ($w - $used_space - $this->pSpace) / count($changed);
+			
+			$count = count($changed);
+			foreach ($changed as $block) {
+				$block->setMaxWidth($block->getMaxWidth()+$contentW);
+			}
+		}
+		
+		*/
+	}
+	
+	public function setMinHeight($h) {
+		parent::setMinHeight($h);
+		
+		if (!isset($this->pBlocks))
+			return;
+		
+		foreach ($this->pBlocks as $block) {
+			$block->setMinHeight($h);
+		}
+	}
+	
+	public function getImage() {
+		
+		$w = $this->getWidth();
+		$h = $this->getHeight();
+	
+		$box = imagecreate($w, $h);
+	
+		$bgcolor = $this->getBgColor();
+		$bg = imagecolorallocate($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
+		
+		imagefilledrectangle($box, 0, 0, $w-1, $h-1, $bg);
+		
+		$xPos = 0;
+		$yPos = 0;
+		
+		$xtraX = $this->getMerge() ? (-1)*$this->pBorders : $this->pSpace;
+		
+		foreach ($this->pBlocks as $block) {
+			//$block->setMaxHeight($this->getHeight); //XXX doesn't work
+			
+			imagecopy($box, $block->getImage(), $xPos, $yPos, 0, 0, $block->getWidth(), $block->getHeight());
+			$xPos += $block->getWidth() + $xtraX;
+			
+		}
+		
+		return $box;
+	}
+}
+
+class VerticalBoxBlock extends ImgBlock {
+	private $pBlocks;
+	private $pSpace;
+	private $pBorders;
+	private $pMerge;
+	private $pHomogeneous;
+	
+	public function VerticalBoxBlock($borders = 0, $space = 0, $merge = false, $homogeneous = false) {
+		parent::ImgBlock();
+		$this->pBlocks = array();
+		$this->pSpace = $space;
+		$this->pBorders = $borders;
+		$this->pMerge = $merge;
+		$this->pHomogeneous = $homogeneous;
+	}
+	
+	public function addBlock($block) {
+//		if (!is_subclass_of($bloc, "ImgBlock"))
+//			return;
+
+		if ($this->pBorders > 0) {
+			$padding = $this->pMerge ? $this->pSpace : 0;
+			$block = new BorderedBlock($block, $this->pBorders, $padding);
+		}
+		
+		$this->pBlocks[] = /*XXX clone  ?*/ $block;
+		
+		if ($this->getMaxWidth() > 0)
+			$this->setMaxWidth($this->getMaxWidth());
+		
+		$this->setMinHeight($this->getHeight());
+	}
+	
+	public function setMerge($m) {
+		$this->pMerge = $m;
+		
+		if ($this->pMerge && $this->pBorders > 0) {
+			foreach ($this->pBlocks as $block)
+				$block->setPadding($this->pSpace);
+		}
+	}
+	
+	public function getMerge() {
+		return $this->pMerge && $this->pBorders > 0; 
+	}
+	
+	public function setHomogeneous($h) {
+		$this->pHomogeneous = $h;
+	}
+	
+	public function getHomogeneous() {
+		return $this->pHomogeneous;
+	}
+	
+	public function setSpace($s) {
+		if ($s > 0)
+			$this->pSpace = intval($s);
+	}
+	
+	public function getWidth() {
+		$w = 0;
+//		$xtra = ($this->getMerge()) ? (-1)*$this->pBorders : $this->pSpace;
+		
+		foreach ($this->pBlocks as $block)
+			$w = max($w, $block->getWidth());
+		
+		return $w/* - $xtra*/;
+	}
+	
+	public function getHeight() {
+		$h = 0;
+		
+		$xtra = ($this->getMerge()) ? (-1)*$this->pBorders : $this->pSpace;
+		
+		foreach ($this->pBlocks as $block)
+			$h += $block->getHeight() + $xtra;
+		
+		return $h - $xtra;
 	}
 	
 	public function setMaxWidth($w) {
@@ -719,13 +897,15 @@ class HorizontalBoxBlock extends ImgBlock {
 		$xPos = 0;
 		$yPos = 0;
 		
-		$xtraX = $this->getMerge() ? (-1)*$this->pBorders : $this->pSpace;
+		//$xtraX = $this->getMerge() ? (-1)*$this->pBorders : $this->pSpace;
+		$xtraY = $this->getMerge() ? (-1)*$this->pBorders : $this->pSpace;
 		
 		foreach ($this->pBlocks as $block) {
 			//$block->setMaxHeight($this->getHeight); //XXX doesn't work
 			
 			imagecopy($box, $block->getImage(), $xPos, $yPos, 0, 0, $block->getWidth(), $block->getHeight());
-			$xPos += $block->getWidth() + $xtraX;
+			$yPos += $block->getWidth() + $xtraY;
+			//$xPos += $block->getWidth() + $xtraX;
 			
 		}
 		
@@ -791,6 +971,19 @@ $blk->setMaxWidth(300);
 //
 //$blk = new BorderedBlock($blk, 5, 0);
 //$blk->setBorderColor("#ff00ff");
+
+
+$blkV = new VerticalBoxBlock(2);
+//$blkV->setSpace(5);
+//$blkV->setMerge(true); 
+//$blkV->setHomogeneous(true);
+//$blkV->addBlock($blk);
+$blkV->addBlock($a);
+$blkV->addBlock($g);
+$blkV->addBlock($f);
+$blkV->addBlock($c);
+$blk = $blkV;
+
 
 header("Content-type: image/png");
 imagepng($blk->getImage());
