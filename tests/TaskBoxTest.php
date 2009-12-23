@@ -29,6 +29,9 @@ $tbx->setResources("22 ph, Dilbert, Requirement Engineering\n".
                    "14 ph, Wally, Sales Manager\n".
                    "4 ph, The Boss, Manager");
 
+/* With Progress */
+$tbx->setProgress(70);
+
 $tbx->draw();
 
 

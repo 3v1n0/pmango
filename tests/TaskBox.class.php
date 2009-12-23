@@ -88,6 +88,13 @@ class TaskBox {
 		$this->pResources = $res;
 	}
 
+	public function setProgress($p) {
+		$this->pProgress = intval($p);
+
+		if ($this->pProgress > 100)
+			$this->pProgress = 100;
+	}
+
 	private function computeFontSize() {
 		//Depends on setSize() ...
 	}
@@ -133,6 +140,13 @@ class TaskBox {
 		$hbox->setSpace($this->pFontSize);
 		$hbox->addBlock($header);
 		$hbox->setMinHeight($this->pMinHeight);
+
+		if ($this->isMinimal()) {
+			$hbox->setWidth($this->pMinWidth);
+		} else {
+			$hbox->setWidth($this->pMaxWidth);
+		}
+
 		$mainVBox->addBlock($hbox);
 
 		/* Planned data */
@@ -148,6 +162,8 @@ class TaskBox {
 			$hbox->addBlock(new TextBlock($this->pPlannedData['cost'], $this->pFont, $this->pFontSize));
 
 			$hbox->setMinHeight($this->pMinHeight);
+			$hbox->setWidth($this->pMaxWidth);
+
 			$mainVBox->addBlock($hbox);
 		}
 
@@ -161,6 +177,8 @@ class TaskBox {
 			$hbox->addBlock(new TextBlock($this->pPlannedTimeframe['end'], $this->pFont, $this->pFontSize));
 
 			$hbox->setMinHeight($this->pMinHeight);
+			$hbox->setWidth($this->pMaxWidth);
+
 			$mainVBox->addBlock($hbox);
 		}
 
@@ -173,6 +191,8 @@ class TaskBox {
 			$hbox->addBlock(new TextBlock($this->pResources, $this->pFont, $this->pFontSize/*, "left"*/));
 
 			$hbox->setMinHeight($this->pMinHeight);
+			$hbox->setWidth($this->pMaxWidth);
+
 			$mainVBox->addBlock($hbox);
 		}
 
@@ -188,6 +208,8 @@ class TaskBox {
 			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
 
 			$hbox->setMinHeight($this->pMinHeight);
+			$hbox->setWidth($this->pMaxWidth);
+
 			$mainVBox->addBlock($hbox);
 		}
 
@@ -205,22 +227,53 @@ class TaskBox {
 			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
 
 			$hbox->setMinHeight($this->pMinHeight);
+			$hbox->setWidth($this->pMaxWidth);
+
 			$mainVBox->addBlock($hbox);
 		}
 
+		if ($this->pProgress != null && $this->pProgress > 0) {
+			$hbox = new HorizontalBoxBlock($this->pBorderSize);
+			$hbox->setMerge(true);
+			$hbox->setSpace(0);
+			$hbox->setHomogeneous(false); // should be false!
 
+			if ($this->isMinimal()) {
+				$w = $this->pMinWidth;
+			} else {
+				$w = $this->pMaxWidth;
+			}
+
+			$progress_width = $w * $this->pProgress / 100 - $this->pBorderSize*2;
+			$progress_blk = new ColorBlock("#bbb");
+			$progress_blk->setHeight($this->pFontSize);
+			$progress_blk->setWidth($progress_width);
+			$hbox->addBlock($progress_blk);
+
+			if ($this->pProgress < 100) {
+				$missing_width = $w - $this->pBorderSize*2 - $progress_width - $this->pProgress%2;
+				$missing_blk = new ColorBlock("#fff");
+				$missing_blk->setHeight($this->pFontSize);
+				$missing_blk->setWidth($missing_width);
+				$hbox->addBlock($missing_blk);
+			}
+
+
+//			$hbox->setMinHeight($this->pMinHeight);
+			$mainVBox->addBlock($hbox);
+		}
 
 		$outBox = new BorderedBlock($mainVBox, $this->pBorderSize, 0);
 
-		if ($this->isMinimal()) {
-			$outBox->setMinWidth($this->pMinWidth);
-			$outBox->setMaxWidth($this->pMaxWidth);
-		} else {
+//		if ($this->isMinimal()) {
+//			$outBox->setMinWidth($this->pMinWidth);
+//			$outBox->setMaxWidth($this->pMaxWidth);
+//		} else {
 //			$outBox->setWidth($this->pMaxWidth);
 
-			$outBox->setMinWidth($this->pMaxWidth);
-			$outBox->setMaxWidth($this->pMaxWidth);
-		}
+//			//$outBox->setMinWidth($this->pMaxWidth);
+//			//$outBox->setMaxWidth($this->pMaxWidth);
+//		}
 
 		$this->pGDImage = $outBox->getImage();
 	}
