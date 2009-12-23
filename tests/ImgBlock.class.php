@@ -707,6 +707,17 @@ class HorizontalBoxBlock extends ImgBlock {
 		*/
 	}
 
+	public function setMinWidth($w) { //TODO complete!
+		parent::setMinWidth($w);
+
+		if (!isset($this->pBlocks))
+			return;
+
+		foreach ($this->pBlocks as $block) {
+			$block->setMinWidth($w);
+		}
+	}
+
 	public function setMinHeight($h) {
 		parent::setMinHeight($h);
 
@@ -911,6 +922,17 @@ class VerticalBoxBlock extends ImgBlock {
 		}
 
 		*/
+	}
+
+	public function setMinWidth($w) { //TODO complete!
+		parent::setMinWidth($w);
+
+		if (!isset($this->pBlocks))
+			return;
+
+		foreach ($this->pBlocks as $block) {
+			$block->setMinWidth($w);
+		}
 	}
 
 	public function setMinHeight($h) {
