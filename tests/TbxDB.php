@@ -29,25 +29,32 @@ class taskBoxDB {
 	}
 
 //inizio pezzo creato da matteo !!! ATTENZIONE!!!!!//
-
+//da aggiungere i casi dove i vari campi non sono definiti
 	public function getTaskName() {
 		$sql = "SELECT task_name FROM tasks t where task_id = ".$this->pWBS_ID;
 		$query = $this->doQuery($sql); // devi usare $this->Funzione oppure taskBoxDB::Funzione !!!
 		return $query[0]['task_name'];
 	}
-
 	public function getPlannedData() {
-		$pDay = $this->doQuery("SELECT datediff(".$end_date.",".$start_date.")
-			 FROM tasks t
-			 WHERE task_id =".$this->pWBS_ID);
-		$pEffort = $this->getEffort(/**$this->task_id*/);  // puo essere usato o meno
-		$pBudget = $this->getBudget(/**$this->task_id*/);  // idem
+		$pDay = $this->doQuery("SELECT datediff(task_finish_date , task_start_date)
+			 		FROM tasks t 
+					WHERE task_id =".$this->pWBS_ID);
+		$pEffort = $this->doQuery("SELECT sum(effort) FROM user_tasks u WHERE task_id = ".$this->pWBS_ID);
+		$pBudget = $this->doQuery("SELECT SUM(ut.effort * pr.proles_hour_cost) 
+				  	   FROM (user_tasks as ut JOIN project_roles as pr) 
+	 				   WHERE ut.proles_id = pr.proles_id and task_id = ".$this->pWBS_ID);
+	
 
 //TODO connettere i vari pezzi dentro allo stessa riga, da fare prob a una classe di liv superiore
 
-		return $pDay." d / ".$pEffort." ph / ".$pBudget." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
+		return  "<br>".$pDay[0][0]." d <br> ".$pEffort[0][0]." ph <br> ".$pBudget[0][0]." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
 }
+
+
 	public function getActualData() {
+$today =$this->doQuery("SELECT task_today FROM tasks t WHERE task_id = ".$this->pWBS_ID);
+
+/*
 		$aDay = $this->doQuery("SELECT datediff(".($today>$actual_finish_date) ? $actual_finish_date : $today." , ".$actual_start_date.")
 				 FROM tasks t
 				 WHERE task_id =".$this->pWBS_ID); // stampa il numero dei giorni che corrono tra la data di inizio e quella attuale (task non ancora concluso) o a quella di fine
@@ -58,7 +65,7 @@ class taskBoxDB {
 
 		return $pDay." d / ".$pEffort." ph / ".$pBudget." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
 
-	}
+*/	}
 	//FINE PEZZO CREATO DA MATTEO!!! DA QUI SI VA TRANQUILLI//
 }
 
@@ -66,5 +73,7 @@ class taskBoxDB {
 
 $tdb = new taskBoxDB(86);
 echo $tdb->getTaskName();
+echo $tdb->getPlannedData();
+echo $tdb->getActualData();
 
 ?>
