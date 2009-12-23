@@ -386,21 +386,29 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	$bar = new GanttBar($row++, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.4 : 0.15);//se padre sarebbe meglio 1
 	$bar->progress->Set($progress/100);
 	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
-    if (!CTask::isLeafSt($a["task_id"])) {
+  if (!CTask::isLeafSt($a["task_id"])) {
 		$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
 		$bar->rightMark->Show();
+
+        $bar->SetColor('black');
+        $bar->SetPattern(BAND_SOLID,'white', 98);
+
         $bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
         $bar->rightMark->SetWidth(3);
         $bar->rightMark->SetColor('black');
-        $bar->rightMark->SetFillColor('black');
+        $bar->rightMark->SetFillColor('white');
 
         $bar->leftMark->Show();
         $bar->leftMark->SetType(MARK_LEFTTRIANGLE);
         $bar->leftMark->SetWidth(3);
         $bar->leftMark->SetColor('black');
-        $bar->leftMark->SetFillColor('black');
+        $bar->leftMark->SetFillColor('green');
+
+	$bar->progress->SetFillColor('green');
+        $bar->progress->SetPattern(BAND_SOLID,'green',98);
         
-        $bar->SetPattern(BAND_SOLID,'black');
+//        $bar->SetPattern(BAND_SOLID,'black');
+
     }
 	
 	//adding captions
