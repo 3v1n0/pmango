@@ -163,35 +163,9 @@ class GDRenderer extends Tree
 		while($this->hasNext())
 		{
 			$node = $this->next();
-			if(!is_null($node->image) && file_exists($node->image))
+			if(!is_null($node->image) && imagesx($node->image) > 0)
 			{
-				$path_parts = pathinfo($node->image);
-				$file_ext = strtolower($path_parts['extension']);
-				$this->imgsize = getimagesize($node->image);
-				switch ($file_ext)
-				{
-					case 'gif':
-					$strSourceImage = imagecreatefromgif($node->image);
-					break;
-
-					case 'jpg':
-					case 'jpeg':
-						$strSourceImage = imagecreatefromjpeg($node->image);
-						break;
-
-					case 'png':
-						$strSourceImage = imagecreatefrompng($node->image);
-						$gdinfo = gd_info();
-						if (version_compare($gdinfo["GD Version"], '2.0.1', '>='))
-						{
-							imageantialias($this->img, true);
-							imagealphablending($this->img, false);
-							imagesavealpha($this->img, true);
-							imagefilledrectangle($this->img, $node->x, $node->y, $node->w, $node->h, imagecolorallocatealpha($this->img, 255, 255, 255, 127));
-						}
-						break;
-				}
-				imagecopyresampled($this->img, $strSourceImage, $node->x, $node->y, 0, 0, $node->w, $node->h, $this->imgsize[0], $this->imgsize[1]);
+				imagecopyresampled($this->img, $node->image, $node->x, $node->y, 0, 0, $node->w, $node->h, imagesx($node->image), imagesy($node->image));
 			}
 			else
 			{
