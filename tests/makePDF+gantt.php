@@ -1213,9 +1213,9 @@ function PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_op
 
 }
 
-function makeGanttPdf(){
+function makeGanttPdf($graph){
 
-	$graph = //riceve il file da gantt.php;
+//	$graph = //riceve il file da gantt.php;
 
 	// Put the image in a PDF page
 	$im = $graph->Stroke(_IMG_HANDLER);
@@ -1223,8 +1223,6 @@ function makeGanttPdf(){
 	$pdf = pdf_new();
 	pdf_open_file($pdf, '');
 
-	// Convert the GD image to somehing the
-	// PDFlibrary knows how to handle
 	$pimg = pdf_open_memory_image($pdf, $im);
 
 	pdf_begin_page($pdf, 595, 842);
