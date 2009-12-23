@@ -81,16 +81,16 @@ class TaskBox {
 	}
 
 	private function buildTaskBox() {
-		$mainBox = new VerticalBoxBlock(0);
+		$mainVBox = new VerticalBoxBlock(0);
+		$mainVBox->setSpace(-1);
 
-		$txt = $this->pID . ($this->pName != null ? " ".$this->pName : "");
+		$txt = $this->pID.($this->pName != null ? " ".$this->pName : "");
 		$header = new TextBlock($txt, $this->pFontBold, $this->pFontSize);
-//		$header->setMinWidth($this->pMinWidth);
-		$mainBox->addBlock($header);
+		$hbox = new HorizontalBoxBlock($this->pBorderSize);
+		$hbox->addBlock($header);
+		$mainVBox->addBlock($hbox);
 
-		$outBox = new BorderedBlock($mainBox, $this->pBorderSize*2);
-//		$outBox = new HorizontalBoxBlock($this->pBorderSize*2);
-//		$outBox->addBlock($mainBox);
+		$outBox = new BorderedBlock($mainVBox, $this->pBorderSize, 0);
 		$outBox->setMinWidth($this->pMinWidth);
 		$outBox->setMaxWidth($this->pMaxWidth);
 
