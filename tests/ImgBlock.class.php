@@ -324,7 +324,7 @@ class TextBlock extends ImgBlock {
 			return;
 
 		if ($this->pTextHeight < $this->getMinHeight())
-			$this->pTextHeight = $this->getMinHeight();
+			$this->processText();
 	}
 
 	public function getWidth() {
@@ -417,8 +417,18 @@ class TextBlock extends ImgBlock {
 
 		$this->pTextHeight += $hspace*2;
 
-		if ($this->pTextHeight < $this->getMinHeight())
+		if ($this->pTextHeight < $this->getMinHeight()) {
+			/* XXX this could cause align issues in horizontal boxes */
+			$diff = ($this->getMinHeight() - $this->pTextHeight) / count($this->pTextLinesInfo)/2;
+
+			if ($diff > 0) {
+				for ($i = 0; $i < count($this->pTextLinesInfo); $i++) {
+					$this->pTextLinesInfo[$i]['top'] += $diff;
+				}
+			}
+
 			$this->pTextHeight = $this->getMinHeight();
+		}
 
 		if ($this->pTextWidth < $this->getMinWidth())
 			$this->pTextWidth = $this->getMinWidth();
@@ -660,9 +670,18 @@ class HorizontalBoxBlock extends ImgBlock {
 		$contentW = ($w - ($this->getMerge() ? 0 : $this->pSpace)) / $count;
 
 		if ($this->getHomogeneous()) {
+			if ($this->getMerge())
+				$contentW += $this->pSpace;
+
 			foreach ($this->pBlocks as $block) {
 				$block->setWidth($contentW);
 			}
+
+			// XXX ugly workaround to force a preset size. - FIXME Still present for little text!
+			$diff = $w - $this->getWidth();
+			if ($diff != 0)
+				$this->pBlocks[0]->setWidth($this->pBlocks[0]->getWidth()+$diff);
+
 		} else {
 			foreach ($this->pBlocks as $block) {
 				$contentW = ($w - $used_space) / $count;
@@ -858,13 +877,13 @@ class VerticalBoxBlock extends ImgBlock {
 
 		$contentW = ($w - ($this->getMerge() ? 0 : $this->pSpace));
 
-		$this->pBlocks[0]->setWidth($contentW);
+		$this->pBlocks[0]->setMaxWidth($contentW);
 		$contentW = $this->pBlocks[0]->getWidth();
 
 //		echo $this->getWidth()."\n";
 
 		for ($i = 1; $i < count($this->pBlocks); $i++) {
-			$this->pBlocks[$i]->setWidth($contentW);
+			$this->pBlocks[$i]->setMaxWidth($contentW);
 		}
 
 //		$newContentW = $this->getWidth();
@@ -927,11 +946,13 @@ class VerticalBoxBlock extends ImgBlock {
 	public function setMinWidth($w) { //TODO complete!
 		parent::setMinWidth($w);
 
-		if (!isset($this->pBlocks))
+		if (!isset($this->pBlocks) || !count($this->pBlocks))
 			return;
 
+		$minW = $w / count($this->pBlocks);
+
 		foreach ($this->pBlocks as $block) {
-			$block->setMinWidth($w);
+			$block->setMinWidth($minW);
 		}
 	}
 
