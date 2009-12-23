@@ -46,8 +46,13 @@ class TaskBox {
 		return $this->pGDImage;  //GD image!
 	}
 
-	public function draw() {
-		return $this->pGDImage; //draw(this->getImage()); draw GD image!
+	public function draw($format = "png") {
+		header("Content-type: image/png");
+		switch ($format) {
+			case "png":
+				imagepng($this->pGDImage);
+				break;
+		}
 	}
 
 	public function getProgress() {}
