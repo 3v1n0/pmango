@@ -76,8 +76,22 @@ class TaskBox {
 		$tmp = new BorderedBlock($tmp, $this->pBorderSize*2, $this->pFontSize);
 		$this->pMinWidth = $tmp->getWidth();
 		$this->pMaxWidth = $this->pMinWidth * 3;
+		$this->pMaxHeight = $tmp->getHeight() + intval(($tmp->getHeight()/100) * 50);
 
 		$this->pBorderSize = 1;
+	}
+
+	private function isMinimal() {
+		if ($this->pName == null &&
+		    $this->pPlannedData == null &&
+		    $this->pActualData == null &&
+		    $this->pPlannedTimeframe == null &&
+		    $this->pActualTimeframe == null &&
+		    $this->pResources == null) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 	private function buildTaskBox() {
@@ -86,13 +100,20 @@ class TaskBox {
 
 		$txt = $this->pID.($this->pName != null ? " ".$this->pName : "");
 		$header = new TextBlock($txt, $this->pFontBold, $this->pFontSize);
+		$header->setMinHeight($this->pMaxHeight);
+
 		$hbox = new HorizontalBoxBlock($this->pBorderSize);
 		$hbox->addBlock($header);
 		$mainVBox->addBlock($hbox);
 
 		$outBox = new BorderedBlock($mainVBox, $this->pBorderSize, 0);
-		$outBox->setMinWidth($this->pMinWidth);
-		$outBox->setMaxWidth($this->pMaxWidth);
+
+		if (!$this->isMinimal()) {
+			$outBox->setMinWidth($this->pMinWidth);
+			$outBox->setMaxWidth($this->pMaxWidth);
+		} else {
+			$outBox->setWidth($this->pMaxWidth);
+		}
 
 		$this->pGDImage = $outBox->getImage();
 	}
