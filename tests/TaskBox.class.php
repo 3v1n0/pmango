@@ -62,6 +62,18 @@ class TaskBox {
 			$this->pName = $n;
 	}
 
+	public function setPlannedData($duration, $effort, $cost) {
+		$this->pPlannedData['duration'] = $duration;
+		$this->pPlannedData['effort'] = $effort;
+		$this->pPlannedData['cost'] = $cost;
+	}
+
+	public function setActualData($duration, $effort, $cost) {
+		$this->pActualData['duration'] = $duration;
+		$this->pActualData['effort'] = $effort;
+		$this->pActualData['cost'] = $cost;
+	}
+
 	private function computeFontSize() {
 		//Depends on setSize() ...
 	}
@@ -76,17 +88,17 @@ class TaskBox {
 		$tmp = new BorderedBlock($tmp, $this->pBorderSize*2, $this->pFontSize);
 		$this->pMinWidth = $tmp->getWidth();
 		$this->pMaxWidth = $this->pMinWidth * 3;
-		$this->pMaxHeight = $tmp->getHeight() + intval(($tmp->getHeight()/100) * 50);
+		$this->pMinHeight = $tmp->getHeight() + intval(($tmp->getHeight()/100) * 50);
 
 		$this->pBorderSize = 1;
 	}
 
 	private function isMinimal() {
-		if ($this->pName == null &&
-		    $this->pPlannedData == null &&
-		    $this->pActualData == null &&
-		    $this->pPlannedTimeframe == null &&
-		    $this->pActualTimeframe == null &&
+		if ($this->pName == null ||
+		    $this->pPlannedData == null ||
+		    $this->pActualData == null ||
+		    $this->pPlannedTimeframe == null ||
+		    $this->pActualTimeframe == null ||
 		    $this->pResources == null) {
 			return false;
 		} else {
@@ -98,21 +110,60 @@ class TaskBox {
 		$mainVBox = new VerticalBoxBlock(0);
 		$mainVBox->setSpace(-1);
 
+		/* Header block */
 		$txt = $this->pID.($this->pName != null ? " ".$this->pName : "");
 		$header = new TextBlock($txt, $this->pFontBold, $this->pFontSize);
-		$header->setMinHeight($this->pMaxHeight);
 
 		$hbox = new HorizontalBoxBlock($this->pBorderSize);
+		$hbox->setMerge(true);
+		$hbox->setSpace($this->pFontSize);
 		$hbox->addBlock($header);
+		$hbox->setMinHeight($this->pMinHeight);
 		$mainVBox->addBlock($hbox);
+
+		/* Planned data */
+
+		if ($this->pPlannedData != null) {
+			$hbox = new HorizontalBoxBlock($this->pBorderSize);
+			$hbox->setMerge(true);
+			$hbox->setSpace(1);
+			$hbox->setHomogeneous(true);
+			$hbox->addBlock(new TextBlock($this->pPlannedData['duration'], $this->pFont, $this->pFontSize));
+			$hbox->addBlock(new TextBlock($this->pPlannedData['effort'], $this->pFont, $this->pFontSize));
+			$hbox->addBlock(new TextBlock($this->pPlannedData['cost'], $this->pFont, $this->pFontSize));
+			$hbox->setMinHeight($this->pMinHeight);
+
+			$mainVBox->addBlock($hbox);
+		}
+
+	if ($this->pActualData != null) {
+			$hbox = new HorizontalBoxBlock($this->pBorderSize);
+			$hbox->setMerge(true);
+			$hbox->setSpace(1);
+			$hbox->setHomogeneous(true);
+			$txt = "<u>".$this->pActualData['duration']."</u>";
+			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
+			$txt = "<u>".$this->pActualData['effort']."</u>";
+			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
+			$txt = "<u>".$this->pActualData['cost']."</u>";
+			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
+			$hbox->setMinHeight($this->pMinHeight);
+
+			$mainVBox->addBlock($hbox);
+		}
+
+
 
 		$outBox = new BorderedBlock($mainVBox, $this->pBorderSize, 0);
 
-		if (!$this->isMinimal()) {
+		if ($this->isMinimal()) {
 			$outBox->setMinWidth($this->pMinWidth);
 			$outBox->setMaxWidth($this->pMaxWidth);
 		} else {
 			$outBox->setWidth($this->pMaxWidth);
+
+//			$outBox->setMinWidth($this->pMaxWidth);
+//			$outBox->setMaxWidth($this->pMaxWidth);
 		}
 
 		$this->pGDImage = $outBox->getImage();
