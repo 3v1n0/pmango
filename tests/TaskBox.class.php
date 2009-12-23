@@ -74,6 +74,20 @@ class TaskBox {
 		$this->pActualData['cost'] = $cost;
 	}
 
+	public function setPlannedTimeframe($start, $end) {
+		$this->pPlannedTimeframe['start'] = $start;
+		$this->pPlannedTimeframe['end'] = $end;
+	}
+
+	public function setActualTimeframe($start, $end) {
+		$this->pActualTimeframe['start'] = $start;
+		$this->pActualTimeframe['end'] = $end;
+	}
+
+	public function setResources($res) {
+		$this->pResources = $res;
+	}
+
 	private function computeFontSize() {
 		//Depends on setSize() ...
 	}
@@ -94,15 +108,15 @@ class TaskBox {
 	}
 
 	private function isMinimal() {
-		if ($this->pName == null ||
-		    $this->pPlannedData == null ||
-		    $this->pActualData == null ||
-		    $this->pPlannedTimeframe == null ||
-		    $this->pActualTimeframe == null ||
+		if ($this->pName == null &&
+		    $this->pPlannedData == null &&
+		    $this->pActualData == null &&
+		    $this->pPlannedTimeframe == null &&
+		    $this->pActualTimeframe == null &&
 		    $this->pResources == null) {
-			return false;
-		} else {
 			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -128,27 +142,69 @@ class TaskBox {
 			$hbox->setMerge(true);
 			$hbox->setSpace(1);
 			$hbox->setHomogeneous(true);
+
 			$hbox->addBlock(new TextBlock($this->pPlannedData['duration'], $this->pFont, $this->pFontSize));
 			$hbox->addBlock(new TextBlock($this->pPlannedData['effort'], $this->pFont, $this->pFontSize));
 			$hbox->addBlock(new TextBlock($this->pPlannedData['cost'], $this->pFont, $this->pFontSize));
-			$hbox->setMinHeight($this->pMinHeight);
 
+			$hbox->setMinHeight($this->pMinHeight);
 			$mainVBox->addBlock($hbox);
 		}
 
-	if ($this->pActualData != null) {
+		if ($this->pPlannedTimeframe != null) {
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
 			$hbox->setSpace(1);
 			$hbox->setHomogeneous(true);
+
+			$hbox->addBlock(new TextBlock($this->pPlannedTimeframe['start'], $this->pFont, $this->pFontSize));
+			$hbox->addBlock(new TextBlock($this->pPlannedTimeframe['end'], $this->pFont, $this->pFontSize));
+
+			$hbox->setMinHeight($this->pMinHeight);
+			$mainVBox->addBlock($hbox);
+		}
+
+		if ($this->pResources != null) {
+			$hbox = new HorizontalBoxBlock($this->pBorderSize);
+			$hbox->setMerge(true);
+			$hbox->setSpace(1);
+			$hbox->setHomogeneous(true);
+
+			$hbox->addBlock(new TextBlock($this->pResources, $this->pFont, $this->pFontSize/*, "left"*/));
+
+			$hbox->setMinHeight($this->pMinHeight);
+			$mainVBox->addBlock($hbox);
+		}
+
+		if ($this->pActualTimeframe != null) {
+			$hbox = new HorizontalBoxBlock($this->pBorderSize);
+			$hbox->setMerge(true);
+			$hbox->setSpace(1);
+			$hbox->setHomogeneous(true);
+
+			$txt = "<u>".$this->pActualTimeframe['start']."</u>";
+			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
+			$txt = "<u>".$this->pActualTimeframe['end']."</u>";
+			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
+
+			$hbox->setMinHeight($this->pMinHeight);
+			$mainVBox->addBlock($hbox);
+		}
+
+		if ($this->pActualData != null) {
+			$hbox = new HorizontalBoxBlock($this->pBorderSize);
+			$hbox->setMerge(true);
+			$hbox->setSpace(1);
+			$hbox->setHomogeneous(true);
+
 			$txt = "<u>".$this->pActualData['duration']."</u>";
 			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
 			$txt = "<u>".$this->pActualData['effort']."</u>";
 			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
 			$txt = "<u>".$this->pActualData['cost']."</u>";
 			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize));
-			$hbox->setMinHeight($this->pMinHeight);
 
+			$hbox->setMinHeight($this->pMinHeight);
 			$mainVBox->addBlock($hbox);
 		}
 
@@ -160,10 +216,10 @@ class TaskBox {
 			$outBox->setMinWidth($this->pMinWidth);
 			$outBox->setMaxWidth($this->pMaxWidth);
 		} else {
-			$outBox->setWidth($this->pMaxWidth);
+//			$outBox->setWidth($this->pMaxWidth);
 
-//			$outBox->setMinWidth($this->pMaxWidth);
-//			$outBox->setMaxWidth($this->pMaxWidth);
+			$outBox->setMinWidth($this->pMaxWidth);
+			$outBox->setMaxWidth($this->pMaxWidth);
 		}
 
 		$this->pGDImage = $outBox->getImage();
