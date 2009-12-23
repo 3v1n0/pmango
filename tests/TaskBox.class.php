@@ -9,6 +9,8 @@
 // - Show alerts
 // - Show progress
 
+include "ImgBlock.class.php";
+
 
 class TaskBox {
 	private $pID;
@@ -24,7 +26,16 @@ class TaskBox {
 	private $pShowExpand;          // show expand sign (+)
 
 
-	public function taskBox($id, $alert = false, $expand = false,
+	///
+	private $pFont;
+	private $pFontBold;
+	private $pFontSize;
+	private $pMinWidth;
+	private $pMaxWidth;
+	private $pMaxLineHeight;
+
+
+	public function TaskBox($id, $alert = false, $expand = false,
 								 $name = null, $progress = null,
 	                             $p_data = null, $a_data = null,
 	                             $p_timeframe = null, $a_timeframe = null,
@@ -40,9 +51,54 @@ class TaskBox {
 		$this->pProgress = $progress;
 		$this->pShowExpand = $expand;
 		$this->pGDImage = null; /* STUB */
+
+		////
+
+		$this->init();
+	}
+
+	public function setName($n) {
+		if (strlen($n) > 0)
+			$this->pName = $n;
+	}
+
+	private function computeFontSize() {
+		//Depends on setSize() ...
+	}
+
+	private function init() {
+		putenv('GDFONTPATH=' . realpath('../fonts/Droid'));
+		$this->pFontSize = 10;
+		$this->pFont = "DroidSans.ttf";
+		$this->pFontBold = "DroidSans-Bold.ttf";
+
+		$tmp = new TextBlock("3.3.3", $this->pFontBold, $this->pFontSize);
+		$tmp = new BorderedBlock($tmp, $this->pBorderSize*2, $this->pFontSize);
+		$this->pMinWidth = $tmp->getWidth();
+		$this->pMaxWidth = $this->pMinWidth * 3;
+
+		$this->pBorderSize = 1;
+	}
+
+	private function buildTaskBox() {
+		$mainBox = new VerticalBoxBlock(0);
+
+		$txt = $this->pID . ($this->pName != null ? " ".$this->pName : "");
+		$header = new TextBlock($txt, $this->pFontBold, $this->pFontSize);
+//		$header->setMinWidth($this->pMinWidth);
+		$mainBox->addBlock($header);
+
+		$outBox = new BorderedBlock($mainBox, $this->pBorderSize*2);
+//		$outBox = new HorizontalBoxBlock($this->pBorderSize*2);
+//		$outBox->addBlock($mainBox);
+		$outBox->setMinWidth($this->pMinWidth);
+		$outBox->setMaxWidth($this->pMaxWidth);
+
+		$this->pGDImage = $outBox->getImage();
 	}
 
 	public function getImage() {
+		$this->buildTaskBox();
 		return $this->pGDImage;  //GD image!
 	}
 
@@ -50,7 +106,7 @@ class TaskBox {
 		header("Content-type: image/png");
 		switch ($format) {
 			case "png":
-				imagepng($this->pGDImage);
+				imagepng($this->getImage());
 				break;
 		}
 	}
