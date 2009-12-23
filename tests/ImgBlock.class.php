@@ -949,10 +949,8 @@ class VerticalBoxBlock extends ImgBlock {
 		if (!isset($this->pBlocks) || !count($this->pBlocks))
 			return;
 
-		$minW = $w / count($this->pBlocks);
-
 		foreach ($this->pBlocks as $block) {
-			$block->setMinWidth($minW);
+			$block->setMinWidth($w);
 		}
 	}
 
