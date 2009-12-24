@@ -21,9 +21,10 @@ class TaskBox {
 	private $pActualTimeframe;
 	private $pResources;    	   // effort, person, role
 	private $pShowAlerts;
-	private $pProgress;
-	private $pGDImage;
 	private $pShowExpand;          // show expand sign (+)
+	private $pProgress;
+	private $pImgBlock;
+	private $pGDImage;
 
 
 	///
@@ -185,10 +186,10 @@ class TaskBox {
 		if ($this->pResources != null) {
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
-			$hbox->setSpace(1);
+			$hbox->setSpace(2);
 			$hbox->setHomogeneous(true);
 
-			$hbox->addBlock(new TextBlock($this->pResources, $this->pFont, $this->pFontSize/*, "left"*/));
+			$hbox->addBlock(new TextBlock($this->pResources, $this->pFont, $this->pFontSize, "left"));
 
 			$hbox->setMinHeight($this->pMinHeight);
 			$hbox->setWidth($this->pMaxWidth);
@@ -276,11 +277,26 @@ class TaskBox {
 //			//$outBox->setMaxWidth($this->pMaxWidth);
 //		}
 
-		$this->pGDImage = $outBox->getImage();
+		$this->pImgBlock = $outBox;
+	}
+	
+	public function getWidth() {
+		$this->buildTaskBox();
+		return $this->pImgBlock->getWidth();
+	}
+	
+	public function getHeight() {
+		$this->buildTaskBox();
+		return $this->pImgBlock->getHeight();
+	}
+	
+	private function buildImage() {
+		$this->buildTaskBox();
+		$this->pGDImage = $this->pImgBlock->getImage();
 	}
 
 	public function getImage() {
-		$this->buildTaskBox();
+		$this->buildImage();
 		return $this->pGDImage;  //GD image!
 	}
 
@@ -295,11 +311,9 @@ class TaskBox {
 
 	public function getProgress() {}
 
-	public function setXxxx() {}
-
 	public function getXxxx() {}
 
-	public function getSize() {/*return gd_size($pGDImage);*/}
+	//public function getSize() {/*return gd_size($pGDImage);*/}
 }
 
 ?>
