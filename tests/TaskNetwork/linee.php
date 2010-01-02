@@ -86,10 +86,10 @@ function mergeImgRight($TN,$b){
 	$imgby = $b["y"];
 	
 	//alloco i punti mediani dei lati della tbx dentro b
-	$b["leftx"] = 0;
-	$b["lefty"] = $imgby/2;  
-	$b["rightx"] = $imgbx;
-	$b["righty"] = $imgby/2;
+	$b["leftx"] = $imgTNx+250; //gap tra tbx + la Spm
+	$b["lefty"] = ($imgby/2)+25;  
+	$b["rightx"] = $imgTNx+250+$imgbx;
+	$b["righty"] = $imgby/2+25;
 	
 	$outx = ($imgTNx+$imgbx+100);
 	$outy = max($imgTNy, $imgby);
@@ -125,7 +125,7 @@ function mergeTNUnder($TN,$TN2){
 	$imgTN2y = $TN2["y"];
 	$indexTN2 = $TN2["index"][0];
 	
-		
+			
 	$outx = max($imgTNx,$imgTN2x);
 	$outy = ($imgTNy+$imgTN2y);
 
@@ -137,6 +137,28 @@ function mergeTNUnder($TN,$TN2){
 	imagecopy($out,$imgTN,($outx/2)-($imgTNx/2),0,0,0,$imgTNx,$imgTNy);
 	//e poi la seconda centrata
 	imagecopy($out,$imgTN2,($outx/2)-($imgTN2x/2),$outy-$imgTN2y,0,0,$imgTN2x,$imgTN2y);
+	
+	//cambio le coordinate della y e della x delle tbx inserite
+	if(($imgTNx-$imgTN2x)>=0){
+		for($cont=0;$cont<sizeof($indexTN2);$cont++){
+			$indexTN2[$cont]["leftx"] += (($imgTNx/2)-($imgTN2x/2)); //la quantità che lo porta centrato
+			$indexTN2[$cont]["lefty"] += $outy-$imgTN2y; 
+			$indexTN2[$cont]["rightx"] +=(($imgTNx/2)-($imgTN2x/2)); //la quantità che lo porta centrato 
+			$indexTN2[$cont]["righty"] += $outy-$imgTN2y;
+		}
+	}
+	else { 
+		
+		$indexTN = incrementmatrix($indexTN,(($imgTN2x/2)-($imgTNx/2)));
+		for($cont=0;$cont<sizeof($indexTN2);$cont++){
+			$indexTN2[$cont]["lefty"] += $outy-$imgTN2y; 
+			$indexTN2[$cont]["righty"] += $outy-$imgTN2y;
+		}
+		
+		
+	}
+	
+	
 	
 	$h = $TN["h"];
 	$indexTN[$h]= $indexTN2;
@@ -176,7 +198,7 @@ function mergeArrayUnder($TaskNetwork, $array){
 	
 	
 	//ora rendo assolute le coordinate relative delle tbx inserite
-		$TaskNetwork["index"] = transformCoordinateRow($TaskNetwork);
+	//	$TaskNetwork["index"] = transformCoordinateRow($TaskNetwork);
 
 	return $TaskNetwork;
 }
@@ -191,7 +213,7 @@ function mergeSpM($TaskNetwork, $spm){
 	$imgspmy = $spm["y"];
 	
 	
-	$outx = ($imgTNx+$imgspmx+200);
+	$outx = ($imgTNx+$imgspmx+(200-$imgspmx)); //$imgTNx +200
 	$outy = max($imgTNy, $imgspmy);
 
 	//alloco i punti mediani del lato destro della SpM
@@ -225,7 +247,7 @@ function mergeEpM($TaskNetwork, $epm){
 	$imgepmx = $epm["x"];
 	$imgepmy = $epm["y"];
 	
-	$outx = ($imgTNx+$imgepmx+200);
+	$outx = ($imgTNx+$imgepmx+(200-$imgepmx));
 	$outy = max($imgTNy, $imgepmy);
 
 	//alloco i punti mediani del lato destro della SpM
@@ -251,6 +273,16 @@ function mergeEpM($TaskNetwork, $epm){
 	
 }
 //------Funzioni di setting------------
+function incrementmatrix($matrix,$inc){
+	for($i=0;$i<sizeof($matrix);$i++){
+		for($j=0;$j<sizeof($matrix[$i]);$j++){
+			$matrix[$i][$j]["leftx"] += $inc;
+			$matrix[$i][$j]["rightx"] += $inc;
+		}
+	}
+	return $matrix;
+}
+
 function connect($TaskNetwork, $ID1,$ID2){
 	//ID 1 e 2 sono due array ID["riga"] ID["colonna"]
 	$im = $TaskNetwork;
@@ -258,9 +290,10 @@ function connect($TaskNetwork, $ID1,$ID2){
 	$tbx1 = $index[$ID1["riga"]][$ID1["colonna"]];
 	$tbx2 = $index[$ID2["riga"]][$ID2["colonna"]];
 	
-	drawline($im,$tbx1,$tbx2,"right",true);
+	drawline($im,$tbx1,$tbx2,"right");
 	
 }
+
 function drawline($out,$im1,$im2,$where,$dash = false){
 	$black = ImageColorAllocate($out["img"],0,0,0);
 	switch($where){
@@ -284,8 +317,11 @@ function drawline($out,$im1,$im2,$where,$dash = false){
 					  }break;
 	}
 }
+
+
 //DEPRECATED
-/*function connect($out,$im1,$im2,$where,$dash = false){
+/*
+function connect($out,$im1,$im2,$where,$dash = false){
 	$black = ImageColorAllocate($out["img"],0,0,0);
 	switch($where){
 		case "right": if($dash==true) {dashedarrow ($out["img"], $im1["x"]+25,(($im1["y"])/2)+25, $out["x"]-($im2["x"]+25),(($im2["y"])/2)+25,5,5, $black);}
@@ -305,10 +341,11 @@ function drawline($out,$im1,$im2,$where,$dash = false){
 						arrow ($out["img"], 0 ,$out["y"]-((($im2["y"])/2)+25), $out["x"]-($im2["x"]+25 ),$out["y"]-((($im2["y"])/2)+25),5,5, $black);
 					  }break;
 	}
-}*/
+}
 
 
-function transformCoordinateRow($TaskNetwork){
+//DEPRECATED
+/*function transformCoordinateRow($TaskNetwork){
 	$x = 50; $y = 25;
 	$index = $TaskNetwork["index"];
 	
@@ -325,7 +362,7 @@ function transformCoordinateRow($TaskNetwork){
 	return $index;
 	
 }
-
+*/	
 //------Funzioni di setting------------fine
 
 
@@ -354,9 +391,9 @@ $epm["y"] =  $size[1];
 //ogni immagine Image è dentro un array im dove im["img"] è l'immagine, im["x"] e im["y"] la x e la y
 $array;
 
-for($r=0;$r<5;$r++){
+for($r=0;$r<4;$r++){
 	
-$l = rand ( 1 , 10 );
+$l = rand ( 1 , 5 );
 
 	for ($j=0;$j<$l;$j++){
 		$im["img"] =  imageCreateFromPNG("TaskBoxTest.png");
@@ -374,12 +411,23 @@ $final = mergeArrayUnder($TaskNetwork,$out);
 $finalSpm = mergeSpM($final, $spm);
 $finalpm = mergeEpM($finalSpm, $epm);
 
+/*
+echo "<pre>";
+print_r($finalpm);
+echo "</pre>";
+*/
 
-$ID1["riga"] = $finalpm["h"]; $ID1["colonna"] = 0;
-$ID2["riga"] = $finalpm["h"]; $ID2["colonna"] = 1;  
-connect($finalpm,$ID1,$ID2);
+//$ID1["riga"] = $finalpm["h"]; $ID1["colonna"] = 0; //Spm
+$ID2["riga"] = $finalpm["h"]; $ID2["colonna"] = 1; //Epm
+for($a=0;$a<$finalpm["h"];$a++){
+		for($b=0;$b<sizeof($finalpm["index"][$a]);$b++){
+			$ID1["riga"] = $a; $ID1["colonna"] = $b;
+			connect($finalpm,$ID1,$ID2);
+			
+		}
+}
 
- 
+
 /* DEPRECATED
 $out = mergeImgUnder($im1,$im2);
 $out2 = mergeImgRight($im1,$im2);
