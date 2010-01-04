@@ -261,7 +261,7 @@ class TaskBox {
 			}
 
 			if ($this->pProgress < 100) {
-				$missing_width = $w - $this->pBorderSize*2 - $progress_width - $this->pProgress%2;
+				$missing_width = $w - $this->pBorderSize*2 - $progress_width;
 				if ($missing_width < 1) $missing_width = 1;
 				$missing_blk = new ColorBlock("#fff");
 				$missing_blk->setHeight($this->pFontSize);
