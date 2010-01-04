@@ -41,25 +41,26 @@ foreach ($results as $project) {
 
 	$tbx = new TaskBox($id);
 	$tbx->setName($project['task_name']);
-	$tbx->setProgress(rand(0, 100)); //FIXME una tbx con valore di completamento uguale a 0 non visualizza la sua barra
+	$tbx->setProgress(rand(0, 100));
+	$tbx->setPlannedData("14 d", "40 ph", "1350 €");
+	$tbx->setActualData("4 d", "6 ph", "230 €");
+	$tbx->setPlannedTimeframe("2009.10.15", "2009.10.29");
+	$tbx->setActualTimeframe("2009.10.16", "NA");
 
 	$items[$id]['tbx'] = $tbx;
 
 	$id++;
 }
 //print_r($items);
-$tbx = new TaskBox("G3-sw4us");
+$tbx = new TaskBox(null);
+$tbx->setName("G3-sw4us");
 $objTree->add(1, 0, "", imagesx($tbx->getImage()), imagesy($tbx->getImage()), $tbx->getImage());
 foreach ($items as $item) {
 	$objTree->add($item['id'], $item['parent'], "", imagesx($item['tbx']->getImage()), imagesy($item['tbx']->getImage()), $item['tbx']->getImage());
 }
 
 $objTree->setBGColor(array(255, 255, 255));
-$objTree->setNodeColor(array(0, 0, 0));
 $objTree->setLinkColor(array(0, 0, 0));
-//$objTree->setNodeLinks(GDRenderer::LINK_BEZIER);
-$objTree->setNodeBorder(array(0, 128, 255), 2);
-//$objTree->setFTFont('./fonts/Vera.ttf', 10, 0, GDRenderer::CENTER|GDRenderer::TOP);
 
 function makeWBSPdf($im){
 
