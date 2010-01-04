@@ -94,6 +94,9 @@ class TaskBox {
 
 		if ($this->pProgress > 100)
 			$this->pProgress = 100;
+		
+		if ($this->pProgress < 1)
+			$this->pProgress = 0;
 	}
 
 	private function computeFontSize() {
@@ -151,7 +154,6 @@ class TaskBox {
 		$mainVBox->addBlock($hbox);
 
 		/* Planned data */
-
 		if ($this->pPlannedData != null) {
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
@@ -168,6 +170,7 @@ class TaskBox {
 			$mainVBox->addBlock($hbox);
 		}
 
+		/* Planned Timeframe */
 		if ($this->pPlannedTimeframe != null) {
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
@@ -183,6 +186,7 @@ class TaskBox {
 			$mainVBox->addBlock($hbox);
 		}
 
+		/* Resources */
 		if ($this->pResources != null) {
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
@@ -197,6 +201,7 @@ class TaskBox {
 			$mainVBox->addBlock($hbox);
 		}
 
+		/* Actual Timeframe */
 		if ($this->pActualTimeframe != null) {
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
@@ -214,6 +219,7 @@ class TaskBox {
 			$mainVBox->addBlock($hbox);
 		}
 
+		/* Actual Data */
 		if ($this->pActualData != null) {
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
@@ -233,7 +239,8 @@ class TaskBox {
 			$mainVBox->addBlock($hbox);
 		}
 
-		if ($this->pProgress != null && $this->pProgress > 0) {
+		/* Progress bar */
+		if ($this->pProgress !== null && $this->pProgress > -1) {
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
 			$hbox->setSpace(0);
@@ -245,11 +252,13 @@ class TaskBox {
 				$w = $this->pMaxWidth;
 			}
 
-			$progress_width = ($w - $this->pBorderSize*2) * $this->pProgress / 100;
-			$progress_blk = new ColorBlock("#bbb");
-			$progress_blk->setHeight($this->pFontSize);
-			$progress_blk->setWidth($progress_width);
-			$hbox->addBlock($progress_blk);
+			if ($this->pProgress > 0) {
+				$progress_width = ($w - $this->pBorderSize*2) * $this->pProgress / 100;
+				$progress_blk = new ColorBlock("#bbb");
+				$progress_blk->setHeight($this->pFontSize);
+				$progress_blk->setWidth($progress_width);
+				$hbox->addBlock($progress_blk);
+			}
 
 			if ($this->pProgress < 100) {
 				$missing_width = $w - $this->pBorderSize*2 - $progress_width - $this->pProgress%2;
