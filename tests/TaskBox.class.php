@@ -105,7 +105,7 @@ class TaskBox {
 
 	private function init() {
 		putenv('GDFONTPATH=' . realpath('../fonts/Droid'));
-		$this->pFontSize = 11;
+		$this->pFontSize = 10;
 		$this->pFont = "DroidSans.ttf";
 		$this->pFontBold = "DroidSans-Bold.ttf";
 
@@ -265,7 +265,7 @@ class TaskBox {
 
 			if ($this->pProgress < 100) {
 				$missing_width = $w - $progress_width;
-				if ($w % 2 == 0) $missing_width--;
+				if ($this->pProgress == 50 && $w % 2 == 0) $missing_width--;
 				if ($missing_width < 1) $missing_width = 1;
 				$missing_blk = new ColorBlock("#fff");
 				$missing_blk->setHeight($this->pFontSize);
