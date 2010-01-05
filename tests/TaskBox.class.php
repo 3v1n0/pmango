@@ -105,7 +105,7 @@ class TaskBox {
 
 	private function init() {
 		putenv('GDFONTPATH=' . realpath('../fonts/Droid'));
-		$this->pFontSize = 10;
+		$this->pFontSize = 11;
 		$this->pFont = "DroidSans.ttf";
 		$this->pFontBold = "DroidSans-Bold.ttf";
 
@@ -251,10 +251,12 @@ class TaskBox {
 			} else {
 				$w = $this->pMaxWidth;
 			}
+			
+			$w -= $this->pBorderSize*2;
 
 			if ($this->pProgress > 0) {
-				$progress_width = ($w - $this->pBorderSize*2) * $this->pProgress / 100;
-				if ($this->pProgress == 50) $progress_width--;
+				$progress_width = ($w * $this->pProgress / 100);
+				if ($this->pProgress == 50 && $w % 2 == 0) $progress_width--;
 				$progress_blk = new ColorBlock("#bbb");
 				$progress_blk->setHeight($this->pFontSize);
 				$progress_blk->setWidth($progress_width);
@@ -262,8 +264,8 @@ class TaskBox {
 			}
 
 			if ($this->pProgress < 100) {
-				$missing_width = $w - $this->pBorderSize*2 - $progress_width;
-				if ($this->pProgress == 50) $missing_width--;
+				$missing_width = $w - $progress_width;
+				if ($w % 2 == 0) $missing_width--;
 				if ($missing_width < 1) $missing_width = 1;
 				$missing_blk = new ColorBlock("#fff");
 				$missing_blk->setHeight($this->pFontSize);
@@ -312,9 +314,9 @@ class TaskBox {
 	}
 
 	public function draw($format = "png") {
-		header("Content-type: image/png");
 		switch ($format) {
 			case "png":
+				header("Content-type: image/png");
 				imagepng($this->getImage());
 				break;
 		}
