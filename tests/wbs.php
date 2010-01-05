@@ -67,17 +67,16 @@ function makeWBSPdf($im){
 	$tmp = tempnam('.','wbs').".png";
 	imagepng($im, $tmp);
 	
-	$format = $pdf->_getpageformat('a4');
+	$pdf->AddPage();
 	
 	if (imagesx($im) > imagesy($im))  {
-		$w = $format[0] - $pdf->lMargin - $pdf->rMargin;
+		$w = $pdf->CurPageFormat[0] - $pdf->lMargin - $pdf->rMargin;
 		$h = 0;
 	} else {
 		$w = 0;
-		$h = $format[1] - $pdf->tMargin - $pdf->bMargin;
+		$h = $pdf->CurPageFormat[1] - $pdf->tMargin - $pdf->bMargin;
 	}
 	
-	$pdf->AddPage();
 	$pdf->Image($tmp, null, null, $w, $h);
 	echo $pdf->Output('wbs.pdf','S');
 
