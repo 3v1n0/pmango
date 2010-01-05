@@ -64,11 +64,12 @@ $objTree->setLinkColor(array(0, 0, 0));
 function makeWBSPdf($im){
 	$pdf=new FPDF('P', 'mm', 'a4');
 	
-	$tmp = tempnam('.','wbs').".png";
+	$tmp = tempnam('.', 'wbs');
 	imagepng($im, $tmp);
 	
 	$pdf->AddPage();
 	
+	// TODO center the image (vertically and horizontally)
 	if (imagesx($im) > imagesy($im))  {
 		$w = $pdf->CurPageFormat[0] - $pdf->lMargin - $pdf->rMargin;
 		$h = 0;
@@ -77,7 +78,7 @@ function makeWBSPdf($im){
 		$h = $pdf->CurPageFormat[1] - $pdf->tMargin - $pdf->bMargin;
 	}
 	
-	$pdf->Image($tmp, null, null, $w, $h);
+	$pdf->Image($tmp, null, null, $w, $h, 'png');
 	echo $pdf->Output('wbs.pdf','S');
 
 	unlink($tmp);
