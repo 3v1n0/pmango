@@ -38,7 +38,6 @@ foreach ($results as $project) {
 	$items[$id]['parent'] = isset($translate[$project['task_parent']]) ? $translate[$project['task_parent']] : 1;
 	if ($items[$id]['parent'] == $id)
 		$items[$id]['parent'] = 1;
-
 	$tbx = new TaskBox($id);
 	$tbx->setName($project['task_name']);
 	$tbx->setProgress(rand(0, 100));
@@ -63,39 +62,26 @@ $objTree->setBGColor(array(255, 255, 255));
 $objTree->setLinkColor(array(0, 0, 0));
 
 function makeWBSPdf($im){
+	$pdf=new FPDF('P', 'mm', 'a4');
+	
+	$tmp = tempnam('.','wbs').".png";
+	imagepng($im, $tmp);
+	
+	$format = $pdf->_getpageformat('a4');
+	
+	if (imagesx($im) > imagesy($im))  {
+		$w = $format[0] - $pdf->lMargin - $pdf->rMargin;
+		$h = 0;
+	} else {
+		$w = 0;
+		$h = $format[1] - $pdf->tMargin - $pdf->bMargin;
+	}
+	
+	$pdf->AddPage();
+	$pdf->Image($tmp, null, null, $w, $h);
+	echo $pdf->Output('wbs.pdf','S');
 
-//	$graph = //riceve il file da gantt.php;
-
-	// Put the image in a PDF page
-	//$im = $graph->Stroke(_IMG_HANDLER);
-
-	$pdf = pdf_new();
-	pdf_open_file($pdf, '');
-
-	$pimg = pdf_open_memory_image($pdf, $im);
-
-	pdf_begin_page($pdf, 595, 842);
-	pdf_add_outline($pdf, 'Page 1');
-	pdf_place_image($pdf, $pimg, 0, 500, 1);
-	pdf_close_image($pdf, $pimg);
-	pdf_end_page($pdf);
-	pdf_close($pdf);
-
-	$buf = pdf_get_buffer($pdf);
-	$len = strlen($buf);
-
-	// Send PDF mime headers
-	header('Content-type: application/pdf');
-	header("Content-Length: $len");
-	header("Content-Disposition: inline; filename=foo.pdf");
-
-	// Send the content of the PDF file da sostituire con la richiesta di salvataggio
-	echo $buf;
-
-	// .. and clean up
-	pdf_delete($pdf);
-
-
+	unlink($tmp);
 }
 
 if (isset($_REQUEST['pdf'])) {
