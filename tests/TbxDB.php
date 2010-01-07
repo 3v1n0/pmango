@@ -50,10 +50,14 @@ class taskBoxDB {
 		return  "<br>".$pDay[0][0]." d <br> ".$pEffort[0][0]." ph <br> ".$pBudget[0][0]." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
 }
 
-
+//Non mi riesce
 	public function getActualData() {
 $today =$this->doQuery("SELECT task_today FROM tasks t WHERE task_id = ".$this->pWBS_ID);
 
+if($task_id > 0 && count($actual_start_date) > 0 && $actual_start_date['task_log_start_date'] <>"-") { 
+	$aDay = $actual_start_date ? $actual_start_date['task_log_start_date']->format( $df1 ) : '-';
+} 
+else {$aDay = "-";} 
 /*
 		$aDay = $this->doQuery("SELECT datediff(".($today>$actual_finish_date) ? $actual_finish_date : $today." , ".$actual_start_date.")
 				 FROM tasks t
@@ -63,9 +67,9 @@ $today =$this->doQuery("SELECT task_today FROM tasks t WHERE task_id = ".$this->
 
 //TODO connettere i vari pezzi dentro allo stessa riga, da fare prob a una classe di liv superiore
 
-		return $pDay." d / ".$pEffort." ph / ".$pBudget." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
+	*/	return $aDay." d / ".$aEffort." ph / ".$aBudget." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
 
-*/	}
+	}
 	//FINE PEZZO CREATO DA MATTEO!!! DA QUI SI VA TRANQUILLI//
 }
 
@@ -74,6 +78,6 @@ $today =$this->doQuery("SELECT task_today FROM tasks t WHERE task_id = ".$this->
 $tdb = new taskBoxDB(86);
 echo $tdb->getTaskName();
 echo $tdb->getPlannedData();
-echo $tdb->getActualData();
+//echo $tdb->getActualData();
 
 ?>
