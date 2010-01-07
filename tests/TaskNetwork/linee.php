@@ -69,6 +69,31 @@ function dashedarrow($im, $x1, $y1, $x2, $y2, $alength, $awidth, $color) {
     imagefilledpolygon($im, array($x2, $y2, $x3, $y3, $x4, $y4), 3, $color);
 }
 
+function drawSpM(){
+	$img = ImageCreate(50,50);
+	$bianco = ImageColorAllocate($img,255,255,255);
+	$nero = ImageColorAllocate($img,0,0,0);
+	
+	$spm["x"] =  50;
+	$spm["y"] =  50;
+	imageFilledEllipse($img,25,25,49,49,$nero);
+	$spm["img"] = $img;
+	return $spm;	
+}
+
+function drawEpM(){
+	$img = ImageCreate(50,50);
+	$bianco = ImageColorAllocate($img,255,255,255);
+	$nero = ImageColorAllocate($img,0,0,0);
+	
+	$epm["x"] =  50;
+	$epm["y"] =  50;
+	imageFilledEllipse($img,25,25,40,40,$nero);
+	imageEllipse($img,25,25,48,48,$nero);
+	imageEllipse($img,25,25,49,49,$nero);
+	$epm["img"] = $img;
+	return $epm;	
+}
 //------Funzioni di disegno------------fine	
 
 //------Funzioni di merging------------
@@ -272,6 +297,7 @@ function mergeEpM($TaskNetwork, $epm){
 	return $TaskNetwork;
 	
 }
+
 //------Funzioni di setting------------
 function incrementmatrix($matrix,$inc){
 	for($i=0;$i<sizeof($matrix);$i++){
@@ -376,16 +402,10 @@ $TaskNetwork["i"] = $i;					//indice delle colonne precedenti
 $TaskNetwork["h"] = $h;					//indice delle righe precedenti
 
 //creazione startprojectmilestone
-$spm["img"] =  imageCreateFromPNG("startprojectmilestone.png");
-$size = getImageSize("startprojectmilestone.png");
-$spm["x"] =  $size[0];
-$spm["y"] =  $size[1];
+$spm = drawSpM();
 
 //creazione endprojectmilestone
-$epm["img"] =  imageCreateFromPNG("endprojectmilestone.png");
-$size = getImageSize("endprojectmilestone.png");
-$epm["x"] =  $size[0];
-$epm["y"] =  $size[1];
+$epm = drawEpM();
 
 
 //ogni immagine Image è dentro un array im dove im["img"] è l'immagine, im["x"] e im["y"] la x e la y
@@ -426,6 +446,7 @@ for($a=0;$a<$finalpm["h"];$a++){
 			
 		}
 }
+
 
 
 /* DEPRECATED
