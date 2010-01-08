@@ -65,6 +65,7 @@ $projectPriorityColor = dPgetSysVal( 'ProjectPriorityColor' );
 
 $working_hours = $AppUI->user_day_hours;
 $user_id = $AppUI->user_id;
+
 // load the record data
 // GJB: Note that we have to special case duration type 24 and this refers to the hours in a day, NOT 24 hours
 $q  = new DBQuery;
@@ -207,8 +208,11 @@ function delIt() {
 	?>
 	</td>
 </tr>
-
-<tr id="project_infos" style="display: none;">
+<?php
+	if (empty($AppUI->properties) && empty($_POST['properties']))
+		$display = "display: none;";
+?>
+<tr id="project_infos" style="<? echo $display ?>">
 	<td width="50%" valign="top"  style="border: outset #d1d1cd 1px">
 		<strong><?php echo $AppUI->_('Base Information');?></strong>
 		<table cellspacing="1" cellpadding="2" border="0" width="100%">
@@ -370,13 +374,14 @@ function delIt() {
 					<td align="left" nowrap> <input id="wf" name="wf" type="checkbox" value="1"></td>
 					<td class="hilite" width="100%" rowspan="4" colspan="2" valign="top" style="border: outset #d1d1cd 2px">
 						<?php
+							
 							if($_POST['properties']){
 							 	$string=$_POST['properties'];
 								$string=urldecode($string);
 								echo str_replace("@","'",$string);
 							}
 							else{
-						 		echo $string=str_replace( chr(10), "<br>", $AppUI->getProperties()) ;
+						 		echo $string=nl2br($AppUI->getProperties());
 								if($string!=''){
 								$string=str_replace("'","@",$string);
 								}
@@ -457,6 +462,7 @@ if ($canViewTask) {
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Planned view)' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Actual view)');
 	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Inactive)' );
+	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtodo", 'Tasks TODO' );
 }
 //if ($perms->checkModule('files', 'view'))
 //	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_files", 'Files' );
@@ -468,5 +474,5 @@ $tabBox->loadExtras($m);
 $f = 'all';
 $min_view = true;
 
-$tabBox->show();
+$tabBox->show(null, false, true);
 ?>
