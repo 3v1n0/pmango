@@ -1,5 +1,8 @@
 <?
-Header("Content-Type: image/jpeg");
+require "../TaskBox.class.php";
+
+Header("Content-Type: image/png");
+
 
 //------Funzioni di disegno------------
 function imageboldline($image, $x1, $y1, $x2, $y2, $color, $thick = 1)
@@ -411,15 +414,30 @@ $epm = drawEpM();
 //ogni immagine Image è dentro un array im dove im["img"] è l'immagine, im["x"] e im["y"] la x e la y
 $array;
 
+putenv('GDFONTPATH=' . dirname($_SERVER['SCRIPT_FILENAME']).'/../../fonts/Droid');
+
 for($r=0;$r<4;$r++){
 	
 $l = rand ( 1 , 5 );
 
 	for ($j=0;$j<$l;$j++){
-		$im["img"] =  imageCreateFromPNG("TaskBoxTest.png");
-		$size = getImageSize("TaskBoxTest.png");
-		$im["x"] =  $size[0];
-		$im["y"] =  $size[1];
+
+		$tbx = new TaskBox("1.$j.");
+		$tbx->setName("Test $j");
+		$tbx->setName("Requirement Analysis");
+		$tbx->setPlannedData("14 d", "40 ph", "1350 €");
+		$tbx->setActualData("4 d", "6 ph", "230 €");
+		$tbx->setPlannedTimeframe("2009.10.15", "2009.10.29");
+		$tbx->setActualTimeframe("2009.10.16", "NA");
+		$tbx->setResources("22 ph, Dilbert, Requirement Engineering\n".
+		                   "14 ph, Wally, Sales Manager\n".
+		                   "04 ph, The Boss, Manager");
+		$tbx->setProgress(rand(0,100));
+
+		$im["x"] =  $tbx->getWidth();
+		$im["y"] =  $tbx->getHeight();
+		$im["img"] = $tbx->getImage();
+
 		$array[$r][$j] = $im;
 	}
 $out[$r] = mergeArrayRight($TaskNetwork, $array[$r]);

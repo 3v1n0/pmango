@@ -51,9 +51,7 @@ class TaskBox {
 		$this->pShowAlerts = $alert;
 		$this->pProgress = $progress;
 		$this->pShowExpand = $expand;
-		$this->pGDImage = null; /* STUB */
-
-		////
+		$this->pGDImage = null;
 
 		$this->init();
 	}
@@ -104,7 +102,8 @@ class TaskBox {
 	}
 
 	private function init() {
-		putenv('GDFONTPATH=' . realpath('../fonts/Droid'));
+		if (!strlen(getenv("GDFONTPATH")))
+			putenv('GDFONTPATH=' . dirname($_SERVER['SCRIPT_FILENAME']).'/../fonts/Droid');
 		$this->pFontSize = 10;
 		$this->pFont = "DroidSans.ttf";
 		$this->pFontBold = "DroidSans-Bold.ttf";
