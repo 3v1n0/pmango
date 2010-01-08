@@ -316,14 +316,13 @@ class PMGanttBar extends GanttPlotObject {
             
             if( $this->leftMark->GetType() == MARK_LEFTTRIANGLE ) {
                 $y = $yb ;
-            }
-            
-            if ($this->leftMark->GetType()) {
+                
             	$bmark = new PlotMark();
 	            $bmark->SetType($this->leftMark->GetType());
-	            $bmark->SetColor('black');
-	            $bmark->SetFillColor('black');
-	            $bmark->SetSize($this->leftMark->GetWidth()*2);
+	            $bmark->SetColor($this->iFrameColor);
+	            $bmark->SetFillColor($this->iFillColor);
+	            $size = $this->leftMark->GetWidth();
+	            $bmark->SetSize($size % 2 == 0 ? $size+1 : $size+2);
 	            $bmark->Show();
             	$bmark->Stroke($aImg, $xt++, $y);
             }
@@ -343,9 +342,10 @@ class PMGanttBar extends GanttPlotObject {
         	if ($this->rightMark->GetType()) {
             	$bmark = new PlotMark();
 	            $bmark->SetType($this->rightMark->GetType());
-	            $bmark->SetColor('black');
-	            $bmark->SetFillColor('black');
-	            $bmark->SetSize($this->rightMark->GetWidth()*2);
+	            $bmark->SetColor($this->iFrameColor);
+	            $bmark->SetFillColor($this->iFillColor);
+	            $size = $this->rightMark->GetWidth(); 
+	            $bmark->SetSize($size % 2 == 0 ? $size+1 : $size+2);
 	            $bmark->Show();
             	$bmark->Stroke($aImg, $xb--, $y);
             }
@@ -737,7 +737,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
         $bar->leftMark->Show();
         $bar->leftMark->SetType(MARK_LEFTTRIANGLE);
-        $bar->leftMark->SetWidth(3);
+        $bar->leftMark->SetWidth(2);
 
         if ($progress == 0) {
         	$bar->leftMark->SetColor('black');
@@ -749,7 +749,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
         
         $bar->rightMark->Show();
   		$bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
-        $bar->rightMark->SetWidth(3);
+        $bar->rightMark->SetWidth(2);
         if ($progress != 100) {
 	        $bar->rightMark->SetColor('black');
 	        $bar->rightMark->SetFillColor('black');
