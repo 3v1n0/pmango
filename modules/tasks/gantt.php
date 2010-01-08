@@ -713,7 +713,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 					$end = $now;
 			}
 			
-			$bar2 = new PMGanttBar($row++, '', $start, $end, $cap, 0.3);
+			$bar2 = new PMGanttBar($row, '', $start, $end, $cap, 0.3);
 			$bar2->SetFillColor('red');
 			$bar2->progress->Set($progress/100);
 		}
