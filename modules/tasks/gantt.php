@@ -277,7 +277,7 @@ class PMGanttBar extends GanttPlotObject {
 
             $xtp = $aScale->TranslateDate($st);
             $xbp = $aScale->TranslateDate($en);
-            $len = ($xbp-$xtp)*$this->progress->iProgress;
+            $len = ($xbp-$xtp)*$this->progress->iProgress-1;
 
             $endpos = $xtp+$len;
             if( $endpos > $xt ) {
@@ -301,7 +301,7 @@ class PMGanttBar extends GanttPlotObject {
                 	$barheight -= $this->iShadowWidth;
                 $progressheight = floor($barheight*$this->progress->iHeight);
                 $marg = ceil(($barheight-$progressheight)/2);
-                $pos = new Rectangle($xtp,$yt + $marg, $len,$barheight-2*$marg);
+                $pos = new Rectangle($xtp+1,$yt + $marg, $len,$barheight-2*$marg);
                 $prog->SetPos($pos);
                 $prog->Stroke($aImg);
             }
