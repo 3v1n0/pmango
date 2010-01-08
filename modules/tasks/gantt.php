@@ -313,9 +313,21 @@ class PMGanttBar extends GanttPlotObject {
             // We treat the RIGHT and LEFT triangle mark a little bi
             // special so that these marks are placed right under the
             // bar.
+            
             if( $this->leftMark->GetType() == MARK_LEFTTRIANGLE ) {
                 $y = $yb ;
             }
+            
+            if ($this->leftMark->GetType()) {
+            	$bmark = new PlotMark();
+	            $bmark->SetType($this->leftMark->GetType());
+	            $bmark->SetColor('black');
+	            $bmark->SetFillColor('black');
+	            $bmark->SetSize($this->leftMark->GetWidth()*2);
+	            $bmark->Show();
+            	$bmark->Stroke($aImg, $xt++, $y);
+            }
+            
             $this->leftMark->Stroke($aImg,$xt,$y);
         }
         if( $limen == $en ) {
@@ -323,9 +335,21 @@ class PMGanttBar extends GanttPlotObject {
             // We treat the RIGHT and LEFT triangle mark a little bi
             // special so that these marks are placed right under the
             // bar.
+            
             if( $this->rightMark->GetType() == MARK_RIGHTTRIANGLE ) {
                 $y = $yb ;
             }
+            
+        	if ($this->rightMark->GetType()) {
+            	$bmark = new PlotMark();
+	            $bmark->SetType($this->rightMark->GetType());
+	            $bmark->SetColor('black');
+	            $bmark->SetFillColor('black');
+	            $bmark->SetSize($this->rightMark->GetWidth()*2);
+	            $bmark->Show();
+            	$bmark->Stroke($aImg, $xb--, $y);
+            }
+            
             $this->rightMark->Stroke($aImg,$xb,$y);
 
             $margin = $this->iCaptionMargin;
@@ -705,21 +729,34 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
   if (!CTask::isLeafSt($a["task_id"])) {
 //		$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
-		$bar->rightMark->Show();
+		
 
         $bar->SetColor('black');
-        $bar->SetPattern(BAND_SOLID,'white', 98);
-
-        $bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
-        $bar->rightMark->SetWidth(3);
-        $bar->rightMark->SetColor('black');
-        $bar->rightMark->SetFillColor('white');
+        $bar->SetFillColor('black');
+        $bar->SetPattern(BAND_SOLID,'black');
 
         $bar->leftMark->Show();
         $bar->leftMark->SetType(MARK_LEFTTRIANGLE);
         $bar->leftMark->SetWidth(3);
-        $bar->leftMark->SetColor('black');
-        $bar->leftMark->SetFillColor('green');
+
+        if ($progress == 0) {
+        	$bar->leftMark->SetColor('black');
+        	$bar->leftMark->SetFillColor('black');
+        } else {
+        	$bar->leftMark->SetColor('green');
+        	$bar->leftMark->SetFillColor('green');
+        }
+        
+        $bar->rightMark->Show();
+  		$bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
+        $bar->rightMark->SetWidth(3);
+        if ($progress != 100) {
+	        $bar->rightMark->SetColor('black');
+	        $bar->rightMark->SetFillColor('black');
+        } else {
+        	$bar->rightMark->SetColor('green');
+	        $bar->rightMark->SetFillColor('green');
+        }
 
 		$bar->progress->SetFillColor('green');
         $bar->progress->SetPattern(BAND_SOLID,'green',98);
