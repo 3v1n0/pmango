@@ -696,7 +696,10 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		
 		$row++;
 		
-	} else $row++;
+	} else {
+		$bar->progress->Set($progress/100);
+		$row++;
+	}
 	
 	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
 
