@@ -422,9 +422,8 @@ $l = rand ( 1 , 5 );
 
 	for ($j=0;$j<$l;$j++){
 
-		$tbx = new TaskBox("1.$j.");
-		$tbx->setName("Test $j");
-		$tbx->setName("Requirement Analysis");
+		$tbx = new TaskBox(($r+1).".$j.");
+		$tbx->setName("TaskBox test row $r, col $j");
 		$tbx->setPlannedData("14 d", "40 ph", "1350 €");
 		$tbx->setActualData("4 d", "6 ph", "230 €");
 		$tbx->setPlannedTimeframe("2009.10.15", "2009.10.29");
