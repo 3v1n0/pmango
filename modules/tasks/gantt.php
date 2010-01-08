@@ -61,6 +61,8 @@ include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
 ////////////////////////////////////////
 ########################################
 
+// TODO: better implementation, split classes and show line to unite bars
+
 class PMGanttBar extends GanttPlotObject {
     public $progress;
     public $leftMark,$rightMark;
@@ -693,7 +695,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 //	$enddate = new CDate($end);
 //	$startdate = new CDate($start);
 
-	$bar = new PMGanttBar($row, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.8 : 0.15);//se padre sarebbe meglio 1
+	$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.5 : 0.15);//se padre sarebbe meglio 1
 	$bar2 = null;
 	
 	if (CTask::isLeafSt($a["task_id"])) {
@@ -711,25 +713,15 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 					$end = $now;
 			}
 			
-			$bar2 = new PMGanttBar($row+1, '', $start, $end, $cap, 0.4);
+			$bar2 = new PMGanttBar($row++, '', $start, $end, $cap, 0.3);
 			$bar2->SetFillColor('red');
 			$bar2->progress->Set($progress/100);
-	
-			$row++;
 		}
-		
-		$row++;
-		
-	} else {
-		$bar->progress->Set($progress/100);
-		$row++;
 	}
 	
 	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
 
   if (!CTask::isLeafSt($a["task_id"])) {
-//		$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
-		
 
         $bar->SetColor('black');
         $bar->SetFillColor('black');
@@ -758,6 +750,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	        $bar->rightMark->SetFillColor('green');
         }
 
+        $bar->progress->Set($progress/100);
 		$bar->progress->SetFillColor('green');
         $bar->progress->SetPattern(BAND_SOLID,'green',98);
         
@@ -803,7 +796,8 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		$bar->title->SetColor("#CC0000");
 	$graph->Add($bar);
 	
-	if (CTask::isLeafSt($a["task_id"]) && !empty($tstart['task_log_start_date']))
+	//if (CTask::isLeafSt($a["task_id"]) && !empty($tstart['task_log_start_date']))
+	if ($bar2 != null)
 		$graph->Add($bar2);
 }
 $today = date("y-m-d");
