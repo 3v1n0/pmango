@@ -296,5 +296,18 @@ class GDRenderer extends Tree
 		}
 		imagepng($this->img, $file);
 	}
+	
+	/**
+	 * output the gd image object
+	 */
+
+	public function image()
+	{
+		if(empty($this->img))
+		{
+			$this->render();
+		}
+		return $this->img;
+	}
 }
 ?>
