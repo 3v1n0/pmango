@@ -214,10 +214,10 @@ function showFullProject() {
                                 <input type="checkbox" name="showLabels" value='1' <?php //echo (($showLabels==1) ? "checked=true" : "");?>><?php //echo $AppUI->_( 'Show captions' );?>
                         </td>-->
                         <td valign="top">
-                                <input type="checkbox" value='1' name="showInactive" <?php echo (($showInactive==1) ? "checked=true" : "");?>><?php echo $AppUI->_( 'Show Inactive' );?>
+                                <input type="checkbox" value='1' name="showInactive" <?php echo (($showInactive==1) ? "checked=checked" : "");?>><?php echo $AppUI->_( 'Show Inactive' );?>
                         </td>
                         <td valign="top">
-                                <input type="checkbox" value='1' name="showAllGantt" <?php echo (($showAllGantt==1) ? "checked=true" : "");?>><?php echo $AppUI->_( 'Show Tasks' );?>
+                                <input type="checkbox" value='1' name="showAllGantt" <?php echo (($showAllGantt==1) ? "checked=checked" : "");?>><?php echo $AppUI->_( 'Show Tasks' );?>
                         </td>
                         <td align="left">
                                 <input type="button" class="button" value="<?php echo $AppUI->_( 'submit' );?>" onclick='document.editFrm.display_option.value="custom";if (document.editFrm.edate.value < document.editFrm.sdate.value) alert("Start date must before end date"); else submit();'>
