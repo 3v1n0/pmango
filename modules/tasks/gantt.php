@@ -143,6 +143,7 @@ class PMGanttBar extends GanttPlotObject {
 			$m = max($m,$this->leftMark->width*2);
 			if( $this->rightMark->show )
 			$m = max($m,$this->rightMark->width*2);
+				
 			return $m;
 		}
 		else
@@ -188,7 +189,6 @@ class PMGanttBar extends GanttPlotObject {
 			$yb = round($aScale->TranslateVertPos($this->iVPos)-($aScale->GetVertSpacing()/2-$vs/2));
 			$ypre = $yb;
 		} else {
-			//$yt = round($aScale->TranslateVertPos($this->iVPos-1)-($aScale->GetVertSpacing()/2-$vs/2));
 			$yt = $ypre;
 			$yb = $ypre+$vs;
 		}
@@ -484,6 +484,7 @@ if($projects[$project_id]["project_finish_date"] == "0000-00-00 00:00:00" || emp
 	$project_end = $start_date;
 } else {
 	$project_end = $projects[$project_id]["project_finish_date"];
+	//XXX find the latest logged task and use it as the end
 }
 
 $end_date   = dPgetParam( $_GET, 'finish_date', $project_end );
