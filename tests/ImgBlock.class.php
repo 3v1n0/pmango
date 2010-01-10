@@ -549,10 +549,6 @@ class ColorBlock extends ImgBlock {
 		$this->setHeight(1);
 	}
 
-//	public function ColorBlock($color) {
-//		$this->ColorBlock($color, null);
-//	}
-
 	public function getWidth() {
 		return $this->getMaxWidth();
 	}
@@ -980,7 +976,6 @@ class VerticalBoxBlock extends ImgBlock {
 		$xPos = 0;
 		$yPos = 0;
 
-		//$xtraX = $this->getMerge() ? (-1)*$this->pBorders : $this->pSpace;
 		$xtraY = $this->getMerge() ? (-1)*$this->pBorders : $this->pSpace;
 
 		foreach ($this->pBlocks as $block) {
@@ -988,7 +983,6 @@ class VerticalBoxBlock extends ImgBlock {
 
 			imagecopy($box, $block->getImage(), $xPos, $yPos, 0, 0, $block->getWidth(), $block->getHeight());
 			$yPos += $block->getHeight() + $xtraY;
-			//$xPos += $block->getWidth() + $xtraX;
 
 		}
 

@@ -27,12 +27,11 @@ $tbx->setActualTimeframe("2009.10.16", "NA");
 /* With Resources */
 $tbx->setResources("22 ph, Dilbert, Requirement Engineering\n".
                    "14 ph, Wally, Sales Manager\n".
-                   "4 ph, The Boss, Manager");
+                   "04 ph, The Boss, Manager");
 
 /* With Progress */
-$tbx->setProgress(70);
+$tbx->setProgress(50);
 
 $tbx->draw();
-
 
 ?>

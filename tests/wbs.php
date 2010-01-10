@@ -55,7 +55,7 @@ $tbx = new TaskBox(null);
 $tbx->setName("G3-sw4us");
 $objTree->add(1, 0, "", imagesx($tbx->getImage()), imagesy($tbx->getImage()), $tbx->getImage());
 foreach ($items as $item) {
-	$objTree->add($item['id'], $item['parent'], "", imagesx($item['tbx']->getImage()), imagesy($item['tbx']->getImage()), $item['tbx']->getImage());
+	$objTree->add($item['id'], $item['parent'], '', $item['tbx']->getWidth(), $item['tbx']->getHeight(), $item['tbx']->getImage());
 }
 
 $objTree->setBGColor(array(255, 255, 255));

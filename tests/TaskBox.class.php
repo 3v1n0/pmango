@@ -9,8 +9,9 @@
 // - Show alerts
 // - Show progress
 
-include "ImgBlock.class.php";
+// TODO add the alert box!
 
+include "ImgBlock.class.php";
 
 class TaskBox {
 	private $pID;
