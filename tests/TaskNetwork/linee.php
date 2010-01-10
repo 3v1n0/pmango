@@ -352,8 +352,11 @@ function mapBlank($TN){
 	$index = $TN["index"];
 	$map; //mappa di output, matrice
 	
+	//alloco il primo spazio in cima alla TN	
+	$map["y"][0] = 1;
+	
 	//codifico nella prima riga della mappa tutte gli indici degli spazi tra righe della TN
-	for($j=0;$j<sizeof($index)-1;$j++){
+	for($j=1;$j<sizeof($index)-1;$j++){
 		$map["y"][$j] =  ($index[$j][0]["lefty"]-($index[$j][0]["y"]/2))-25;
 	}
 	//alloco l'ultimo spazio in fondo alla TN	
