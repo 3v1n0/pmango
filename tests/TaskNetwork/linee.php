@@ -347,7 +347,30 @@ function drawline($out,$im1,$im2,$where,$dash = false){
 	}
 }
 
+//mappa tutti i punti vuoti della TN
+function mapBlank($TN){
+	$index = $TN["index"];
+	$map; //mappa di output, matrice
+	
+	//codifico nella prima riga della mappa tutte gli indici degli spazi tra righe della TN
+	for($j=0;$j<sizeof($index)-1;$j++){
+		$map["y"][$j] =  ($index[$j][0]["lefty"]-($index[$j][0]["y"]/2))-25;
+	}
+	//alloco l'ultimo spazio in fondo alla TN	
+	$map["y"][(sizeof($index)-1)] =  $TN["y"] - 1;
+	
+	//codifico nelle restanti righe della matrice gli spazi tra tbx della stessa TN
+	for($h=0;$h<sizeof($index)-1;$h++){
+		$map[$h]["inizio"] = 200;
+		$map[$h]["fine"] = $TN["x"] - 200;
 
+		for($i=0;$i<sizeof($index[$h]);$i++){
+			$map[$h][$i] = $index[$h][$i]["leftx"] - 50;
+		}
+	}
+	
+	return $map;
+}
 //DEPRECATED
 /*
 function connect($out,$im1,$im2,$where,$dash = false){
@@ -454,6 +477,25 @@ print_r($finalpm);
 echo "</pre>";
 */
 
+//mappo tutti i punti vuoti della TN
+$mapB = mapBlank($finalpm);
+$black = imagecolorallocate($finalpm["img"],0,0,0);
+
+foreach($mapB["y"] as $blank){
+	imageFilledEllipse($finalpm["img"],$finalpm["x"]/2,$blank,10,10,$black);	
+}
+
+for($int=0;$int<5;$int++){
+		imageFilledEllipse($finalpm["img"],$mapB[$int]["inizio"],$finalpm["index"][$int][0]["lefty"],10,10,$black);
+		imageFilledEllipse($finalpm["img"],$mapB[$int]["fine"],$finalpm["index"][$int][0]["lefty"],10,10,$black);
+		
+	for($f=0;$f<sizeof($finalpm["index"][$int]);$f++){
+		imageFilledEllipse($finalpm["img"],$mapB[$int][$f],$finalpm["index"][$int][$f]["lefty"],10,10,$black);
+	}
+}
+
+
+/*
 //$ID1["riga"] = $finalpm["h"]; $ID1["colonna"] = 0; //Spm
 $ID2["riga"] = $finalpm["h"]; $ID2["colonna"] = 1; //Epm
 for($a=0;$a<$finalpm["h"];$a++){
