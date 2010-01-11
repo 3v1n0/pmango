@@ -62,22 +62,23 @@ $objTree->setBGColor(array(255, 255, 255));
 $objTree->setLinkColor(array(0, 0, 0));
 
 function makeWBSPdf($im){
-	$pdf=new FPDF('P', 'mm', 'a4');
-	
+	$mode = 'L';
+	$pdf=new FPDF($mode, 'mm', 'a4');
+
 	$tmp = tempnam('.', 'wbs');
 	imagepng($im, $tmp);
-	
+
 	$pdf->AddPage();
-	
+
 	// TODO center the image (vertically and horizontally)
 	if (imagesx($im) > imagesy($im))  {
-		$w = $pdf->CurPageFormat[0] - $pdf->lMargin - $pdf->rMargin;
+		$w = $pdf->CurPageFormat[($mode == 'P' ? 0 : 1)] - $pdf->lMargin - $pdf->rMargin;
 		$h = 0;
 	} else {
 		$w = 0;
-		$h = $pdf->CurPageFormat[1] - $pdf->tMargin - $pdf->bMargin;
+		$h = $pdf->CurPageFormat[($mode == 'P' ? 1 : 0)] - $pdf->tMargin - $pdf->bMargin;
 	}
-	
+
 	$pdf->Image($tmp, null, null, $w, $h, 'png');
 	echo $pdf->Output('wbs.pdf','S');
 
