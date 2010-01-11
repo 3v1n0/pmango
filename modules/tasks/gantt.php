@@ -20,7 +20,7 @@
  Second version, modified to manage PMango Gantt.
  - 2006.07.30 Lorenzo
  First version, unmodified from dotProject 2.0.1 (J. Christopher Pereira).
-  
+
  ---------------------------------------------------------------------------
 
  PMango - A web application for project planning and control.
@@ -143,7 +143,7 @@ class PMGanttBar extends GanttPlotObject {
 			$m = max($m,$this->leftMark->width*2);
 			if( $this->rightMark->show )
 			$m = max($m,$this->rightMark->width*2);
-				
+
 			return $m;
 		}
 		else
@@ -376,6 +376,9 @@ $showLabels = dPgetParam($_REQUEST, 'showLabels', false);
 // get the prefered date format
 $df = $AppUI->getPref('SHDATEFORMAT');
 
+$tasks_closed = $AppUI->getState("tasks_closed");
+$tasks_opened = $AppUI->getState("tasks_opened");
+
 require_once $AppUI->getModuleClass('projects');
 $project =& new CProject;
 //$allowedProjects = $project->getAllowedRecords($AppUI->user_id, 'project_id, project_name');
@@ -412,15 +415,21 @@ $task =& new CTask;
 
 $select = "
 tasks.task_id, task_parent, task_name, task_start_date, task_finish_date,
-task_priority, task_order, task_project, task_milestone, 
+task_priority, task_order, task_project, task_milestone,
 project_name
 ";
 
 $from = "tasks";
 $join = "LEFT JOIN projects ON project_id = task_project";
-$where = "task_project = $project_id";
+$where = "task_project = $project_id AND task_id = task_parent";
 
-/*switch ($f) {
+if (isset($tasks_opened) && !empty($tasks_opened)) {
+	$tsks = implode(",", $tasks_opened);
+	$where .= "\nOR task_id IN ($tsks) OR task_parent IN ($tsks)";
+}
+
+/*
+switch ($f) {
  case 'all':
  $where .= "\nAND task_status > -1";
  break;
@@ -627,7 +636,7 @@ if($hide_task_groups) {
 }
 
 $row = 0;
-$now = "2009-12-05";//date("y-m-d");
+$now = "2009-12-05 12:00:00";//date("y-m-d");
 //print_r($gantt_arr); exit;
 for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
@@ -691,30 +700,35 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		$caption = substr($caption, 0, strlen($caption)-1);
 		}*/
 
-		
+
 
 	//	$enddate = new CDate($end);
 	//	$startdate = new CDate($start);
 
-	$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, CTask::isLeafSt($a["task_id"]) ? 0.5 : 0.15);//se padre sarebbe meglio 1
+	$task_leaf = (CTask::isLeafSt($a["task_id"]) || !$tasks_opened || !in_array($a["task_id"], $tasks_opened));
+
+	$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.15);//se padre sarebbe meglio 1
 	$bar2 = null;
 
-	if (CTask::isLeafSt($a["task_id"])) {
+	if ($task_leaf) {
 		//if ($now > )
-		$tstart = CTask::getActualStartDate($a["task_id"], null);
+		$child = CTask::getChild($a["task_id"], $project_id);
+		$tstart = CTask::getActualStartDate($a["task_id"], $child);
+
 		if (!empty($tstart['task_log_start_date'])) {
-			$start = substr($tstart['task_log_start_date'], 0, 10);
+			$start = $tstart['task_log_start_date'];
 
+			$tend = CTask::getActualFinishDate($a["task_id"], $child);
 
-			$tend = CTask::getActualFinishDate($a["task_id"], null);
-			if (!empty($tend['task_log_finish_date']) && $progress == 100) {
-				$end = substr($tend['task_log_finish_date'], 0, 10);
-			} else {
-				if (strtotime($end) > strtotime($now) && strtotime($start) < strtotime($now))
-				$end = $now;
+			if (!empty($tend['task_log_finish_date'])) {
+				if (strtotime($end) > strtotime($now)
+					/*XXX should be implicit*/&& strtotime($start) < strtotime($now))
+					$end = substr($now, 0, 10);
+				else
+					$end = $tend['task_log_finish_date'];
 			}
-				
-			$bar2 = new PMGanttBar($row++, '', $start, $end, $cap, 0.3);
+
+			$bar2 = new PMGanttBar($row++, '', $start, $end, '', 0.3);
 			$bar2->SetFillColor('red');
 			$bar2->progress->Set($progress/100);
 		}
@@ -722,7 +736,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
 
-	if (!CTask::isLeafSt($a["task_id"])) {
+	if (!$task_leaf) {
 
 		$bar->SetColor('black');
 		$bar->SetFillColor('black');
