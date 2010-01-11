@@ -5,7 +5,7 @@ Header("Content-Type: image/png");
 
 
 //------Funzioni di disegno------------
-function imageboldline($image, $x1, $y1, $x2, $y2, $color, $thick = 1)
+function imageboldline($image, $x1, $y1, $x2, $y2, $color, $thick = 3)
 {
    /* this way it works well only for orthogonal lines
    imagesetthickness($image, $thick);
@@ -70,6 +70,27 @@ function dashedarrow($im, $x1, $y1, $x2, $y2, $alength, $awidth, $color) {
 
     imagedashedline($im, $x1, $y1, $dx, $dy, $color);
     imagefilledpolygon($im, array($x2, $y2, $x3, $y3, $x4, $y4), 3, $color);
+}
+
+function boldarrow($im, $x1, $y1, $x2, $y2, $alength, $awidth, $color) {
+   $distance = sqrt(pow($x1 - $x2, 2) + pow($y1 - $y2, 2));
+
+    $dx = $x2 + ($x1 - $x2) * $alength / $distance;
+    $dy = $y2 + ($y1 - $y2) * $alength / $distance;
+
+    $k = $awidth / $alength;
+
+    $x2o = $x2 - $dx;
+    $y2o = $dy - $y2;
+
+    $x3 = $y2o * $k + $dx;
+    $y3 = $x2o * $k + $dy;
+
+    $x4 = $dx - $y2o * $k;
+    $y4 = $dy - $x2o * $k;
+
+    imageboldline($im, $x1, $y1, $dx, $dy, $color);
+    imagefilledpolygon($im, array($x2, $y2, $x3, $y3, $x4, $y4), 3, $color);	
 }
 
 function drawSpM(){
@@ -312,7 +333,23 @@ function incrementmatrix($matrix,$inc){
 	return $matrix;
 }
 
-function connect($TaskNetwork,$mapBlank, $ID1,$ID2, $dash = false, $dist=0){
+function connect($TaskNetwork,$mapBlank, $ID1,$ID2,$criticalPath=false, $dash = false, $dist=0){
+	$line;$arrow;
+	if(!$criticalPath){	
+		if($dash){
+			$line="imagedashedline";
+			$arrow="dashedarrow";
+		}
+		else{
+			$line="imageline";
+			$arrow="arrow";
+		}
+	}else{
+		$line="imageboldline";
+		$arrow="boldarrow";
+	}
+	
+	
 	//ID 1 e 2 sono due array ID["riga"] ID["colonna"]
 	$img = $TaskNetwork["img"];
 	$black = ImageColorAllocate($img,0,0,0);
@@ -348,121 +385,61 @@ function connect($TaskNetwork,$mapBlank, $ID1,$ID2, $dash = false, $dist=0){
 	/////////////////////////////////
 	if($tbx1ry<$tbx2ly){//se tbx1 è piu in alto di tbx2
 			if($tbx1rx>$TaskNetwork["x"]/2 or $tbx2lx>$TaskNetwork["x"]/2){//se tbx1 o tbx2 è nella metà di destra della TN
-				if($dash==true) {
-					imagedashedline ($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
-					imagedashedline ($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankDown, $black);
-					if($tbx1BlankDown>$tbx2BlankUp+1 or $tbx1BlankDown<$tbx2BlankUp-1){
-						imagedashedline ($img,$tbx1BlankRight,$tbx1BlankDown, $tbx1BlankLast,$tbx1BlankDown, $black);
-						imagedashedline ($img,$tbx1BlankLast,$tbx1BlankDown,$tbx1BlankLast,$tbx2BlankUp, $black);
-						imagedashedline ($img,$tbx1BlankLast,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);
-					}else{
-						imagedashedline ($img,$tbx1BlankRight,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);						
-					}
-					imagedashedline ($img, $tbx2BlankLeft,$tbx2BlankUp, $tbx2BlankLeft ,$tbx2ly, $black);
-					dashedarrow ($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
+			
+				$line($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
+				$line($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankDown, $black);
+				if($tbx1BlankDown>$tbx2BlankUp+1 or $tbx1BlankDown<$tbx2BlankUp-1){
+					$line($img,$tbx1BlankRight,$tbx1BlankDown, $tbx1BlankLast,$tbx1BlankDown, $black);
+					$line($img,$tbx1BlankLast,$tbx1BlankDown,$tbx1BlankLast,$tbx2BlankUp, $black);
+					$line($img,$tbx1BlankLast,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);
+				}else{
+					$line($img,$tbx1BlankRight,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);						
 				}
-				else {
-				  	imageline ($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
-					imageline ($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankDown, $black);
-					if($tbx1BlankDown>$tbx2BlankUp+1 or $tbx1BlankDown<$tbx2BlankUp-1){
-						imageline ($img,$tbx1BlankRight,$tbx1BlankDown, $tbx1BlankLast,$tbx1BlankDown, $black);
-						imageline ($img,$tbx1BlankLast,$tbx1BlankDown,$tbx1BlankLast,$tbx2BlankUp, $black);
-						imageline ($img,$tbx1BlankLast,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);
-					}else{
-						imageline ($img,$tbx1BlankRight,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);						
-					}
-					imageline ($img, $tbx2BlankLeft,$tbx2BlankUp, $tbx2BlankLeft ,$tbx2ly, $black);
-					arrow ($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
-				}
+				$line($img, $tbx2BlankLeft,$tbx2BlankUp, $tbx2BlankLeft ,$tbx2ly, $black);
+				$arrow($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
 			}
 			else{//tbx1 è a sinistra
-				if($dash==true) {
-					imagedashedline ($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
-					imagedashedline ($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankDown, $black);
-					if($tbx1BlankDown>$tbx2BlankUp+1 or $tbx1BlankDown<$tbx2BlankUp-1){
-						imagedashedline ($img,$tbx1BlankRight,$tbx1BlankDown, $tbx1BlankFirst,$tbx1BlankDown, $black);
-						imagedashedline ($img,$tbx1BlankFirst,$tbx1BlankDown,$tbx1BlankFirst,$tbx2BlankUp, $black);
-						imagedashedline ($img,$tbx1BlankFirst,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);
-					}else{
-						imagedashedline ($img,$tbx1BlankRight,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);						
-					}
-					imagedashedline ($img, $tbx2BlankLeft,$tbx2BlankUp, $tbx2BlankLeft ,$tbx2ly, $black);
-					dashedarrow ($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
+				$line($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
+				$line($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankDown, $black);
+				if($tbx1BlankDown>$tbx2BlankUp+1 or $tbx1BlankDown<$tbx2BlankUp-1){
+					$line($img,$tbx1BlankRight,$tbx1BlankDown, $tbx1BlankFirst,$tbx1BlankDown, $black);
+					$line($img,$tbx1BlankFirst,$tbx1BlankDown,$tbx1BlankFirst,$tbx2BlankUp, $black);
+					$line($img,$tbx1BlankFirst,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);
+				}else{
+					$line($img,$tbx1BlankRight,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);						
 				}
-				else {
-				  	imageline ($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
-					imageline ($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankDown, $black);
-					if($tbx1BlankDown>$tbx2BlankUp+1 or $tbx1BlankDown<$tbx2BlankUp-1){
-						imageline ($img,$tbx1BlankRight,$tbx1BlankDown, $tbx1BlankFirst,$tbx1BlankDown, $black);
-						imageline ($img,$tbx1BlankFirst,$tbx1BlankDown,$tbx1BlankFirst,$tbx2BlankUp, $black);
-						imageline ($img,$tbx1BlankFirst,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);
-					}else{
-						imageline ($img,$tbx1BlankRight,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $black);						
-					}
-					imageline ($img, $tbx2BlankLeft,$tbx2BlankUp, $tbx2BlankLeft ,$tbx2ly, $black);
-					arrow ($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
-				}
+				$line($img, $tbx2BlankLeft,$tbx2BlankUp, $tbx2BlankLeft ,$tbx2ly, $black);
+				$arrow($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);	
 			}
 	}
 	else{//tbx2 è piu in alto o uguale a tbx1
-	if($tbx1rx>$TaskNetwork["x"]/2 or $tbx2lx>$TaskNetwork["x"]/2){//se tbx1 o tbx2 è nella metà di destra della TN
-				if($dash==true) {
-					imagedashedline ($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
-					imagedashedline ($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankUp, $black);
-					if($tbx1BlankUp>$tbx2BlankDown+1 or $tbx1BlankUp<$tbx2BlankDown-1){
-						imagedashedline ($img,$tbx1BlankRight,$tbx1BlankUp, $tbx1BlankLast,$tbx1BlankUp, $black);
-						imagedashedline ($img,$tbx1BlankLast,$tbx1BlankUp,$tbx1BlankLast,$tbx2BlankDown, $black);
-						imagedashedline ($img,$tbx1BlankLast,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
-					}
-					else{
-						imagedashedline ($img,$tbx1BlankRight,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
-					}
-					imagedashedline ($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2ly, $black);
-					dashedarrow ($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
+		if($tbx1rx>$TaskNetwork["x"]/2 or $tbx2lx>$TaskNetwork["x"]/2){//se tbx1 o tbx2 è nella metà di destra della TN
+				$line ($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
+				$line($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankUp, $black);
+				if($tbx1BlankUp>$tbx2BlankDown+1 or $tbx1BlankUp<$tbx2BlankDown-1){
+					$line($img,$tbx1BlankRight,$tbx1BlankUp, $tbx1BlankLast,$tbx1BlankUp, $black);
+					$line($img,$tbx1BlankLast,$tbx1BlankUp,$tbx1BlankLast,$tbx2BlankDown, $black);
+					$line($img,$tbx1BlankLast,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
 				}
-				else {
-				  	imageline ($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
-					imageline ($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankUp, $black);
-					if($tbx1BlankUp>$tbx2BlankDown+1 or $tbx1BlankUp<$tbx2BlankDown-1){
-						imageline ($img,$tbx1BlankRight,$tbx1BlankUp, $tbx1BlankLast,$tbx1BlankUp, $black);
-						imageline ($img,$tbx1BlankLast,$tbx1BlankUp,$tbx1BlankLast,$tbx2BlankDown, $black);
-						imageline ($img,$tbx1BlankLast,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
-					}
-					else{
-						imageline ($img,$tbx1BlankRight,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
-					}
-					imageline ($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2ly, $black);
-					arrow ($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
+				else{
+					$line($img,$tbx1BlankRight,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
 				}
-			}
-			else{//tbx1 è a sinistra
-				if($dash==true) {
-					imagedashedline ($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
-					imagedashedline ($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankUp, $black);
-					if($tbx1BlankUp>$tbx2BlankDown+1 or $tbx1BlankUp<$tbx2BlankDown-1){
-						imagedashedline ($img,$tbx1BlankRight,$tbx1BlankUp, $tbx1BlankFirst,$tbx1BlankUp, $black);
-						imagedashedline ($img,$tbx1BlankFirst,$tbx1BlankUp,$tbx1BlankFirst,$tbx2BlankDown, $black);
-						imagedashedline ($img,$tbx1BlankFirst,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
-					}else{
-						imagedashedline ($img,$tbx1BlankRight,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
-					}
-					imagedashedline ($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2ly, $black);
-					dashedarrow ($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
+				$line($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2ly, $black);
+				$arrow($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
+		}
+		else{//tbx1 è a sinistra
+				$line($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
+				$line($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankUp, $black);
+				if($tbx1BlankUp>$tbx2BlankDown+1 or $tbx1BlankUp<$tbx2BlankDown-1){
+					$line($img,$tbx1BlankRight,$tbx1BlankUp, $tbx1BlankFirst,$tbx1BlankUp, $black);
+					$line($img,$tbx1BlankFirst,$tbx1BlankUp,$tbx1BlankFirst,$tbx2BlankDown, $black);
+					$line($img,$tbx1BlankFirst,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
+				}else{
+					$line($img,$tbx1BlankRight,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
 				}
-				else {
-				  	imageline ($img, $tbx1rx,$tbx1ry, $tbx1BlankRight,$tbx1ry, $black);
-					imageline ($img, $tbx1BlankRight,$tbx1ry, $tbx1BlankRight,$tbx1BlankUp, $black);
-					if($tbx1BlankUp>$tbx2BlankDown+1 or $tbx1BlankUp<$tbx2BlankDown-1){
-						imageline ($img,$tbx1BlankRight,$tbx1BlankUp, $tbx1BlankFirst,$tbx1BlankUp, $black);
-						imageline ($img,$tbx1BlankFirst,$tbx1BlankUp,$tbx1BlankFirst,$tbx2BlankDown, $black);
-						imageline ($img,$tbx1BlankFirst,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
-					}else{
-						imageline ($img,$tbx1BlankRight,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $black);
-					}
-					imageline ($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2ly, $black);
-					arrow ($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
-				}
-			}
+				$line($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2ly, $black);
+				$arrow($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
+		}
 	}
 	
 	$TaskNetwork["img"] = $img;
@@ -585,17 +562,24 @@ echo "<pre>";
 print_r($mapB);
 echo "</pre>";
 */
-//$ID1["riga"] = $finalpm["h"]; $ID1["colonna"] = 0; //Spm
-$ID2["riga"] = $finalpm["h"]; $ID2["colonna"] = 1; //Epm
+
+$ID1["riga"] = $finalpm["h"]; $ID1["colonna"] = 0; //Spm
+//$ID2["riga"] = $finalpm["h"]; $ID2["colonna"] = 1; //Epm
 $space=0;
 for($a=0;$a<$finalpm["h"];$a++){
 		for($b=0;$b<sizeof($finalpm["index"][$a]);$b++){
-			$ID1["riga"] = $a; $ID1["colonna"] = $b;
-			$finalpm = connect($finalpm,$mapB,$ID1,$ID2,true,$space);
-			$space-=5;
+			$ID2["riga"] = $a; $ID2["colonna"] = $b;
+								//img	 map			cr.path  dash dist
+			$finalpm = connect($finalpm,$mapB,$ID1,$ID2, false, true, 0);
+		
 		}
-		$space=0;
+		
 }
+
+$ID1["riga"] = 0; $ID1["colonna"] = 0; //Spm
+$ID2["riga"] = 3; $ID2["colonna"] = 1; //Epm
+$finalpm = connect($finalpm,$mapB,$ID1,$ID2, true, false, 5);
+
 
 
 Imagepng($finalpm["img"]);
