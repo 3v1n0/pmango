@@ -4,6 +4,7 @@ include "$baseDir/includes/config.php";
 include "$baseDir/includes/db_adodb.php";
 include "$baseDir/includes/db_connect.php";
 include "$baseDir/includes/main_functions.php";
+include "$baseDir/modules/tasks/tasks.class.php";
 
 $query = "SELECT task_id, task_name, task_parent FROM tasks t ".
          " ORDER BY task_id";
@@ -50,6 +51,25 @@ class taskBoxDB {
 		return  "<br>".$pDay[0][0]." d <br> ".$pEffort[0][0]." ph <br> ".$pBudget[0][0]." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
 }
 
+	public function getPlannedTimeframe() {
+		
+		$pStart = $this->doQuery("SELECT task_start_date
+			 		FROM tasks t 
+					WHERE task_id =".$this->pWBS_ID);
+		
+		$pFinish = $this->doQuery("SELECT task_finish_date
+			 		FROM tasks t 
+					WHERE task_id =".$this->pWBS_ID);
+		
+		$start = substr($pStart[0][0],8 ,2 )."/".substr($pStart[0][0],5 ,2 )."/".substr($pStart[0][0],0 ,4 );
+		$finish =  substr($pFinish[0][0],8 ,2 )."/".substr($pFinish[0][0],5 ,2 )."/".substr($pFinish[0][0],0 ,4 );
+		return  "<br>".$start."    |    ".$finish; //restituisce una stringa contenente tutte le variabili sopra elencate.
+		
+	}
+	
+	public function getProgress() {
+		return CTask::getProgress($this->pWBS_ID);
+	}
 //Non mi riesce
 	public function getActualData() {
 $today =$this->doQuery("SELECT task_today FROM tasks t WHERE task_id = ".$this->pWBS_ID);
@@ -79,5 +99,6 @@ $tdb = new taskBoxDB(86);
 echo $tdb->getTaskName();
 echo $tdb->getPlannedData();
 //echo $tdb->getActualData();
-
+echo $tdb ->getPlannedTimeframe();
+echo $tdb ->getProgress();
 ?>
