@@ -1,28 +1,5 @@
 <?php
 
-function hex2dec($hex) {
-	$color = str_replace('#', '', $hex);
-
-	$rgba = array ('r' => 0, 'g' => 0, 'b' => 0, 'a' => 255);
-
-	if (strlen($color) == 3) {
-		$rgba['r'] = hexdec($color[0].$color[0]);
-		$rgba['g'] = hexdec($color[1].$color[1]);
-		$rgba['b'] = hexdec($color[2].$color[2]);
-	}
-
-	if (strlen($color) == 6 || strlen($color) == 8) {
-			$rgba['r'] = hexdec(substr($color, 0, 2));
-			$rgba['g'] = hexdec(substr($color, 2, 2));
-			$rgba['b'] = hexdec(substr($color, 4, 2));
-
-			if (strlen($color) == 8)
-				$rgba['a'] = hexdec(substr($color, 4, 2));
-	}
-
-	return $rgba;
-}
-
 abstract class ImgBlock {
 	private $pFgColor;
 	private $pBgColor;
@@ -75,7 +52,7 @@ abstract class ImgBlock {
 
 	public function setFgColor($c) {
 		if ($c != null)
-			$this->pFgColor = hex2dec($c);
+			$this->pFgColor = $this->hex2dec($c);
 	}
 
 	public function getFgColor() {
@@ -84,7 +61,7 @@ abstract class ImgBlock {
 
 	public function setBgColor($c) {
 		if ($c != null)
-			$this->pBgColor = hex2dec($c);
+			$this->pBgColor = $this->hex2dec($c);
 	}
 
 	public function getBgColor() {
@@ -106,6 +83,29 @@ abstract class ImgBlock {
 
 	//buildImage(), getImage(), destroy() / chached?
 	public abstract function getImage();
+
+	private function hex2dec($hex) {
+		$color = str_replace('#', '', $hex);
+
+		$rgba = array ('r' => 0, 'g' => 0, 'b' => 0, 'a' => 255);
+
+		if (strlen($color) == 3) {
+			$rgba['r'] = hexdec($color[0].$color[0]);
+			$rgba['g'] = hexdec($color[1].$color[1]);
+			$rgba['b'] = hexdec($color[2].$color[2]);
+		}
+
+		if (strlen($color) == 6 || strlen($color) == 8) {
+			$rgba['r'] = hexdec(substr($color, 0, 2));
+			$rgba['g'] = hexdec(substr($color, 2, 2));
+			$rgba['b'] = hexdec(substr($color, 4, 2));
+
+			if (strlen($color) == 8)
+				$rgba['a'] = hexdec(substr($color, 4, 2));
+		}
+
+		return $rgba;
+	}
 }
 
 class BorderedBlock extends ImgBlock {
@@ -271,7 +271,6 @@ class TextBlock extends ImgBlock {
 	private $pTextLines;
 	private $pTextLinesInfo;
 	private $pTextWidth;
-	private $pTextHeight;
 
 	public function TextBlock($text, $font, $font_size, $align = "center") {
 		parent::ImgBlock();
