@@ -1155,7 +1155,7 @@ class CTask extends CDpObject {
 			foreach ($temp as $t => $tparent) {//echo $t." ";
 				if ($tparent == $tid && $tid != $t) {
 					unset($ar[$t]);
-					$child = array_merge(CTask::gChild($t,$ar),$child);
+					$child = array_merge($this->gChild($t,$ar),$child);
 					$child[] = $t;//print_r($child);echo"<br>";
 				}
 			}
