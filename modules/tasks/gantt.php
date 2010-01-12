@@ -485,9 +485,11 @@ for ($x=0; $x < $nums; $x++) {
 if($row["task_finish_date"] == "0000-00-00 00:00:00") {
 	$row["task_finish_date"] = "";
 }
-$width      = dPgetParam( $_GET, 'width', 600 );
+$width      = dPgetParam($_GET, 'width', 600 );
 //consider critical (concerning finish date) tasks as well
-$start_date = dPgetParam( $_GET, 'start_date', $projects[$project_id]["project_start_date"] );
+$start_date = dPgetParam($_GET, 'start_date', $projects[$project_id]["project_start_date"] );
+$show_names = dPgetParam($_GET, 'show_names', "true");
+$draw_deps  = dPgetParam($_GET, 'draw_deps', "true");
 
 if($projects[$project_id]["project_finish_date"] == "0000-00-00 00:00:00" || empty($projects[$project_id]["project_finish_date"])) {
 	$project_end = $start_date;
@@ -515,12 +517,11 @@ $graph->SetBox(true, array(0,0,0), 2);
 $graph->scale->week->SetStyle(WEEKSTYLE_FIRSTDAY);
 //$graph->scale->day->SetStyle(DAYSTYLE_SHORTDATE2);
 
-// This configuration variable is obsolete
+// This configuration variable may be obsolete
 $jpLocale = dPgetConfig( 'jpLocale' );
 if ($jpLocale) {
 	$graph->scale->SetDateLocale( $jpLocale );
 }
-//$graph->scale->SetDateLocale('en');
 
 if ($start_date && $end_date) {
 	$graph->SetDateRange( $start_date, $end_date );
@@ -528,7 +529,8 @@ if ($start_date && $end_date) {
 
 $graph->scale->actinfo->vgrid->SetColor('gray');
 $graph->scale->actinfo->SetColor('darkgray');
-$graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task', UI_OUTPUT_RAW)),array(200));
+$graph->scale->actinfo->SetColTitles(array($AppUI->_('Task', UI_OUTPUT_RAW)),
+                                     ($show_names == "true" ? array($width/6) : null));
 $graph->scale->actinfo->SetFont(FF_USERFONT);
 
 $graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
@@ -645,8 +647,8 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 	if($hide_task_groups) $level = 0;
 
-	$name = Ctask::getWBS($a["task_id"]);
-	$name .= " ".$a["task_name"];
+	$name = Ctask::getWBS($a["task_id"]).".".($show_names == "true" ? " ".$a["task_name"] : "");
+
 	if ( $locale_char_set=='utf-8' && function_exists("utf8_decode") ) {
 		$name = utf8_decode($name);
 	}
@@ -721,11 +723,12 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 			$tend = CTask::getActualFinishDate($a["task_id"], $child);
 
 			if (!empty($tend['task_log_finish_date'])) {
-				if (strtotime($end) > strtotime($now)
-					/*XXX should be implicit*/&& strtotime($start) < strtotime($now))
+				if ($progress < 100 && strtotime($tend['task_log_finish_date']) < strtotime($now) ||
+				       strtotime($end) > strtotime($now) && strtotime($start) < strtotime($now)) {
 					$end = substr($now, 0, 10);
-				else
+				} else {
 					$end = $tend['task_log_finish_date'];
+				}
 			}
 
 			$bar2 = new PMGanttBar($row++, '', $start, $end, '', 0.3);
