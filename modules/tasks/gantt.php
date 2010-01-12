@@ -827,14 +827,16 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		}
 	}
 
-	$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE dependencies_req_task_id=" . $a["task_id"];
-	$query = db_exec($sql);
+	if ($draw_deps == "true") {
+		$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE dependencies_req_task_id=" . $a["task_id"];
+		$query = db_exec($sql);
 
-	while($dep = db_fetch_assoc($query)) {
-		// find row num of dependencies
-		for($d = 0; $d < count($gantt_arr); $d++ ) {
-			if($gantt_arr[$d][0]["task_id"] == $dep["dependencies_task_id"] && $d != $bar->GetLineNbr()) {
-				$bar->SetConstrain($d, CONSTRAIN_ENDSTART,'brown');
+		while($dep = db_fetch_assoc($query)) {
+			// find row num of dependencies
+			for($d = 0; $d < count($gantt_arr); $d++ ) {
+				if($gantt_arr[$d][0]["task_id"] == $dep["dependencies_task_id"] && $d != $bar->GetLineNbr()) {
+					$bar->SetConstrain($d, CONSTRAIN_ENDSTART,'brown');
+				}
 			}
 		}
 	}
