@@ -654,8 +654,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	}
 
 	$name = str_repeat(" ", $level).$name;
-	$w = CTask::isLeafSt($a["task_id"]) ? 42 : 35;
-	$name = strlen( $name ) > $w ? substr( $name, 0, $w-1 ).'...' : $name ;
+
 	//using new jpGraph determines using Date object instead of string
 	$start = $a["task_start_date"];
 	$end_date = $a["task_finish_date"];
@@ -738,6 +737,15 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	}
 
 	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
+	$tst = new Image();
+	$tst->ttf->SetUserFont2('DroidSerif-Regular.ttf');
+
+	$cut = 2;
+	while ($bar->title->GetWidth($tst) >= $width/6) {
+		$n = substr($name, 0, strlen($name)-(1+$cut))."...";
+		$bar->title->Set($n);
+		$cut++;
+	}
 
 	if (!$task_leaf) {
 
