@@ -61,8 +61,10 @@ class TaskBox {
 	}
 
 	public function setName($n) {
-		if (strlen($n) > 0)
+		if (strlen($n) > 0) {
 			$this->pName = $n;
+			$this->pChanged = true;
+		}
 	}
 
 	public function setPlannedData($duration, $effort, $cost) {
