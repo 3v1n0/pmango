@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
 ---------------------------------------------------------------------------
 
@@ -17,12 +17,12 @@
 
  Version history.
  - 2007.05.08 Riccardo
-   Third version, modified to create PDF reports. 
+   Third version, modified to create PDF reports.
  - 2006.07.30 Lorenzo
    Second version, modified to manage Mango task.
  - 2006.07.30 Lorenzo
    First version, unmodified from dotProject 2.0.1.
-   
+
 -------------------------------------------------------------------------------------------
 
  PMango - A web application for project planning and control.
@@ -30,12 +30,12 @@
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi, Riccardo Nicolini
  All rights reserved.
 
- PMango reuses part of the code of dotProject 2.0.1: dotProject code is 
+ PMango reuses part of the code of dotProject 2.0.1: dotProject code is
  released under GNU GPL, further information at: http://www.dotproject.net
  Copyright (C) 2003-2005 The dotProject Development Team.
 
  Other libraries used by PMango are redistributed under their own license.
- See ReadMe.txt in the root folder for details. 
+ See ReadMe.txt in the root folder for details.
 
  PMango is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ class CTask extends CDpObject {
 	var $task_wbs_index = NULL;
 	var $task_start_date = NULL;
 	var $task_today = NULL;
-	
+
 /** @deprecated */
 	var $task_finish_date = NULL;
 	var $task_status = NULL;
@@ -96,7 +96,7 @@ class CTask extends CDpObject {
 	var $task_custom = NULL;
 	var $task_type   = NULL;
 
-	
+
 	function CTask() {
 		$this->CDpObject( 'tasks', 'task_id' );
 	}
@@ -104,13 +104,13 @@ class CTask extends CDpObject {
 // overload check
 	function check() {
 		global $AppUI;
-		
+
 		if ($this->task_id === NULL)
 			return 'task id is NULL';
 
 	// ensure changes to checkboxes are honoured
 		$this->task_milestone = intval( $this->task_milestone );
-		
+
 		if (!$this->task_creator) {
 			$this->task_creator = $AppUI->user_id;
 		}
@@ -118,7 +118,7 @@ class CTask extends CDpObject {
 		if (!$this->task_related_url) {
 			$this->task_related_url = '';
 		}
-				
+
 		/*
 		 * Check for bad or circular task relationships (dep or child-parent).
 		 * These checks are definately not exhaustive it is still quite possible
@@ -211,7 +211,7 @@ class CTask extends CDpObject {
 					return 'BadParent_ChildDepOnParent';
 			}
 		} // parent
-		
+
 		return NULL;
 	}
 
@@ -256,9 +256,9 @@ class CTask extends CDpObject {
 				$newChild->store();
 			}
 		}
-		
+
 		return $newObj;
-	} 
+	}
 
 	function move($destProject_id = 0, $destTask_id = -1) {
 		if ($destProject_id != 0)
@@ -326,15 +326,15 @@ class CTask extends CDpObject {
 			if (!$this->task_parent || $this->task_parent=="^" || $this->task_parent == $this->task_id) {
 				$sql = "UPDATE tasks SET task_parent = $this->task_id WHERE task_id = $this->task_id";
 				db_exec( $sql );
-			} 
-			
+			}
+
 			if (!is_null($res_ar) && count($res_ar) > 0)
 				foreach ($res_ar as $i => $res) {
 					$sql = 'INSERT INTO user_tasks (user_id, proles_id, task_id, effort, perc_effort) VALUES ('.$res[0].','.$res[1].','.$this->task_id.','.$res[2].','.$res[3].')';
 					db_exec( $sql );
-				}				
+				}
 		}
-			
+
 		// update dependencies
 		if (!empty($this->task_id))
 			$this->updateDependencies($this->getDependencies());
@@ -357,7 +357,7 @@ class CTask extends CDpObject {
 		// delete the tasks...what about orphans?
 		// delete task with parent is this task
 		$childrenlist = $this->getChild();
-		
+
 		if (empty($this->task_id)||empty($this->task_parent)||empty($this->task_wbs_index)||empty($this->task_project))
 			return NULL;
 		// delete linked user tasks
@@ -368,12 +368,12 @@ class CTask extends CDpObject {
 		}
 		if (!db_exec( $sql )) {
 			return db_error();
-		} 
-			
+		}
+
 		$sql = "DELETE FROM user_tasks WHERE task_id = $this->task_id";
 		if (!db_exec( $sql )) {
 			return db_error();
-		} 
+		}
 		if (!empty($childrenlist)) {// delete children form user_tasks
 			$sql = "DELETE FROM user_tasks WHERE task_id IN ($childrenlist)";
 			if (!db_exec( $sql ))
@@ -383,24 +383,24 @@ class CTask extends CDpObject {
 		//load it before deleting it because we need info on it to update the parents later on
 		$this->load($this->task_id);
 		//addHistory('tasks', $this->task_id, 'delete', $this->task_name, $this->task_project);
-		
+
 		$sql = "DELETE FROM tasks WHERE task_id = $this->task_id";
 		if (!db_exec( $sql )) {
 			return db_error();
-		} 
+		}
 		if (!empty($childrenlist)) 	{// delete children from tasks
 			$sql = "DELETE FROM tasks WHERE task_id IN ($childrenlist)";
-			if (!db_exec( $sql )) 
+			if (!db_exec( $sql ))
 				return db_error();
 		}
-		
+
 		$sql = "DELETE FROM models WHERE model_association = 2 && model_pt = $this->task_id";
 		if (!db_exec( $sql )) {
 			return db_error();
-		} 
+		}
 		if (!empty($childrenlist)) 	{// delete children from tasks
 			$sql = "DELETE FROM models WHERE model_association = 2 && model_pt IN ($childrenlist)";
-			if (!db_exec( $sql )) 
+			if (!db_exec( $sql ))
 				return db_error();
 		}
 
@@ -408,18 +408,18 @@ class CTask extends CDpObject {
 		$sql = "DELETE FROM task_log WHERE task_log_task = $this->task_id";
 		if (!db_exec( $sql )) {
 			return db_error();
-		} 
+		}
 		if (!empty($childrenlist)) {// delete children form task_log
 			$sql = "DELETE FROM task_log WHERE task_log_task IN ($childrenlist)";
 			if (!db_exec( $sql ))
 				return db_error();
 		}
-		
+
 		// delete dependencies
 		$sql = "DELETE FROM task_dependencies WHERE dependencies_task_id = $this->task_id || dependencies_req_task_id = $this->task_id";
 		if (!db_exec( $sql )) {
 			return db_error();
-		} 
+		}
 		if (!empty($childrenlist)) {// delete children form task_log
 			$sql = "DELETE FROM task_dependencies WHERE dependencies_task_id IN ($childrenlist) || dependencies_req_task_id IN ($childrenlist)";
 			if (!db_exec( $sql ))
@@ -437,14 +437,14 @@ class CTask extends CDpObject {
 		$tarr = explode( ",", $cslist );
 		foreach ($tarr as $task_id) {
 			if (intval( $task_id ) > 0) {
-				$sql = "REPLACE INTO task_dependencies (dependencies_task_id, dependencies_req_task_id) VALUES ($this->task_id, $task_id)";				
+				$sql = "REPLACE INTO task_dependencies (dependencies_task_id, dependencies_req_task_id) VALUES ($this->task_id, $task_id)";
 				db_exec($sql);
 			}
 		}
 	}
-	
+
 	/**
-	*	Retrieve the tasks dependencies 
+	*	Retrieve the tasks dependencies
 	*
 	*	@author	handco	<handco@users.sourceforge.net>
 	*	@return	string	comma delimited list of tasks id's
@@ -491,7 +491,7 @@ class CTask extends CDpObject {
 	// convert to default db time stamp
 		$db_start = $start_date->format( FMT_DATETIME_MYSQL );
 		$db_finish = $finish_date->format( FMT_DATETIME_MYSQL );
-		
+
 		// filter tasks for not allowed projects
 		$tasks_filter = '';
 		$proj =& new CProject;
@@ -507,14 +507,14 @@ class CTask extends CDpObject {
 			. "\n\t\tOR task_start_date BETWEEN '$db_start' AND '$db_finish'"
 			. "\n\t)"
 		    . "\n\t$tasks_filter";
-	
+
 	//		OR
 		//	task_finish_date BETWEEN '$db_start' AND '$db_finish'
 			//OR
 //			(DATE_ADD(task_start_date, INTERVAL task_duration HOUR)) BETWEEN '$db_start' AND '$db_finish'
 	//		OR
 		//	(DATE_ADD(task_start_date, INTERVAL task_duration DAY)) BETWEEN '$db_start' AND '$db_finish'
-	
+
 		$where .= $company_id ? "\n\tAND project_company = '$company_id'" : '';
 
 	// exclude read denied projects
@@ -536,7 +536,7 @@ class CTask extends CDpObject {
 			. "\nFROM tasks,projects,companies"
 			. "\nWHERE $where"
 			. "\nORDER BY task_start_date";
-			
+
 //echo "<pre>$sql</pre>";
 	// execute and return
 		return db_loadList( $sql );
@@ -548,7 +548,7 @@ class CTask extends CDpObject {
 		if(!getDenyRead("admin")){
 			return true;
 		}
-		
+
 		switch ($this->task_access) {
 			case 0:
 				// public
@@ -591,7 +591,7 @@ class CTask extends CDpObject {
 		if (($taskId == false) && ($isDep == false))
 			$aDeps = array();
 
-		// retrieve dependents tasks 
+		// retrieve dependents tasks
 		if (!$taskId)
 			$taskId = $this->task_id;
 
@@ -624,7 +624,7 @@ class CTask extends CDpObject {
 		// return if we are in a dependency call
 		if ($isDep)
 			return;
-                       
+
 		return implode (',', $aDeps);
 
 	} // end of dependentTasks()
@@ -640,7 +640,7 @@ class CTask extends CDpObject {
 		}
 		return $dateObj;
 	}
-	
+
 	// Return date obj for the end of the previous working day
 	function prev_working_day( $dateObj ) {
 		global $AppUI;
@@ -708,7 +708,7 @@ class CTask extends CDpObject {
 
 	/*function calc_end_date( $start_date=null, $durn='8', $durnType='1' ) {
 		GLOBAL $AppUI;
-	
+
 		$cal_day_start = intval(dPgetConfig( 'cal_day_start' ));
 		$cal_day_end = intval(dPgetConfig( 'cal_day_end' ));
 		$daily_working_hours = intval(dPgetConfig( 'daily_working_hours' ));
@@ -737,7 +737,7 @@ class CTask extends CDpObject {
 			// First partial day
 			if (( $s->getHour() + $inc ) > $cal_day_end ) {
 				// Account hours for partial work day
-				$hours_to_add_to_first_day = $cal_day_end - $s->getHour();	
+				$hours_to_add_to_first_day = $cal_day_end - $s->getHour();
 				if ( $hours_to_add_to_first_day > $daily_working_hours )
 					$hours_to_add_to_first_day = $daily_working_hours;
 				$inc -= $hours_to_add_to_first_day;
@@ -745,7 +745,7 @@ class CTask extends CDpObject {
 				// number of full working days remaining
 				$full_working_days = round(($inc - $hours_to_add_to_last_day) / $daily_working_hours);
 
-				if ( $hours_to_add_to_first_day != 0 ) {	
+				if ( $hours_to_add_to_first_day != 0 ) {
 					while (1) {
 						// Move on to the next workday
 						$e->addDays(1);
@@ -796,7 +796,7 @@ class CTask extends CDpObject {
 		} else {
 		  $number_assigned_users = count($assigned_users);
 		}
-		
+
 		$day_diff              = $task_finish_date->dateDiff($task_start_date);
 		$number_of_days_worked = 0;
 		$actual_date           = $task_start_date;
@@ -823,11 +823,11 @@ class CTask extends CDpObject {
 
         // @return      returns the Names of the concerned Users if there occured an overAssignment, otherwise false
 	function updateAssigned( $res_ar) {
-		//print_r($res_ar);					
+		//print_r($res_ar);
 		if (count($res_ar) > 0) {
 			$sql = "SELECT CONCAT(user_id, proles_id, task_id), user_task_priority FROM user_tasks WHERE task_id = $this->task_id";
 			$utp_ar = db_loadHashList($sql);
-			
+
             $sql = "DELETE FROM user_tasks WHERE task_id = $this->task_id";
             db_exec( $sql );
 
@@ -849,7 +849,7 @@ class CTask extends CDpObject {
 	}
 
 	function getAssignedUsers(){
-		$sql = "select u.*, ut.perc_effort, ut.user_task_priority, user_last_name 
+		$sql = "select u.*, ut.perc_effort, ut.user_task_priority, user_last_name
 		        from users as u, user_tasks as ut
 		        where ut.task_id = '$this->task_id'
 		              and ut.user_id = u.user_id";
@@ -894,7 +894,7 @@ class CTask extends CDpObject {
 		$prio = db_loadHash($sql, $priority);
 		return $prio ? $priority['user_task_priority'] : NULL;
 	}
-	
+
 	function updateUserSpecificTaskPriority( $user_task_priority = 0, $user_id = 0, $task_id = NULL ) {
 		// use task_id of given object if the optional parameter task_id is empty
 		$task_id = empty($task_id) ? $this->task_id : $task_id;
@@ -928,7 +928,7 @@ class CTask extends CDpObject {
 				$tempTask->load($child);
 				$deep_children = array_merge($deep_children, $this->getChildren());
 			}
-				
+
 			return array_merge($children, $deep_children);
 		}
 		return array();
@@ -942,15 +942,15 @@ class CTask extends CDpObject {
 		if(is_null($task_id)){
 			$task_id = $this->task_id;
 		}
-		
+
 		// get children
 		$sql = "select task_id
 		        from tasks
 		        where task_parent = '$task_id'";
-		
+
 		$tasks_id = db_loadColumn($sql);
 		if(count($tasks_id) == 0) return true;
-		
+
 		// update status of children
 		$sql = "update tasks set task_status = '$new_status' where task_parent = '$task_id'";
 
@@ -966,7 +966,7 @@ class CTask extends CDpObject {
 	/**
 	* This function recursively updates all tasks project
 	* to the one passed as parameter
-	*/ 
+	*/
 	function updateSubTasksProject($new_project , $task_id = null){
 		if(is_null($task_id)){
 			$task_id = $this->task_id;
@@ -974,10 +974,10 @@ class CTask extends CDpObject {
 		$sql = "select task_id
 		        from tasks
 		        where task_parent = '$task_id'";
-		
+
 		$tasks_id = db_loadColumn($sql);
 		if(count($tasks_id) == 0) return true;
-		
+
 		$sql = "update tasks set task_project = '$new_project' where task_parent = '$task_id'";
 		db_exec($sql);
 
@@ -987,7 +987,7 @@ class CTask extends CDpObject {
 			}
 		}
 	}
-	
+
 	function isLeaf() {
 		$sql = "SELECT COUNT(*) FROM tasks WHERE $this->task_id <> task_id && task_parent = $this->task_id";
 		$r = db_loadResult($sql);
@@ -996,7 +996,7 @@ class CTask extends CDpObject {
 		else
 			return true;
 	}
-	
+
 	static function isLeafSt($tid) {
 		$sql = "SELECT COUNT(*) FROM tasks WHERE $tid <> task_id && task_parent = $tid";
 		$r = db_loadResult($sql);
@@ -1005,31 +1005,31 @@ class CTask extends CDpObject {
 		else
 			return true;
 	}
-	
+
 	static function getWBSIndexFromParent($tid, $pid=null) {
 		if (is_null($tid))
 			return "";
 		if ($tid == "^") {
 			$sql = "SELECT MAX(task_wbs_index) FROM tasks WHERE task_parent = task_id && $pid = task_project";
 			$r = db_loadResult($sql);
-		} else { 
+		} else {
 			$sql = "SELECT MAX(task_wbs_index) FROM tasks WHERE $tid = task_parent && task_parent != task_id";
 			$r = db_loadResult($sql);
 		}
 		return $r+1;
 	}
-	
+
 	static function getWBS($tid, $isRootChildren = false) {
 		if (is_null($tid))
 			return "";
 		$sql = "SELECT task_parent, task_wbs_index FROM tasks WHERE $tid = task_id";
 		$r = db_loadList($sql);
-		
+
 		$currentTask = $tid;
 		$wbs = $r[0]['task_wbs_index'];//if ($tid == 24) echo strrev($wbs);
 		if ($r[0]['task_parent']==$tid && $isRootChildren)
 			return "";
-			
+
 		while ($currentTask != $r[0]['task_parent']) {
 			$currentTask = $r[0]['task_parent'];
 			if (!is_null($currentTask)) {
@@ -1042,12 +1042,12 @@ class CTask extends CDpObject {
 		}
 		return strrev($wbs);
 	}
-	
+
 	static function getTaskLevel($tid) {
-	 
+
 	 if (is_null($tid))
 			return "";
-	 
+
 	 $t_level = strlen(str_replace(".","",CTask::getWBS($tid)));
 	 return $t_level;
 	 }
@@ -1058,15 +1058,15 @@ class CTask extends CDpObject {
 
 		if (is_null($pid))
 			return "";
-			
+
 		$sql = "SELECT task_id, task_parent FROM tasks WHERE $pid = task_project ORDER BY task_parent ASC";
 		$r = db_loadList($sql);
-		
+
 		for($i=0;$i<count($r);$i++){
 			$level[$i]=CTask::getTaskLevel($r[$i]['task_id']);
 			}
 		/*	if($r[$i]['task_parent']==$r[$i]['task_id']){
-				$level[$i]=1;	
+				$level[$i]=1;
 			}else{
 			 	for($j=0;$j<count($r);$j++){
 			 		if($r[$j]['task_id']==$r[$i]['task_parent']) $level[$i]=$level[$j]+1;}
@@ -1075,7 +1075,7 @@ class CTask extends CDpObject {
 			print_r($level);*/
 		 return max($level);
 	}
-	
+
 	//funzione di aggiornamento della wbs in seguito ad un cambiamento
 	function updateWBS($oldParent,$oldWBSi) {
 		if (empty($this->task_id) || empty($this->task_wbs_index) || empty($this->task_parent) || empty($this->task_project))
@@ -1092,7 +1092,7 @@ class CTask extends CDpObject {
 				elseif ($oldWBSi > $this->task_wbs_index)
 					$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index + 1 WHERE task_parent = task_id && task_wbs_index >= $this->task_wbs_index && task_id <> $this->task_id && task_wbs_index <= $oldWBSi && task_project = $this->task_project";
 			}
-			else //modifica di un task che è figlio di project 
+			else //modifica di un task che ï¿½ figlio di project
 				$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index + 1 WHERE task_parent = task_id && task_wbs_index >= $this->task_wbs_index && task_id <> $this->task_id && task_project = $this->task_project";
 		}
 		else {//echo "222";
@@ -1107,17 +1107,17 @@ class CTask extends CDpObject {
 				$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index + 1 WHERE task_parent = $this->task_parent && task_wbs_index >= $this->task_wbs_index && task_id <> $this->task_id && task_parent <> task_id && task_project = $this->task_project";
 		}
 		db_exec( $sql );
-		
+
 		// MODIFICA DEL LIVELLO SUPERIORE
 		if ($this->task_parent != $oldParent && $oldParent != 0 && $oldWBSi != 0) {
 			if ($oldParent == $this->task_id) //era figlio di project
-				$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index - 1 WHERE task_wbs_index >= $oldWBSi && task_parent = task_id && task_id <> $this->task_id && task_project = $this->task_project";			
+				$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index - 1 WHERE task_wbs_index >= $oldWBSi && task_parent = task_id && task_id <> $this->task_id && task_project = $this->task_project";
 			else
 				$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index - 1 WHERE task_parent = $oldParent && task_wbs_index >= $oldWBSi && task_parent <> task_id && task_project = $this->task_project";
 			db_exec( $sql );// gestire i figli id project*/
 		}
 	}
-	
+
 	function getEffort($tid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
@@ -1131,7 +1131,7 @@ class CTask extends CDpObject {
 			$r = 0;
         return round($r,2);
 	}
-	
+
 	function getBudget($tid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
@@ -1146,23 +1146,23 @@ class CTask extends CDpObject {
 			$r = 0;
         return round($r,2);
 	}
-	
-	
+
+
 	function gChild($tid, &$ar) {
 		$child =array();//echo "<br>".$tid."<br>";
 		if (count($ar) > 0) {
-			$temp = $ar; 
+			$temp = $ar;
 			foreach ($temp as $t => $tparent) {//echo $t." ";
 				if ($tparent == $tid && $tid != $t) {
 					unset($ar[$t]);
-					$child = array_merge($this->gChild($t,$ar),$child);		
+					$child = array_merge(CTask::gChild($t,$ar),$child);
 					$child[] = $t;//print_r($child);echo"<br>";
 				}
 			}
 		}
-		return ($child);	
+		return ($child);
 	}
-	
+
 	function getChild($tid = null, $pid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
@@ -1178,13 +1178,13 @@ class CTask extends CDpObject {
 		foreach ($ar as $t => $tparent) {
 			if ($tparent == $tid && $tid != $t) {
 				unset($ar[$t]);
-				$child = array_merge($this->gChild($t,$ar),$child);			
+				$child = array_merge(CTask::gChild($t,$ar),$child);
 				$child[] = $t;
 			}
 		}
 		return (implode($child,','));
 	}
-	
+
 	function getStartDateFromTask($tid = null, $setTid) {
 		if (($setTid == null) || ($setTid == ''))
 			return "-";
@@ -1199,7 +1199,7 @@ class CTask extends CDpObject {
         $ar = $q->loadList();
         return $ar[0];
 	}
-	
+
 	function getFinishDateFromTask($tid = null, $setTid) {
 		if (($setTid == null) || ($setTid == ''))
 			return "-";
@@ -1214,7 +1214,7 @@ class CTask extends CDpObject {
         $ar = $q->loadList();
         return $ar[0];
 	}
-	
+
 	function getEffortFromTask($tid = null, $setTid) {
 		if (($setTid == null) || ($setTid == ''))
 			return 0;
@@ -1231,7 +1231,7 @@ class CTask extends CDpObject {
 			$r = 0;
         return round($r,2);
 	}
-	
+
 	function getBudgetFromTask($tid = null, $setTid) {
 		if (($setTid == null) || ($setTid == ''))
 			return 0;
@@ -1249,7 +1249,7 @@ class CTask extends CDpObject {
 			$r = 0;
         return round($r,2);
 	}
-	
+
 	function getActualStartDate($tid = null, $setTid) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
@@ -1258,16 +1258,16 @@ class CTask extends CDpObject {
 		$q->addQuery('tl.task_log_start_date, t.task_id');
 		$q->addTable('tasks','t');
 		$q->addJoin('task_log','tl','tl.task_log_task = t.task_id');
-		if (($setTid == null) || ($setTid == '')) 
+		if (($setTid == null) || ($setTid == ''))
 			$q->addWhere("t.task_id = $tid && !isnull( tl.task_log_start_date ) AND tl.task_log_start_date !=  '0000-00-00 00:00:00'");
-		else	
+		else
 			$q->addWhere("t.task_id IN ($setTid) && !isnull( tl.task_log_start_date ) AND tl.task_log_start_date !=  '0000-00-00 00:00:00'");
 		$q->addOrder('tl.task_log_start_date ASC');
         $ar = $q->loadList();
         return $ar[0];
 		return "in progress";
 	}
-	
+
 	function getActualFinishDate($tid = null, $setTid) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
@@ -1276,15 +1276,15 @@ class CTask extends CDpObject {
 		$q->addQuery('tl.task_log_finish_date, t.task_id');
 		$q->addTable('tasks','t');
 		$q->addJoin('task_log','tl','tl.task_log_task = t.task_id');
-		if (($setTid == null) || ($setTid == '')) 
+		if (($setTid == null) || ($setTid == ''))
 			$q->addWhere("t.task_id = $tid && !isnull( tl.task_log_finish_date ) AND tl.task_log_finish_date !=  '0000-00-00 00:00:00'");
-		else	
+		else
 			$q->addWhere("t.task_id IN ($setTid) && !isnull( tl.task_log_finish_date ) AND tl.task_log_finish_date !=  '0000-00-00 00:00:00'");
 		$q->addOrder('tl.task_log_finish_date DESC');
         $ar = $q->loadList();
         return $ar[0];
 	}
-	
+
 	function getActualEffort($tid = null, $setTid) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
@@ -1302,7 +1302,7 @@ class CTask extends CDpObject {
 			$r = 0;
         return round($r,2);
 	}
-	
+
 	function getActualCost($tid = null, $setTid) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
@@ -1321,7 +1321,7 @@ class CTask extends CDpObject {
 			$r = 0;
         return round($r,2);
 	}
-	
+
 	function getEffortPerformanceIndex($tid = null, $tae = null, $te = null, $pr = null, $setTid) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
         if ($tid == 0)
@@ -1334,14 +1334,14 @@ class CTask extends CDpObject {
         	$pr = $this->getProgress($tid,$te);
         if ($te == 0 || is_null($tae) || is_null($te) || is_null($pr))
         	return "-";
-        
+
         if ($pr == 0)
         	return "-";
         if ($te == 0 || $pr == 0)
-        	return "-";	
+        	return "-";
         return round(($tae * 100)/($te * $pr),2);
 	}
-	
+
 	function getCostPerformanceIndex($tid = null, $tac = null, $tb = null, $pr = null, $setTid) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
         if ($tid == 0)
@@ -1354,14 +1354,14 @@ class CTask extends CDpObject {
         	$pr = $this->getProgress($tid);
         if ($tb == 0 || is_null($tac) || is_null($tb) || is_null($pr))
         	return "-";
-        
+
         if ($pr == 0)
         	return "-";
         if ($tb == 0 || $pr == 0)
         	return "-";
         return round(($tac * 100)/($tb * $pr),2);
 	}
-	
+
 	function getTimePerformanceIndex($tid = null, $ptd = null, $psd = null, $pfd = null, $pafd = null, $pr = null, $setTid) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
         if ($tid == 0)
@@ -1377,7 +1377,7 @@ class CTask extends CDpObject {
         if ($pafd == null) {
         	$d = $this->getActualFinishDate(null,$setTid);
         	$pafd = intval($d['task_log_finish_date']) ? new CDate($d['task_log_finish_date']) : null;
-        } 
+        }
         if ($pr == null)
         	$pr = $this->getProgress($tid);
         if (is_null($ptd) || is_null($psd) || is_null($pfd) || is_null($pr))
@@ -1393,7 +1393,7 @@ class CTask extends CDpObject {
         }
         if ($pafd == "-" || is_null($pafd))
         	$diff3 = 0;
-        else 
+        else
         	$diff3 = $pafd->dateDiff($psd);
         if ($diff3 == 0)
         	$diff3 = 1;
@@ -1405,10 +1405,10 @@ class CTask extends CDpObject {
         }
         else
         	return "-";
-        	
+
         return round(($pac * 100)/($ptb * $pr),2);
 	}
-	
+
 	function getProgress($tid = null, $te = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
@@ -1422,13 +1422,13 @@ class CTask extends CDpObject {
 		$q->addQuery('task_id');
 		$q->addTable('tasks');
 		$q->addWhere("task_parent = $tid && task_parent != task_id");
-		$ar = $q->loadColumn();	
+		$ar = $q->loadColumn();
 		$q->clear();
 		if (count($ar) > 0) {
 			$temp = $ar;
 			foreach ($temp as $t) {
 				$tte = $this->getEffort($t);
-				$tp += ($this->getProgress($t, $tte) * $tte);	
+				$tp += ($this->getProgress($t, $tte) * $tte);
 			}
 		} else {//is_leaf
 			$q->addQuery('task_log_progress');
@@ -1444,7 +1444,7 @@ class CTask extends CDpObject {
 			return 0;
 		return round($tp/$te,2);
 	}
-	
+
 	static function getPr($tid, $te = null) {
 		$tid = !empty($tid) ? $tid : 0;
 		if ($tid == 0)
@@ -1456,14 +1456,14 @@ class CTask extends CDpObject {
 			$q->addTable('user_tasks');
 			$q->addWhere("task_id  = $tid");
 	        $te = $q->loadResult();
-			if ($te <= 0 || is_null($te)) 
+			if ($te <= 0 || is_null($te))
 	       		return 0;
 			$q->clear();
         }
         $q->addQuery('task_id');
 		$q->addTable('tasks');
 		$q->addWhere("task_parent = $tid && task_parent != task_id");
-		$ar = $q->loadColumn();	
+		$ar = $q->loadColumn();
 		$q->clear();
 		if (count($ar) > 0) {
 			$temp = $ar;
@@ -1475,7 +1475,7 @@ class CTask extends CDpObject {
 				if ($tte < 0 || is_null($tte))
 		       		return 0;
 				$q->clear();
-				$tp += (CTask::getPr($t, $tte) * $tte);	
+				$tp += (CTask::getPr($t, $tte) * $tte);
 			}
 		} else {//is_leaf
 			$q->addQuery('task_log_progress');
@@ -1488,10 +1488,10 @@ class CTask extends CDpObject {
 	        return intval($r);
 		}
 		//return $te;
-		
+
 		return round($tp/$te,2);
 	}
-	
+
 	function isDefined($tid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
         if ($tid == 0)
@@ -1506,9 +1506,9 @@ class CTask extends CDpObject {
         	$msg.="- Task finish date is not defined\n";
         // 1.4.1.3 V
         if ($this->task_start_date > $this->task_finish_date)
-        	$msg.="- Task start date is after task finish date\n";  
+        	$msg.="- Task start date is after task finish date\n";
         // 1.4.1.4 V
-        // Automatically calculated 
+        // Automatically calculated
         // 1.4.1.5 V
         $r = 0;
         $q = new DBQuery();
@@ -1520,13 +1520,13 @@ class CTask extends CDpObject {
         	$msg.="- There aren't resources assigned to task\n";
 
         return $msg;
-        
+
 	}
-	
+
 	function isWellFormed($tid = null, $setTid = null, $fromProj = false) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		$setTid = !empty($setTid) ? $setTid : $this->getChild();
-		
+
 		if ($tid == 0)
         	return 'Error';
         $msg='';
@@ -1541,10 +1541,10 @@ class CTask extends CDpObject {
         	foreach ($ar as $t) {
         		$msg .= "- Task start date is before <a href=\"?m=tasks&a=view&task_id=".$t['task_id']."\"><span style=\"color:#990000;text-decoration:underline;\">".CTask::getWBS($t['task_id'])." ".$t['task_name']."</span></a> finish date\n";
         	}
-        
+
 		if($this->isLeaf())
 			return $msg;
-        
+
         $ts = $this->getStartDateFromTask($tid,$setTid);
         if ($this->task_start_date > $ts['task_start_date'])
         	$msg.="- Task start date is after <a href=\"?m=tasks&a=view&task_id=".$ts["task_id"]."\"><span style=\"color:#990000;text-decoration:underline;\">start date from tasks</span></a>\n";
@@ -1554,7 +1554,7 @@ class CTask extends CDpObject {
   		if ($this->getBudget($tid,$setTid) <> $this->getBudgetFromTask($tid,$setTid))
   			$msg.="- Task budget is different from budget from tasks\n";
   		$tasks = explode(",",$setTid);
-  		
+
   		$leafs = array();
   		//print_r($tasks);echo"<br>";print_r($child);echo"<br>";
   		if (is_array($tasks) && !empty($tasks)) {
@@ -1575,9 +1575,9 @@ class CTask extends CDpObject {
 		  		if (is_array($ar) && count($ar)>0)
 		  			foreach ($ar as $t)
 		  				$msg.="- Task doesn't contain a resource assigned to <a href=\"?m=tasks&a=view&task_id=".$t['task_id']."\"><span style=\"color:#990000;text-decoration:underline;\">".CTask::getWBS($t['task_id'])." ".$t['task_name']."</span></a>\n";
-  				
+
 	  		}
-	  		foreach ($tasks as $ch) 
+	  		foreach ($tasks as $ch)
 	  			if (CTask::isLeafSt($ch))
 	  				$leafs[] = $ch;
 	  		//print_r($leafs);echo"<br><br>";
@@ -1588,7 +1588,7 @@ class CTask extends CDpObject {
 		  		$q->addJoin("tasks","t","t.task_id=ut.task_id");
 		  		$q->addJoin("users","u","u.user_id=ut.user_id");
 		  		$q->addJoin("project_roles","p","p.proles_id=ut.proles_id");
-		  		$q->addWhere("t.task_project = $this->task_project && ut.task_id = $tid && 
+		  		$q->addWhere("t.task_project = $this->task_project && ut.task_id = $tid &&
 		  		((ut.effort != (SELECT SUM(ut2.effort) FROM user_tasks as ut2 WHERE ut2.task_id IN (".implode($leafs,',').") && CONCAT_WS(',',ut.user_id,ut.proles_id) = CONCAT_WS(',',ut2.user_id,ut2.proles_id)))||
 		  		(0 = (SELECT COUNT(*) FROM user_tasks as ut2 WHERE ut2.task_id IN (".implode($leafs,',').") && CONCAT_WS(',',ut.user_id,ut.proles_id) = CONCAT_WS(',',ut2.user_id,ut2.proles_id))))");
 		  		$ar = $q->loadColumn();
@@ -1604,14 +1604,14 @@ class CTask extends CDpObject {
   		$t = $q->loadResult();
   		if ($t == 1)
   			$msg.="- Task has only one child\n";
-  		  		
+
   		$q->clear();
   		$q->addQuery("COUNT(task_log_id)");
   		$q->addTable("task_log");
   		$q->addWhere("task_log_task = $tid");
   		if ($q->loadResult() > 0)
   			$msg.="- Task isn't leaf and there are task logs assigned to it\n";
-  			
+
   		$q->clear();
 		$q->addQuery('task_finish_date');
 		$q->addTable('tasks');
@@ -1638,9 +1638,9 @@ class CTask extends CDpObject {
 		if ($d1 > 0)
 			if (!array_search($d1,$dates))
 				$msg .=" - Task delivery date doesn't match with a child task finish date\n";
-	  		
+
 	  	if (!$fromProj) {
-	  		if (is_array($tasks))	
+	  		if (is_array($tasks))
 		        foreach ($tasks as $t) {
 		        	$obj = new CTask();
 		        	if (!$obj->load($t)) {
@@ -1656,9 +1656,9 @@ class CTask extends CDpObject {
 		        }
   		}
         return $msg;
-        
+
 	}
-	
+
 	function isCostEffective($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
         if ($tid == 0)
@@ -1671,7 +1671,7 @@ class CTask extends CDpObject {
         	$msg.="- Task cost performance index is greater than 1\n";
         return $msg;
 	}
-	
+
 	function isEffortEffective($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
         if ($tid == 0)
@@ -1684,28 +1684,28 @@ class CTask extends CDpObject {
         	$msg.="- Task effort performance index is greater than 1\n";
         return $msg;
 	}
-	
+
 	function isTimeEffective($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
         if ($tid == 0)
         	return 'Error';
         $msg='';
-        
+
         if ($this->getTimePerformanceIndex($tid,'','','','','',$setTid) > 1)
         	$msg.="- Task time performance index is greater than 1\n";
         return $msg;
-        
+
 	}
-	
+
 	function isPlanEffective($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
         if ($tid == 0)
         	return 'Error';
         $msg='';
-        
-        
+
+
         return $msg;
-        
+
 	}
 
 
@@ -1738,7 +1738,7 @@ class CTaskLog extends CDpObject {
                 // ensure changes to checkboxes are honoured
         $this->task_log_problem = intval( $this->task_log_problem );
 	}
-	
+
 	function updateProgress() {
 		//AGGIORNAMENTO DELLE PERCENTUALI
 	}
@@ -1749,7 +1749,7 @@ class CTaskLog extends CDpObject {
 		return NULL;
 	}
 
-	function canDelete( &$msg, $oid=null, $joins=null ) {//OK non viene mai chiamata perchè canDelete di CDobj ha 4 par quindi non c'è overriding
+	function canDelete( &$msg, $oid=null, $joins=null ) {//OK non viene mai chiamata perchï¿½ canDelete di CDobj ha 4 par quindi non c'ï¿½ overriding
 		global $AppUI;
 
 		// First things first.  Are we allowed to delete?
@@ -1804,7 +1804,7 @@ class CTaskLog extends CDpObject {
 function closeOpenedTask($task_id){
     global $tasks_opened;
     global $tasks_closed;
-    
+
     if(in_array($task_id, $tasks_opened))
     	unset($tasks_opened[array_search($task_id, $tasks_opened)]);
     if(!in_array($task_id, $tasks_closed))
@@ -1817,7 +1817,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 	global $AppUI, $dPconfig, $done, $query_string, $userAlloc, $showEditCheckbox;
 	global $tasks_opened;
 	global $tasks_closed;
-	
+
 	if ($showIncomplete && intval(CTask::getPr($a["task_id"]) >= 100))
 		return '';
 
@@ -1839,7 +1839,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 	$te = $obj->getEffort($a['task_id']);
 	//inserrire controlla unfinished
 	$tpr = intval( $obj->getProgress($a['task_id'],$te));
-	
+
 	$tc = $obj->getBudget($a['task_id']);
 	$df = $AppUI->getPref('SHDATEFORMAT');
 	$df .= " " . $AppUI->getPref('TIMEFORMAT');
@@ -1847,7 +1847,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 	$show_all_assignees = @$dPconfig['show_all_task_assignees'] ? true : false;
 
 	$done[] = $a['task_id'];
-	
+
 	$start_date = intval( $a["task_start_date"] ) ? new CDate( $a["task_start_date"] ) : null;
 	$finish_date = intval( $a["task_finish_date"] ) ? new CDate( $a["task_finish_date"] ) : null;
 
@@ -1858,13 +1858,13 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 			if(($sdate>$task_edate)||($edate<$task_sdate)){
 	 			return '';	}
 		}
-	
+
 	// prepare coloured highlight of task time information
 	$sign = 1;
-    $style = "";  
+    $style = "";
 	$s = "\n<tr>";
 // edit icon
-	
+
 	//$canEdit = !getDenyEdit( 'tasks', $a["task_id"] );
 	if ($canEdit) {
 		$s .= "\n\t<td>";
@@ -1873,7 +1873,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 			. "\n\t\t</a>";
 		$s .= "\n\t</td>";
 	}
-	
+
 // pinned
     /*    $pin_prefix = $a['task_pinned']?'':'un';
         $s .= "\n\t<td align=\"center\">";
@@ -1896,7 +1896,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 	$s .= '<td align="left" nowrap="nowrap">';
 	$s .= CTask::getWBS($a['task_id']);
 	$s .= "</td>";
-	
+
 // dots
 	if ($today_view)
 		$s .= '<td width="50%">';
@@ -1915,15 +1915,15 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 	$alt = strlen($a['task_description']) > 80 ? substr($a["task_description"],0,80) . '...' : $a['task_description'];
 	// instead of the statement below
 	$alt = str_replace("\"", "&quot;", $alt);
-//	$alt = htmlspecialchars($alt); 
+//	$alt = htmlspecialchars($alt);
 	$alt = str_replace("\r", ' ', $alt);
 	$alt = str_replace("\n", ' ', $alt);
 
 	if (!$notOpen)
 		$open_link = $is_opened ? "<a href='index.php$query_string&close_task_id=".$a["task_id"]."&reset_level=1'><img src='images/icons/collapse.gif' border='0' align='center' /></a>" : "<a href='index.php$query_string&open_task_id=".$a["task_id"]."&reset_level=1'><img src='images/icons/expand.gif' border='0' /></a>";
-	else 
+	else
 		$open_link = "<img src='images/icons/nothing.gif' border='0' />";
-		
+
 /*	if ($is_opened){
 	 	if(in_array($a['task_id'], $tasks_opened)) $open_link = "<a href='index.php$query_string&close_task_id=".$a["task_id"]."'><img src='images/icons/r-collapse.gif' border='0' align='center' /></a>";
 	 	else $open_link = "<a href='index.php$query_string&close_task_id=".$a["task_id"]."'><img src='images/icons/collapse.gif' border='0' align='center' /></a>";
@@ -1932,7 +1932,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 		if(in_array($a['task_id'], $tasks_closed)) $open_link = "<a href='index.php$query_string&open_task_id=".$a["task_id"]."'><img src='images/icons/r-expand.gif' border='0' align='center' /></a>";
 		else $open_link = "<a href='index.php$query_string&open_task_id=".$a["task_id"]."'><img src='images/icons/expand.gif' border='0' align='center' /></a>";
 	}*/
-	
+
 	if ($a["task_milestone"] > 0 ) {
 		$s .= '&nbsp;<a href="./index.php?m=tasks&a=view&task_id=' . $a["task_id"] . '&child_task=1" title="' . $alt . '"><b><i>' . $a["task_name"] . '</i></b></a> <img src="./images/icons/milestone.gif" border="0"></td>';
 	} else if (!CTask::isLeafSt($a["task_id"])) {
@@ -1948,17 +1948,17 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 		$s .= '<span style="padding:2px;background-color:#' . $a['project_color_identifier'] . ';color:' . bestColor($a['project_color_identifier']) . '">' . $a['project_name'] . '</span>';
 		$s .= '</a></td>';
 	}
-	
+
 //	$s .= '<td nowrap="nowrap" align="center">'. $a["user_username"] .'</td>';
 	if ( isset($a['task_assigned_users']) && ($assigned_users = $a['task_assigned_users'])) {
 		$a_u_tmp_array = array();
 		$s .= '<td align="center" nowrap="nowrap">';
         $id = $a['task_id'];
-        
+
 	$sql="SELECT users.user_last_name, project_roles.proles_name FROM users,project_roles,user_tasks
 	WHERE user_tasks.user_id=users.user_id AND user_tasks.proles_id=project_roles.proles_id AND user_tasks.task_id=".$a['task_id'];
 	$db_roles = db_loadList($sql);
-	
+
 		if(count( $db_roles )>0){
 			if($roles=="A"){
 				$s .=  $db_roles[0][0].": ".$db_roles[0][1];
@@ -1967,11 +1967,11 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 					$s .= $db_roles[$i][0].": ".$db_roles[$i][1];
 				}
 			}
-			
+
 			if($roles=="N"){
 				$s .= " <a href=\"javascript: void(0);\"  onClick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
 			}
-			
+
 			if($roles=="R"){
 				$s .= $db_roles[0][1];
 				for ( $i = 1; $i < count( $db_roles ); $i++) {
@@ -1980,7 +1980,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 				}
 			}
 		}else{$s .="No Worker";}
-		
+
 		if(count( $assigned_users )>0){
 			if($roles=="P"){
 				$s .= $assigned_users[0]['user_first_name']." ".$assigned_users[0]['user_last_name'] ;
@@ -2004,7 +2004,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 		// No users asigned to task
 		$s .= '<td align="center">-</td>';
 	}
-	
+
 	$s .= '<td nowrap="nowrap" align="center" style="'.$style.'">'.($start_date ? $start_date->format( $df ) : '-').'</td>';
 // duration or milestone
 	$s .= '<td nowrap="nowrap" align="center" style="'.$style.'">'.($finish_date ? $finish_date->format( $df ) : '-').'</td>';
@@ -2027,7 +2027,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 
 function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, $notOpen = false, $canEdit, $showIncomplete = false,$showMine = false,$roles, $sdate, $edate) {
 	global $AppUI, $dPconfig, $done, $query_string, $userAlloc, $showEditCheckbox;
-	
+
 	$obj = new CTask();//echo $re;
 	$te = $obj->getEffort($a['task_id']);
 	//inserrire controlla unfinished
@@ -2048,7 +2048,7 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 		if (!$mine_found)
 			return '';
 	}
-		
+
 	$tc = $obj->getBudget($a['task_id']);
     $now = new CDate();
 	$df = $AppUI->getPref('SHDATEFORMAT');
@@ -2057,10 +2057,10 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 	$show_all_assignees = @$dPconfig['show_all_task_assignees'] ? true : false;
 
 	$done[] = $a['task_id'];
-	$childs = $obj->getChild($a['task_id'],$a['task_project']); 
-	
+	$childs = $obj->getChild($a['task_id'],$a['task_project']);
+
 	$actual_start_date = $obj->getActualStartDate($a['task_id'], $childs);
-	
+
 	$task_date=substr($actual_start_date['task_log_start_date'],0,10);
 	$task_date=str_replace("-","",$task_date);
 
@@ -2070,27 +2070,27 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 	$actual_start_date = intval( $actual_start_date['task_log_start_date'] ) ? new CDate( $actual_start_date['task_log_start_date'] ) : null;
 	$actual_finish_date = $obj->getActualFinishDate($a['task_id'], $childs);
 	$actual_finish_date = intval( $actual_finish_date['task_log_finish_date'] ) ? new CDate( $actual_finish_date['task_log_finish_date'] ) : null;
-	
+
 	$tae = $obj->getActualEffort($a['task_id'], $childs);//echo "-".$childs;
 	$tac = $obj->getActualCost($a['task_id'], $childs);
-	
+
 	if((($sdate>$task_date)||($edate<$task_date))&&($task_date!=null))
-	 return '';	
-	
+	 return '';
+
 	// prepare coloured highlight of task time information
 	$sign = 1;
         $style = "";
-        
+
         if ((!$actual_finish_date && $now->after( $start_date ))||($now->after($finish_date)&& $tpr < 100)){
 			$icon='images/icons/!t.png';
 			$style = 'background-color:#cc6666;color:#ffffff';
         }
-			
+
     	if ($actual_start_date){
 			if ($now->after( $actual_start_date ) && $tpr < 100) {//Running
 	            $icon='images/icons/!r.png';
-				$style = 'background-color:#e6eedd';     
-	        } 
+				$style = 'background-color:#e6eedd';
+	        }
 
 			if ((!$actual_finish_date && $now->after( $start_date ))||($now->after($finish_date)&& $tpr < 100)){
 				$icon='images/icons/!t.png';
@@ -2101,17 +2101,17 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 				$icon='images/icons/!v.png';
 				$style = 'background-color:#aaddaa; color:#00000';
 	        }
-    	}  
-	
+    	}
+
 	$style3=$style;
 	if (($tae > $te)||($tac > $tc)) {
 		$icon='images/icons/!b.png';
-		$style3='background-color:#bb0000; color:#ffffff;';	
+		$style3='background-color:#bb0000; color:#ffffff;';
 	}
-	
+
 	$s = "\n<tr>";
 // edit icon
-	
+
 	//$canEdit = !getDenyEdit( 'tasks', $a["task_id"] );
 	if ($canEdit) {
 		$s .= "\n\t<td>";
@@ -2120,7 +2120,7 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 			. "\n\t\t</a>";
 		$s .= "\n\t</td>";
 	}
-	
+
 // pinned
         /*$pin_prefix = $a['task_pinned']?'':'un';
         $s .= "\n\t<td align=\"center\">";
@@ -2146,7 +2146,7 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 	$s .= "\n\t<td align='left' nowrap='nowrap'>";
 	$s .= CTask::getWBS($a['task_id']);
 	$s .= "</td>";
-	
+
 // dots
 	if ($today_view)
 		$s .= '<td width="50%">';
@@ -2165,14 +2165,14 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 	$alt = strlen($a['task_description']) > 80 ? substr($a["task_description"],0,80) . '...' : $a['task_description'];
 	// instead of the statement below
 	$alt = str_replace("\"", "&quot;", $alt);
-//	$alt = htmlspecialchars($alt); 
+//	$alt = htmlspecialchars($alt);
 	$alt = str_replace("\r", ' ', $alt);
 	$alt = str_replace("\n", ' ', $alt);
 	if (!$notOpen)
 		$open_link = ($is_opened)  ? "<a href='index.php$query_string&close_task_id=".$a["task_id"]."&actual=1'><img src='images/icons/collapse.gif' border='0' align='center' /></a>" : "<a href='index.php$query_string&open_task_id=".$a["task_id"]."&actual=1'><img src='images/icons/expand.gif' border='0' /></a>";
-	else 
+	else
 		$open_link = "<img src='images/icons/nothing.gif' border='0' />";
-	
+
 	if ($a["task_milestone"] > 0 ) {
 		$s .= '&nbsp;<a href="./index.php?m=tasks&a=view&task_id=' . $a["task_id"] . '&child_task=1" title="' . $alt . '"><b><i>' . $a["task_name"] . '</i></b></a> <img src="./images/icons/milestone.gif" border="0"></td>';
 	} else if (!CTask::isLeafSt($a["task_id"])) {
@@ -2195,11 +2195,11 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 		$a_u_tmp_array = array();
 		$s .= '<td align="center" nowrap="nowrap">';
         $id = $a['task_id'];
-          
+
 	$sql="SELECT users.user_last_name, project_roles.proles_name FROM users,project_roles,user_tasks
 	WHERE user_tasks.user_id=users.user_id AND user_tasks.proles_id=project_roles.proles_id AND user_tasks.task_id=".$a['task_id'];
 	$db_roles = db_loadList($sql);
-	
+
 		if(count( $db_roles )>0){
 			if($roles=="A"){
 				$s .=  $db_roles[0][0].": ".$db_roles[0][1];
@@ -2208,11 +2208,11 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 					$s .= $db_roles[$i][0].": ".$db_roles[$i][1];
 				}
 			}
-			
+
 			if($roles=="N"){
 				$s .= " <a href=\"javascript: void(0);\"  onClick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
 			}
-			
+
 			if($roles=="R"){
 				$s .= $db_roles[0][1];
 				for ( $i = 1; $i < count( $db_roles ); $i++) {
@@ -2221,7 +2221,7 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 				}
 			}
 		}else{$s .="No Worker";}
-		
+
 		if(count( $assigned_users )>0){
 			if($roles=="P"){
 				$s .= $assigned_users[0]['user_first_name']." ".$assigned_users[0]['user_last_name'] ;
@@ -2231,7 +2231,7 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 				}
 			}
 		}else{$s .="No Worker";}
-		
+
         $s .= '<span style="display: none" id="users_' . $id . '">';
         $a_u_tmp_array[] = $assigned_users[0]['user_last_name'];
 		for ( $i = 0; $i < count( $assigned_users ); $i++) {
@@ -2250,14 +2250,14 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 	$s .= '<td nowrap="nowrap" align="center" >'/*style="'.$style.'">'*/.($actual_finish_date ? $actual_finish_date->format( $df ) : '-').'</td>';
 // effort
 	$style2="";//echo $tae. " ".$ta;
-	//if ($tae > $te) 
+	//if ($tae > $te)
 		//$style2 = 'background-color:#bb0000; color:#ffffff;';
 	$s .= '<td align="right" nowrap="nowrap" style="'.$style2.'">';
 	$s .= $tae." ph";
 	$s .= "</td>";
 //cost
 	$style2="";
-	//if ($tac > $tc) 
+	//if ($tac > $tc)
 		//$style2 = 'background-color:#bb0000; color:#ffffff;';
 	$s .= '<td align="right" nowrap="nowrap" style="'.$style2.'">';
 	$s .= $tac." ".$dPconfig['currency_symbol'];
@@ -2275,11 +2275,11 @@ function findchild( &$tarr, $parent, $level=0, $tview, $explodeTasks = false, $c
 	GLOBAL $projects;
 	global $tasks_opened;
 	global $tasks_closed;
-		
+
 	$level = $level+1;
 	$n = count( $tarr );
 	for ($x=0; $x < $n; $x++) {
-	 
+
 		if($tarr[$x]["task_parent"] == $parent && $tarr[$x]["task_parent"] != $tarr[$x]["task_id"]){
 			if ((CTask::getTaskLevel($tarr[$x]["task_id"])<$explodeTasks&&(!in_array($tarr[$x]["task_id"], $tasks_closed)))) {
 				$is_opened = true;}
@@ -2303,9 +2303,9 @@ function array_csort()   //coded by Ichier2003
 {
     $args = func_get_args();
     $marray = array_shift($args);
-	
+
 	if ( empty( $marray )) return array();
-	
+
 	$i = 0;
     $msortline = "return(array_multisort(";
 	$sortarr = array();
@@ -2365,9 +2365,9 @@ function sort_by_item_title( $title, $item_name, $item_type )
 		echo '&task_sort_order2='.$task_sort_order1;
 	}
 	echo '" class="hdr">';
-	
+
 	echo $AppUI->_($title);
-	
+
 	echo '</a>';
 }
 
