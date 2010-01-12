@@ -232,8 +232,7 @@ class BorderedBlock extends ImgBlock {
 
 		// XXX Check bigger image!
 
-		$blk = imagecreate($w, $h);
-	//	$blk = imagecreatetruecolor($w, $h);
+		$blk = imagecreatetruecolor($w, $h);
 	//	imageantialias($blk, true);
 
 		$bg = $this->getBgColor();
@@ -557,7 +556,7 @@ class ColorBlock extends ImgBlock {
 	}
 
 	public function getImage() {
-		$img = imagecreate($this->getWidth(), $this->getHeight());
+		$img = imagecreatetruecolor($this->getWidth(), $this->getHeight());
 		$color = $this->getFgColor();
 
 		$bg = imagecolorallocate($img, $color['r'], $color['g'], $color['b']);
@@ -748,7 +747,7 @@ class HorizontalBoxBlock extends ImgBlock {
 		$w = $this->getWidth();
 		$h = $this->getHeight();
 
-		$box = imagecreate($w, $h);
+		$box = imagecreatetruecolor($w, $h);
 
 		$bgcolor = $this->getBgColor();
 		$bg = imagecolorallocate($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
@@ -965,7 +964,7 @@ class VerticalBoxBlock extends ImgBlock {
 		$w = $this->getWidth();
 		$h = $this->getHeight();
 
-		$box = imagecreate($w, $h);
+		$box = imagecreatetruecolor($w, $h);
 
 		$bgcolor = $this->getBgColor();
 		$bg = imagecolorallocate($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
