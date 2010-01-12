@@ -833,13 +833,15 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	while($dep = db_fetch_assoc($query)) {
 		// find row num of dependencies
 		for($d = 0; $d < count($gantt_arr); $d++ ) {
-			if($gantt_arr[$d][0]["task_id"] == $dep["dependencies_task_id"]) {
+			if($gantt_arr[$d][0]["task_id"] == $dep["dependencies_task_id"] && $d != $bar->GetLineNbr()) {
 				$bar->SetConstrain($d, CONSTRAIN_ENDSTART,'brown');
 			}
 		}
 	}
+
 	if ($a["task_milestone"])
-	$bar->title->SetColor("#CC0000");
+		$bar->title->SetColor("#CC0000");
+
 	$graph->Add($bar);
 
 	//if (CTask::isLeafSt($a["task_id"]) && !empty($tstart['task_log_start_date']))
