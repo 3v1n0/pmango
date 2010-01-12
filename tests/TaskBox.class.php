@@ -9,7 +9,7 @@
 // - Show alerts
 // - Show progress
 
-// TODO add the alert box!
+// TODO add the alert box! Δ!
 
 include "ImgBlock.class.php";
 
@@ -26,6 +26,7 @@ class TaskBox {
 	private $pProgress;
 	private $pImgBlock;
 	private $pGDImage;
+	private $pUpdate;
 
 
 	///
@@ -52,7 +53,9 @@ class TaskBox {
 		$this->pShowAlerts = $alert;
 		$this->pProgress = $progress;
 		$this->pShowExpand = $expand;
+		$this->pImgBlock = null;
 		$this->pGDImage = null;
+		$this->pChanged = true;
 
 		$this->init();
 	}
@@ -66,26 +69,31 @@ class TaskBox {
 		$this->pPlannedData['duration'] = $duration;
 		$this->pPlannedData['effort'] = $effort;
 		$this->pPlannedData['cost'] = $cost;
+		$this->pChanged = true;
 	}
 
 	public function setActualData($duration, $effort, $cost) {
 		$this->pActualData['duration'] = $duration;
 		$this->pActualData['effort'] = $effort;
 		$this->pActualData['cost'] = $cost;
+		$this->pChanged = true;
 	}
 
 	public function setPlannedTimeframe($start, $end) {
 		$this->pPlannedTimeframe['start'] = $start;
 		$this->pPlannedTimeframe['end'] = $end;
+		$this->pChanged = true;
 	}
 
 	public function setActualTimeframe($start, $end) {
 		$this->pActualTimeframe['start'] = $start;
 		$this->pActualTimeframe['end'] = $end;
+		$this->pChanged = true;
 	}
 
 	public function setResources($res) {
 		$this->pResources = $res;
+		$this->pChanged = true;
 	}
 
 	public function setProgress($p) {
@@ -93,9 +101,11 @@ class TaskBox {
 
 		if ($this->pProgress > 100)
 			$this->pProgress = 100;
-		
+
 		if ($this->pProgress < 1)
 			$this->pProgress = 0;
+
+		$this->pChanged = true;
 	}
 
 	private function computeFontSize() {
@@ -132,6 +142,9 @@ class TaskBox {
 	}
 
 	private function buildTaskBox() {
+		if ($this->pImgBlock != null && !$this->pChanged)
+			return;
+
 		$mainVBox = new VerticalBoxBlock(0);
 		$mainVBox->setSpace(-1);
 
@@ -251,7 +264,7 @@ class TaskBox {
 			} else {
 				$w = $this->pMaxWidth;
 			}
-			
+
 			$w -= $this->pBorderSize*2;
 
 			if ($this->pProgress > 0) {
@@ -291,26 +304,30 @@ class TaskBox {
 //		}
 
 		$this->pImgBlock = $outBox;
+		$this->pChanged = false;
 	}
-	
+
 	public function getWidth() {
 		$this->buildTaskBox();
 		return $this->pImgBlock->getWidth();
 	}
-	
+
 	public function getHeight() {
 		$this->buildTaskBox();
 		return $this->pImgBlock->getHeight();
 	}
-	
+
 	private function buildImage() {
+		if ($this->pGDImage && !$this->pChanged)
+			return;
+
 		$this->buildTaskBox();
 		$this->pGDImage = $this->pImgBlock->getImage();
 	}
 
 	public function getImage() {
 		$this->buildImage();
-		return $this->pGDImage;  //GD image!
+		return $this->pGDImage;
 	}
 
 	public function draw($format = "png") {
@@ -318,6 +335,11 @@ class TaskBox {
 			case "png":
 				header("Content-type: image/png");
 				imagepng($this->getImage());
+				break;
+			case "jpg":
+			case "jpeg":
+				header("Content-type: image/jpeg");
+				imagejpeg($this->getImage());
 				break;
 		}
 	}
