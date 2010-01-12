@@ -376,6 +376,7 @@ $showLabels = dPgetParam($_REQUEST, 'showLabels', false);
 // get the prefered date format
 $df = $AppUI->getPref('SHDATEFORMAT');
 
+$task_level = $AppUI->getState('ExplodeTasks', 1);
 $tasks_closed = $AppUI->getState("tasks_closed");
 $tasks_opened = $AppUI->getState("tasks_opened");
 
@@ -421,12 +422,7 @@ project_name
 
 $from = "tasks";
 $join = "LEFT JOIN projects ON project_id = task_project";
-$where = "task_project = $project_id AND task_id = task_parent";
-
-if (isset($tasks_opened) && !empty($tasks_opened)) {
-	$tsks = implode(",", $tasks_opened);
-	$where .= "\nOR task_id IN ($tsks) OR task_parent IN ($tsks)";
-}
+$where = "task_project = $project_id";
 
 /*
 switch ($f) {
@@ -466,6 +462,9 @@ $nums = db_num_rows( $ptrc );
 echo db_error();
 $orrarr[] = array("task_id"=>0, "order_up"=>0, "order"=>"");
 
+if (!$tasks_closed) $tasks_closed = array();
+if (!$tasks_opened) $tasks_opened = array();
+
 //pull the tasks into an array
 for ($x=0; $x < $nums; $x++) {
 	$row = db_fetch_assoc( $ptrc );
@@ -479,7 +478,27 @@ for ($x=0; $x < $nums; $x++) {
 		$row["task_finish_date"] = "";
 	}
 
-	$projects[$row['task_project']]['tasks'][] = $row;
+
+	$add = false;
+
+	if ($row["task_id"] == $row["task_parent"]) {
+		$add = true;
+	}
+
+	if (CTask::getTaskLevel($row["task_id"]) <= $task_level &&
+		!in_array($row["task_id"], $tasks_closed) ||
+	    in_array($row["task_id"], $tasks_closed) &&
+	    !in_array($row["task_parent"], $tasks_closed) &&
+	    !CTask::isLeafSt($row["task_id"])) {
+		   $add = true;
+	}
+
+	if (in_array($row["task_id"], $tasks_opened) ||
+		in_array($row["task_parent"], $tasks_opened))
+		$add = true;
+
+	if ($add)
+		$projects[$row['task_project']]['tasks'][] = $row;
 }
 
 if($row["task_finish_date"] == "0000-00-00 00:00:00") {
@@ -709,6 +728,18 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	$task_leaf = (CTask::isLeafSt($a["task_id"]) || !$tasks_opened || !in_array($a["task_id"], $tasks_opened));
 
 	$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.15);//se padre sarebbe meglio 1
+
+	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
+	$tst = new Image();
+	$tst->ttf->SetUserFont2('DroidSerif-Regular.ttf');
+
+	$cut = 2;
+	while ($bar->title->GetWidth($tst) >= $width/6) {
+		$n = substr($name, 0, strlen($name)-(1+$cut))."...";
+		$bar->title->Set($n);
+		$cut++;
+	}
+
 	$bar2 = null;
 
 	if ($task_leaf) {
@@ -734,17 +765,6 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 			$bar2->SetFillColor('red');
 			$bar2->progress->Set($progress/100);
 		}
-	}
-
-	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
-	$tst = new Image();
-	$tst->ttf->SetUserFont2('DroidSerif-Regular.ttf');
-
-	$cut = 2;
-	while ($bar->title->GetWidth($tst) >= $width/6) {
-		$n = substr($name, 0, strlen($name)-(1+$cut))."...";
-		$bar->title->Set($n);
-		$cut++;
 	}
 
 	if (!$task_leaf) {
