@@ -656,6 +656,20 @@ if($hide_task_groups) {
 	}
 }
 
+for ($i = 0; $i < count(@$gantt_arr); $i++) {
+	$found = false;
+
+	foreach ($gantt_arr as $gitem) {
+		if ($gantt_arr[$i][0]['task_id'] == $gitem[0]['task_parent'] &&
+			$gantt_arr[$i][0]['task_id'] != $gitem[0]['task_id']) {
+			$found = true;
+			break;
+		}
+	}
+
+	$gantt_arr[$i][2] = !$found;
+}
+
 $row = 0;
 $now = "2009-12-05 12:00:00";//date("y-m-d");
 //print_r($gantt_arr); exit;
@@ -663,6 +677,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 	$a     = $gantt_arr[$i][0];
 	$level = $gantt_arr[$i][1];
+	$task_leaf = $gantt_arr[$i][2];
 
 	if($hide_task_groups) $level = 0;
 
@@ -725,7 +740,23 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	//	$enddate = new CDate($end);
 	//	$startdate = new CDate($start);
 
-	$task_leaf = (CTask::isLeafSt($a["task_id"]) || !$tasks_opened || !in_array($a["task_id"], $tasks_opened));
+//	$task_leaf = (CTask::isLeafSt($a["task_id"]) || !in_array($a["task_id"], $tasks_opened) || in_array($a["task_id"], $tasks_closed));
+//
+//	$task_leaf = true;
+//
+//	if (empty($tasks_closed) && empty($tasks_opened) && CTask::isLeafSt($a["task_id"]))
+//		$task_leaf = true;
+//	else  {
+//
+//	if (!CTask::isLeafSt($a["task_id"]) && in_array($a["task_id"], $tasks_opened))
+//		$task_leaf = false;
+//
+//	if (!CTask::isLeafSt($a["task_id"]) && !in_array($a["task_id"], $tasks_closed))
+//		$task_leaf = false;}
+
+//	if (!CTask::isLeafSt($a["task_id"]) &&
+//	    (in_array($a["task_id"], $tasks_opened) || !in_array($a["task_id"], $tasks_closed)))
+//		$task_leaf = false;
 
 	$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.15);//se padre sarebbe meglio 1
 
