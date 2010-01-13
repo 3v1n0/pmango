@@ -887,7 +887,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 			// find row num of dependencies
 			for($d = 0; $d < count($gantt_arr); $d++ ) {
 				if($gantt_arr[$d][0]["task_id"] == $dep["dependencies_task_id"] && $d != $bar->GetLineNbr()) {
-					$bar->SetConstrain($d, CONSTRAIN_ENDSTART,'brown');
+					$bar->SetConstrain($d, CONSTRAIN_ENDSTART, $colors ? 'brown' : 'gray4');
 				}
 			}
 		}
