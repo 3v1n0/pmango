@@ -314,6 +314,8 @@ class CircleBlock extends ImgBlock {
 		return $this->getWidth();
 	}
 
+	// TODO set{Max,Min}{Width,Height}
+
 	public function getImage() {
 		$img = imagecreatetruecolor($this->getWidth(), $this->getHeight());
 		imagefill($img, 0, 0, imagecolorallocatealpha($img, 0, 0, 0, 127));
@@ -330,7 +332,6 @@ class CircleBlock extends ImgBlock {
 		imagefilledellipse($img, $center, $center, $w, $w, $fg);
 
 		$color = $this->getBgColor();
-		//$color = $this->pContent->getBgColor(); //XXX ?
 		$bg = imagecolorallocatealpha($img, $color['r'], $color['g'], $color['b'], $color['a']);
 		$w = $this->getWidth() - $this->pBorder*2;
 		imagefilledellipse($img, $center, $center, $w, $w, $bg);
@@ -553,7 +554,7 @@ class TextBlock extends ImgBlock {
 								//intval($font_size + (imagesy($timg) - $lsize['h'])/2);
 
 			if ($lsize['h'] <= $this->pFontSize) {
-					$txtY-= ($lsize['box'][0]+$lsize['box'][1])*2;
+					$txtY-= abs(($lsize['box'][0]+$lsize['box'][1])*2);
 
 				if (count($this->pTextLines) > 1)
 					$txtY -= ($this->pFontSize - $lsize['h'] - $lsize['box'][0]) + 1;
