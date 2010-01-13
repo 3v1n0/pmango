@@ -349,6 +349,91 @@ class CircleBlock extends ImgBlock {
 	}
 }
 
+class FixedBlock extends ImgBlock {
+	private $pContent;
+
+	public function FixedBlock() {
+		parent::ImgBlock();
+		$this->pContent = array();
+		$this->setBgColor("#FFFF");
+	}
+
+	public function addContent($content, $x, $y) {
+		if (!is_subclass_of($content, "ImgBlock"))
+			return;
+
+		$this->pContent[] = array('blk' => $content, 'x' => $x, 'y' => $y);
+	}
+
+	public function getWidth() {
+		$w = 0;
+
+		foreach ($this->pContent as $item)
+			$w = max($w, ($item['x'] + $item['blk']->getWidth()));
+
+		return $w;
+	}
+
+	public function getHeight() {
+		$h = 0;
+
+		foreach ($this->pContent as $item)
+			$h = max($h, ($item['y'] + $item['blk']->getHeight()));
+
+		return $h;
+	}
+
+	public function setMinWidth($w) {
+		parent::setMinWidth($h);
+		if (!isset($this->pContent)) return;
+
+		foreach ($this->pContent as $item)
+			$item['blk']->setMinWidth($w);
+	}
+
+	public function setMaxWidth($w) {
+		parent::setMaxWidth($h);
+		if (!isset($this->pContent)) return;
+
+		foreach ($this->pContent as $item)
+			$item['blk']->setMaxWidth($w);
+	}
+
+	public function setMinHeight($h) {
+		parent::setMinHeight($h);
+		if (!isset($this->pContent)) return;
+
+		foreach ($this->pContent as $item)
+			$item['blk']->setMinHeight($w);
+	}
+
+	public function setMaxHeight($h) {
+		parent::setMaxHeight($h);
+		if (!isset($this->pContent)) return;
+
+		foreach ($this->pContent as $item)
+			$item['blk']->setMaxHeight($w);
+	}
+
+	public function getImage() {
+		$img = imagecreatetruecolor($this->getWidth(), $this->getHeight());
+		$c = $this->getBgColor();
+		$bg = imagecolorallocatealpha($img, $c['r'], $c['g'], $c['b'], $c['a']);
+		imagefill($img, 0, 0, $bg);
+		imagesavealpha($img, true);
+
+		if (function_exists('imageantialias'))
+			imageantialias($img, true);
+
+		foreach($this->pContent as $item) {
+			imagecopy($img, $item['blk']->getImage(), $item['x'], $item['y'], 0, 0,
+			          $item['blk']->getWidth(), $item['blk']->getHeight());
+		}
+
+		return $img;
+	}
+}
+
 class TextBlock extends ImgBlock {
 	private $pText;
 	private $pFont;
@@ -425,6 +510,71 @@ class TextBlock extends ImgBlock {
 	public function getTextBox() {
 		return $this->pTextBox;
 	}
+
+	public function getImage() {
+
+		$txtimg = imagecreatetruecolor($this->pTextWidth, $this->pTextHeight);
+		imagefill($txtimg, 0, 0, imagecolorallocatealpha($txtimg, 0, 0, 0, 127));
+		imagesavealpha($txtimg, true);
+
+		$bg = $this->getBgColor();
+		$background_color = imagecolorallocatealpha($txtimg, $bg['r'], $bg['g'], $bg['b'], $bg['a']);
+		imagefilledrectangle($txtimg, 0, 0, $this->pTextWidth, $this->pTextHeight, $background_color);
+
+		for ($i = 0; $i < count($this->pTextLines); $i++) {
+			$lsize = $this->pTextLinesInfo[$i];
+			$text = strip_tags($this->pTextLines[$i]);
+
+			$timg = imagecreatetruecolor($this->pTextWidth, $lsize['h']+1);
+			imagefill($timg, 0, 0, imagecolorallocatealpha($timg, 0, 0, 0, 127));
+
+			if ($this->pAlign == "center") {
+				$padding = intval(($this->pTextWidth - $lsize['w']) / 2);
+			} else if ($this->pAlign == "right") {
+				$padding = $this->pTextWidth - $lsize['w'] - $hspace/2 + 1;
+			} else /*($this->pAlign == "left") */ {
+				$padding = $hspace/2 - 1;
+			}
+
+			$fg = $this->getFgColor();
+			$font_color = imagecolorallocatealpha($timg, $fg['r'], $fg['g'], $fg['b'], $fg['a']);
+
+			$txtX = $padding;
+			$txtY = $this->pFontSize ; //+ $lsize['box'][0] - $lsize['box'][1]
+								//intval($font_size + (imagesy($timg) - $lsize['h'])/2);
+
+			if ($lsize['h'] <= $this->pFontSize) {
+					$txtY-= abs(($lsize['box'][0]+$lsize['box'][1])*2);
+
+				if (count($this->pTextLines) > 1)
+					$txtY -= ($this->pFontSize - $lsize['h'] - $lsize['box'][0]) + 1;
+			}
+	//		else //XXX moves up the "gggph" text
+	//				$txtY += $lsize['box'][1];
+
+
+			// Move up text like "prrrrrrr"
+
+			// FIXME: afaasj at 14px
+			imagettftext($timg, $this->pFontSize, 0, $txtX, $txtY, $font_color, $this->pFont, $text);
+
+			if (isset($lsize['u'])) {
+				// FIXME: text like "ggguuuu"
+				// imageline($timg, $padding, $lineY, $padding + $lsize['w'] /*- $hspace*/, $lineY, $font_color);
+
+				$lineY = $lsize['h']-$lsize['box'][3]-1;
+				foreach ($lsize['u'] as $underlined)
+					imageline($timg, $padding + $underlined['start'], $lineY, $padding + $underlined['end'] /*- $hspace*/, $lineY, $font_color);
+			}
+
+			imagecopy($txtimg, $timg, 0, $lsize['top'], 0, 0, imagesx($timg), imagesy($timg));
+			imagedestroy($timg);
+		}
+
+		return $txtimg;
+	}
+
+	/* Private stuff */
 
 	private function processText() {
 		$vspace = intval($this->pFontSize * 20 / 100);
@@ -520,71 +670,6 @@ class TextBlock extends ImgBlock {
 		if ($this->pTextWidth < $this->getMinWidth())
 			$this->pTextWidth = $this->getMinWidth();
 	}
-
-	public function getImage() {
-
-		$txtimg = imagecreatetruecolor($this->pTextWidth, $this->pTextHeight);
-		imagefill($txtimg, 0, 0, imagecolorallocatealpha($txtimg, 0, 0, 0, 127));
-		imagesavealpha($txtimg, true);
-
-		$bg = $this->getBgColor();
-		$background_color = imagecolorallocatealpha($txtimg, $bg['r'], $bg['g'], $bg['b'], $bg['a']);
-		imagefilledrectangle($txtimg, 0, 0, $this->pTextWidth, $this->pTextHeight, $background_color);
-
-		for ($i = 0; $i < count($this->pTextLines); $i++) {
-			$lsize = $this->pTextLinesInfo[$i];
-			$text = strip_tags($this->pTextLines[$i]);
-
-			$timg = imagecreatetruecolor($this->pTextWidth, $lsize['h']+1);
-			imagefill($timg, 0, 0, imagecolorallocatealpha($timg, 0, 0, 0, 127));
-
-			if ($this->pAlign == "center") {
-				$padding = intval(($this->pTextWidth - $lsize['w']) / 2);
-			} else if ($this->pAlign == "right") {
-				$padding = $this->pTextWidth - $lsize['w'] - $hspace/2 + 1;
-			} else /*($this->pAlign == "left") */ {
-				$padding = $hspace/2 - 1;
-			}
-
-			$fg = $this->getFgColor();
-			$font_color = imagecolorallocatealpha($timg, $fg['r'], $fg['g'], $fg['b'], $fg['a']);
-
-			$txtX = $padding;
-			$txtY = $this->pFontSize ; //+ $lsize['box'][0] - $lsize['box'][1]
-								//intval($font_size + (imagesy($timg) - $lsize['h'])/2);
-
-			if ($lsize['h'] <= $this->pFontSize) {
-					$txtY-= abs(($lsize['box'][0]+$lsize['box'][1])*2);
-
-				if (count($this->pTextLines) > 1)
-					$txtY -= ($this->pFontSize - $lsize['h'] - $lsize['box'][0]) + 1;
-			}
-	//		else //XXX moves up the "gggph" text
-	//				$txtY += $lsize['box'][1];
-
-
-			// Move up text like "prrrrrrr"
-
-			// FIXME: afaasj at 14px
-			imagettftext($timg, $this->pFontSize, 0, $txtX, $txtY, $font_color, $this->pFont, $text);
-
-			if (isset($lsize['u'])) {
-				// FIXME: text like "ggguuuu"
-				// imageline($timg, $padding, $lineY, $padding + $lsize['w'] /*- $hspace*/, $lineY, $font_color);
-
-				$lineY = $lsize['h']-$lsize['box'][3]-1;
-				foreach ($lsize['u'] as $underlined)
-					imageline($timg, $padding + $underlined['start'], $lineY, $padding + $underlined['end'] /*- $hspace*/, $lineY, $font_color);
-			}
-
-			imagecopy($txtimg, $timg, 0, $lsize['top'], 0, 0, imagesx($timg), imagesy($timg));
-			imagedestroy($timg);
-		}
-
-		return $txtimg;
-	}
-
-	/* Private stuff */
 
 	private function getTextSize($text = null) {
 
