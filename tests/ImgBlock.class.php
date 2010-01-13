@@ -89,10 +89,13 @@ abstract class ImgBlock {
 
 		$rgba = array ('r' => 0, 'g' => 0, 'b' => 0, 'a' => 0);
 
-		if (strlen($color) == 3) {
+		if (strlen($color) == 3 || strlen($color) == 4) {
 			$rgba['r'] = hexdec($color[0].$color[0]);
 			$rgba['g'] = hexdec($color[1].$color[1]);
 			$rgba['b'] = hexdec($color[2].$color[2]);
+
+			if (strlen($color) == 4)
+				$rgba['a'] = hexdec($color[3].$color[3]);
 		}
 
 		if (strlen($color) == 6 || strlen($color) == 8) {
@@ -100,12 +103,12 @@ abstract class ImgBlock {
 			$rgba['g'] = hexdec(substr($color, 2, 2));
 			$rgba['b'] = hexdec(substr($color, 4, 2));
 
-			if (strlen($color) == 8) {
+			if (strlen($color) == 8)
 				$rgba['a'] = hexdec(substr($color, 6, 2));
-				if ($rgba['a'] > 127)
-					$rgba['a'] = 127;
-			}
 		}
+
+		if ($rgba['a'] > 127)
+			$rgba['a'] = 127;
 
 		return $rgba;
 	}
@@ -237,6 +240,8 @@ class BorderedBlock extends ImgBlock {
 		// XXX Check bigger image!
 
 		$blk = imagecreatetruecolor($w, $h);
+		imagefill($blk, 0, 0, imagecolorallocatealpha($blk, 0, 0, 0, 127));
+		imagesavealpha($blk, true);
 	//	imageantialias($blk, true);
 
 		$bg = $this->getBgColor();
@@ -439,6 +444,8 @@ class TextBlock extends ImgBlock {
 	public function getImage() {
 
 		$txtimg = imagecreatetruecolor($this->pTextWidth, $this->pTextHeight);
+		imagefill($txtimg, 0, 0, imagecolorallocatealpha($txtimg, 0, 0, 0, 127));
+		imagesavealpha($txtimg, true);
 
 		$bg = $this->getBgColor();
 		$background_color = imagecolorallocatealpha($txtimg, $bg['r'], $bg['g'], $bg['b'], $bg['a']);
@@ -449,7 +456,7 @@ class TextBlock extends ImgBlock {
 			$text = strip_tags($this->pTextLines[$i]);
 
 			$timg = imagecreatetruecolor($this->pTextWidth, $lsize['h']+1);
-			//imageantialias($timg, true);
+			imagefill($timg, 0, 0, imagecolorallocatealpha($timg, 0, 0, 0, 127));
 			imagefilledrectangle($timg, 0, 0, $this->pTextWidth, $lsize['h'], $background_color);
 
 			if ($this->pAlign == "center") {
@@ -561,6 +568,9 @@ class ColorBlock extends ImgBlock {
 
 	public function getImage() {
 		$img = imagecreatetruecolor($this->getWidth(), $this->getHeight());
+		imagefill($img, 0, 0, imagecolorallocatealpha($img, 0, 0, 0, 127));
+		imagesavealpha($img, true);
+
 		$color = $this->getFgColor();
 
 		$bg = imagecolorallocatealpha($img, $color['r'], $color['g'], $color['b'], $color['a']);
@@ -752,6 +762,8 @@ class HorizontalBoxBlock extends ImgBlock {
 		$h = $this->getHeight();
 
 		$box = imagecreatetruecolor($w, $h);
+		imagefill($box, 0, 0, imagecolorallocatealpha($box, 0, 0, 0, 127));
+		imagesavealpha($box, true);
 
 		$bgcolor = $this->getBgColor();
 		$bg = imagecolorallocatealpha($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b'], $bgcolor['a']);
@@ -969,6 +981,8 @@ class VerticalBoxBlock extends ImgBlock {
 		$h = $this->getHeight();
 
 		$box = imagecreatetruecolor($w, $h);
+		imagefill($box, 0, 0, imagecolorallocatealpha($box, 0, 0, 0, 127));
+		imagesavealpha($box, true);
 
 		$bgcolor = $this->getBgColor();
 		$bg = imagecolorallocatealpha($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b'], $bgcolor['a']);
