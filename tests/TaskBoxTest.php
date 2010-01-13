@@ -4,7 +4,9 @@ include "TaskBox.class.php";
 
 /* BASE */
 $tbx = new TaskBox("1.1.");
-//$tbx->draw();
+
+/* With Expand sign */
+$tbx->showExpand(true);
 
 /* With name */
 $tbx->setName("Test");

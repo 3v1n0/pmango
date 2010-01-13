@@ -39,7 +39,6 @@ class TaskBox {
 	const ALERT_WARNING = 0;
 	const ALERT_ERROR = 1;
 
-
 	public function TaskBox($id, $alert = false, $expand = false,
 								 $name = null, $progress = null,
 	                             $p_data = null, $a_data = null,
@@ -116,6 +115,10 @@ class TaskBox {
 		$this->pShowAlerts = $a;
 	}
 
+	public function showExpand($e) {
+		$this->pShowExpand = $e;
+	}
+
 	private function computeFontSize() {
 		//Depends on setSize() ...
 	}
@@ -157,7 +160,8 @@ class TaskBox {
 		$mainVBox->setSpace(-1);
 
 		/* Header block */
-		$txt = $this->pID.($this->pName != null ? " ".$this->pName : "");
+		if ($this->pShowExpand) $txt = "+ ";
+		$txt .= $this->pID.($this->pName != null ? " ".$this->pName : "");
 		$header = new TextBlock($txt, $this->pFontBold, $this->pFontSize);
 
 		$hbox = new HorizontalBoxBlock($this->pBorderSize);
