@@ -473,10 +473,15 @@ class TextBlock extends ImgBlock {
 			$txtY = $this->pFontSize ; //+ $lsize['box'][0] - $lsize['box'][1]
 								//intval($font_size + (imagesy($timg) - $lsize['h'])/2);
 
-			if ($lsize['h'] <= $this->pFontSize && count($this->pTextLines) > 1) //XXX renable it and check the multline
+			if ($lsize['h'] <= $this->pFontSize) {
+					$txtY-= ($lsize['box'][0]+$lsize['box'][1])*2;
+
+				if (count($this->pTextLines) > 1)
 					$txtY -= ($this->pFontSize - $lsize['h'] - $lsize['box'][0]) + 1;
+			}
 	//		else //XXX moves up the "gggph" text
 	//				$txtY += $lsize['box'][1];
+
 
 			// Move up text like "prrrrrrr"
 
