@@ -48,8 +48,7 @@ $cbk2 = new HorizontalBoxBlock(1);
 $cbk2->addBlock($cbk);
 $cbk = $cbk2;
 
-//$blk->setMaxWidth(230);
-
+$blk->setWidth(420);
 $blk->addBlock($a);
 $blk->addBlock($b);
 $blk->addBlock($c);
@@ -70,26 +69,56 @@ $blk->addBlock($g);
 //$blk->setBorderColor("#ff00ff");
 
 
-$blkV = new VerticalBoxBlock(0);
-$blkV->setSpace(5);
-$blkV->setMerge(true);
-///blkV->setHomogeneous(true);
-$blk2 = clone $blk;
-$blkV->addBlock($blk2);
-$blk2->addBlock(clone $a);
+//$blkV = new VerticalBoxBlock(0);
+//$blkV->setSpace(-1);
+////$blkV->setMerge(true);
+/////blkV->setHomogeneous(true);
+//$blk2 = clone $blk;
+//$blkV->addBlock($blk2);
+//$blk2->addBlock(clone $a);
+////$blkV->addBlock(clone $blk);
+//$blkV->addBlock(clone $g);
+//$blkV->addBlock(clone $f);
+////$blkV->addBlock(clone $c);
+//$h->setWidth($blkV->getContentWidth());
+//$h->setHeight(20);
+//$blkV->addBlock(clone $cbk);
 //$blkV->addBlock(clone $blk);
-$blkV->addBlock(clone $g);
-$blkV->addBlock(clone $f);
-//$blkV->addBlock(clone $c);
-$h->setWidth($blkV->getContentWidth());
-$h->setHeight(20);
-$blkV->addBlock(clone $cbk);
-$blkV->addBlock(clone $blk);
-$blkV->addBlock(clone $blk);
-$blkV->addBlock(clone $blk);
-$blkV->setMaxWidth(390);
-$blk = $blkV;
+//$blkV->addBlock(clone $blk);
+//$blkV->addBlock(clone $blk);
+//$blkV->setMaxWidth(390);
+//$blk = $blkV;
 
+
+$f = new TextBlock("mmmYmmm", $font_normal, $font_size);
+
+$blk = new HorizontalBoxBlock(2);
+$blk->setHomogeneous(true);
+$blk->setSpace(1);
+$blk->setMerge(true);
+$blk->setWidth(184);
+$blk->addBlock($f);
+$blk->addBlock(clone $f);
+$old = $blk;
+
+$f = new TextBlock("Δ!", $font_normal, 20);
+$f->setAlign("center");
+//$f = new TextBlock("m\n\nm\nm\nYm\nmm\n\n", $font_normal, 24);
+$f->setBgColor("#ffff");
+
+$crc= new CircleBlock($f);
+//$crc->setFgColor("#FF1122");
+//$crc->setBgColor("#11FF66");
+$crc->setPadding(5);
+$crc->setBorder(2);
+
+$blk = new FixedBlock();
+$blk->addContent($old, 0, 0);
+$blk->addContent(clone $crc, 5, 5);
+$blk->addContent(clone $crc, 10, 10);
+$blk->addContent(clone $crc, 100, 100);
+$blk->setBgColor("#f13");
+$blk->setWidth(150);
 
 header("Content-type: image/png");
 imagepng($blk->getImage());
