@@ -89,8 +89,8 @@ class TaskBox {
 	}
 
 	public function setActualTimeframe($start, $end) {
-		$this->pActualTimeframe['start'] = $start;
-		$this->pActualTimeframe['end'] = $end;
+		$this->pActualTimeframe['start'] = ($start == null || empty($start)) ? "NA" : $start;
+		$this->pActualTimeframe['end'] = ($end == null || empty($end)) ? "NA" : $end;
 		$this->pChanged = true;
 	}
 
@@ -124,11 +124,10 @@ class TaskBox {
 	}
 
 	private function init() {
-		if (!strlen(getenv("GDFONTPATH")))
-			putenv('GDFONTPATH=' . dirname($_SERVER['SCRIPT_FILENAME']).'/../fonts/Droid');
+		$font_path = dirname($_SERVER['SCRIPT_FILENAME']).'/../fonts/Droid/';
 		$this->pFontSize = 10;
-		$this->pFont = "DroidSans.ttf";
-		$this->pFontBold = "DroidSans-Bold.ttf";
+		$this->pFont = $font_path."DroidSans.ttf";
+		$this->pFontBold = $font_path."DroidSans-Bold.ttf";
 
 		$tmp = new TextBlock("3.3.3", $this->pFontBold, $this->pFontSize);
 		$tmp = new BorderedBlock($tmp, $this->pBorderSize*2, $this->pFontSize);
