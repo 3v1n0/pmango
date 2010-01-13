@@ -796,7 +796,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 			} else {
 				$bar2->SetColor('black');
 				$bar2->SetFillColor('black');
-				$bar2->SetPattern(BAND_SOLID,'gray3');
+				$bar2->SetPattern(BAND_SOLID, $colors ? 'gray3' : 'white');
 
 				$bar2->progress->SetFillColor($colors ? 'green' : 'gray6');
 				$bar2->progress->SetPattern(BAND_SOLID, $colors ? 'green' : 'gray6', 98);
@@ -818,8 +818,8 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 				$bar2->rightMark->SetWidth(2);
 
 				if ($progress != 100) {
-					$bar2->rightMark->SetColor('gray3');
-					$bar2->rightMark->SetFillColor('gray3');
+					$bar2->rightMark->SetColor($colors ? 'gray3' : 'white');
+					$bar2->rightMark->SetFillColor($colors ? 'gray3' : 'white');
 				} else {
 					$bar2->rightMark->SetColor($colors ? 'green' : 'gray6');
 					$bar2->rightMark->SetFillColor($colors ? 'green' : 'gray6');
