@@ -32,6 +32,9 @@ $tbx->setResources("22 ph, Dilbert, Requirement Engineering\n".
 /* With Progress */
 $tbx->setProgress(50);
 
+/* With Alert */
+$tbx->setAlerts(TaskBox::ALERT_ERROR);
+
 $tbx->draw();
 
 ?>

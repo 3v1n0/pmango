@@ -28,7 +28,6 @@ class TaskBox {
 	private $pGDImage;
 	private $pUpdate;
 
-
 	///
 	private $pFont;
 	private $pFontBold;
@@ -36,6 +35,9 @@ class TaskBox {
 	private $pMinWidth;
 	private $pMaxWidth;
 	private $pMaxLineHeight;
+
+	const ALERT_WARNING = 0;
+	const ALERT_ERROR = 1;
 
 
 	public function TaskBox($id, $alert = false, $expand = false,
@@ -108,6 +110,10 @@ class TaskBox {
 			$this->pProgress = 0;
 
 		$this->pChanged = true;
+	}
+
+	public function setAlerts($a) {
+		$this->pShowAlerts = $a;
 	}
 
 	private function computeFontSize() {
@@ -304,6 +310,20 @@ class TaskBox {
 //			//$outBox->setMinWidth($this->pMaxWidth);
 //			//$outBox->setMaxWidth($this->pMaxWidth);
 //		}
+
+		/* Alerts */
+
+		if ($this->pShowAlerts === TaskBox::ALERT_WARNING || $this->pShowAlerts === TaskBox::ALERT_ERROR) {
+			$txt = 'Δ'.($this->pShowAlerts == TaskBox::ALERT_ERROR ? '!' : '');
+			$alert = new CircleBlock(new TextBlock($txt, $this->pFont, $this->pFontSize*3/2));
+			$alert->setPadding(1);
+			$alert->setBorder($this->pBorderSize*2);
+
+			$tmp = new FixedBlock();
+			$tmp->addContent($outBox, 0, $alert->getHeight()/2);
+			$tmp->addContent($alert, $outBox->getWidth()-$alert->getWidth()/2, 0);
+			$outBox = $tmp;
+		}
 
 		$this->pImgBlock = $outBox;
 		$this->pChanged = false;
