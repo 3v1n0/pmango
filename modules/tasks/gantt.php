@@ -741,7 +741,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		$caption = substr($caption, 0, strlen($caption)-1);
 		}*/
 
-	$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.15);//se padre sarebbe meglio 1
+	$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.10);//se padre sarebbe meglio 1
 	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
 
 	if (!$colors) {
@@ -764,10 +764,12 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 	$bar2 = null;
 
-	if ($task_leaf) {
+//	if ($task_leaf) {
 		//if ($now > )
 		$child = CTask::getChild($a["task_id"], $project_id);
 		$tstart = CTask::getActualStartDate($a["task_id"], $child);
+
+		$rMarkshow = true;
 
 		if (!empty($tstart['task_log_start_date'])) {
 			$start = $tstart['task_log_start_date'];
@@ -775,6 +777,10 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 			$tend = CTask::getActualFinishDate($a["task_id"], $child);
 
 			if (!empty($tend['task_log_finish_date'])) {
+
+				if (strtotime($tend['task_log_finish_date']) > strtotime($end))
+					$rMarkshow = false;
+
 				if ($progress < 100 && strtotime($tend['task_log_finish_date']) < strtotime($now) ||
 				       strtotime($end) > strtotime($now) && strtotime($start) < strtotime($now)) {
 					$end = substr($now, 0, 10);
@@ -783,12 +789,47 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 				}
 			}
 
-			$bar2 = new PMGanttBar($row++, '', $start, $end, '', 0.3);
+			$bar2 = new PMGanttBar($row++, '', $start, $end, '', $task_leaf ? 0.3 : 0.15);
 
-			$bar2->SetPattern(GANTT_RDIAG, $colors ? 'red' : 'black', 95);
+			if ($task_leaf) {
+				$bar2->SetPattern(GANTT_RDIAG, $colors ? 'red' : 'black', 95);
+			} else {
+				$bar2->SetColor('black');
+				$bar2->SetFillColor('black');
+				$bar2->SetPattern(BAND_SOLID,'black');
+
+				$bar2->progress->SetFillColor($colors ? 'green' : 'gray6');
+				$bar2->progress->SetPattern(BAND_SOLID, $colors ? 'green' : 'gray6', 98);
+
+				$bar2->leftMark->Show();
+				$bar2->leftMark->SetType(MARK_LEFTTRIANGLE);
+				$bar2->leftMark->SetWidth(2);
+
+				if ($progress == 0) {
+					$bar2->leftMark->SetColor('black');
+					$bar2->leftMark->SetFillColor('black');
+				} else {
+					$bar2->leftMark->SetColor($colors ? 'green' : 'gray6');
+					$bar2->leftMark->SetFillColor($colors ? 'green' : 'gray6');
+				}
+
+				$bar2->rightMark->Show();
+				$bar2->rightMark->SetType(MARK_RIGHTTRIANGLE);
+				$bar2->rightMark->SetWidth(2);
+
+				if ($progress != 100) {
+					$bar2->rightMark->SetColor('black');
+					$bar2->rightMark->SetFillColor('black');
+				} else {
+					$bar2->rightMark->SetColor($colors ? 'green' : 'gray6');
+					$bar2->rightMark->SetFillColor($colors ? 'green' : 'gray6');
+				}
+			}
+
+
 			$bar2->progress->Set($progress/100);
 		}
-	}
+//	}
 
 	if (!$task_leaf) {
 
@@ -798,31 +839,17 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 		$bar->leftMark->Show();
 		$bar->leftMark->SetType(MARK_LEFTTRIANGLE);
-		$bar->leftMark->SetWidth(2);
+		$bar->leftMark->SetWidth(1);
+		$bar->leftMark->SetColor('black');
+		$bar->leftMark->SetFillColor('black');
 
-		if ($progress == 0) {
-			$bar->leftMark->SetColor('black');
-			$bar->leftMark->SetFillColor('black');
-		} else {
-			$bar->leftMark->SetColor($colors ? 'green' : 'gray6');
-			$bar->leftMark->SetFillColor($colors ? 'green' : 'gray6');
-		}
-
-		$bar->rightMark->Show();
-		$bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
-		$bar->rightMark->SetWidth(2);
-		if ($progress != 100) {
+		if ($rMarkshow) {
+			$bar->rightMark->Show();
+			$bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
+			$bar->rightMark->SetWidth(1);
 			$bar->rightMark->SetColor('black');
 			$bar->rightMark->SetFillColor('black');
-		} else {
-			$bar->rightMark->SetColor($colors ? 'green' : 'gray6');
-			$bar->rightMark->SetFillColor($colors ? 'green' : 'gray6');
 		}
-
-		$bar->progress->Set($progress/100);
-		$bar->progress->SetFillColor($colors ? 'green' : 'gray6');
-		$bar->progress->SetPattern(BAND_SOLID, $colors ? 'green' : 'gray6', 98);
-
 	}
 
 	//adding captions
@@ -867,9 +894,8 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 	$graph->Add($bar);
 
-	//if (CTask::isLeafSt($a["task_id"]) && !empty($tstart['task_log_start_date']))
 	if ($bar2 != null)
-	$graph->Add($bar2);
+		$graph->Add($bar2);
 }
 $today = date("y-m-d");
 $vline = new GanttVLine(/*$today*/$now, $AppUI->_('Today', UI_OUTPUT_RAW), ($colors ? 'darkred' : 'gray3'));
