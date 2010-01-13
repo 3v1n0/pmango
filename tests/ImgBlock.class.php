@@ -269,6 +269,85 @@ class BorderedBlock extends ImgBlock {
 	}
 }
 
+class CircleBlock extends ImgBlock {
+	private $pBorder;
+	private $pContent;
+	private $pPadding;
+
+	public function CircleBlock($content = null, $bSize = 1, $padding = 0) {
+		parent::ImgBlock();
+		$this->setContent($content);
+		$this->setBorder($bSize);
+		$this->setPadding($padding);
+	}
+
+	public function setContent($content) {
+		if (!is_subclass_of($content, "ImgBlock"))
+			return;
+
+		$this->pContent = $content;
+	}
+
+	public function setBorder($b) {
+		$b = intval($b);
+		if ($b > 0) $this->pBorder = $b;
+	}
+
+	public function setPadding($p) {
+		$p = intval($p);
+		if ($p > 0) $this->pPadding = $p;
+	}
+
+	private function getContentSide() {
+		return max($this->pContent->getWidth(), $this->pContent->getHeight());
+	}
+
+	private function getRay() {
+		return intval($this->getContentSide()/sqrt(2)) + 1;
+	}
+
+	public function getWidth() {
+		return ($this->getRay() + $this->pBorder + $this->pPadding) * 2 - 1;
+	}
+
+	public function getHeight() {
+		return $this->getWidth();
+	}
+
+	public function getImage() {
+		$img = imagecreatetruecolor($this->getWidth(), $this->getHeight());
+		imagefill($img, 0, 0, imagecolorallocatealpha($img, 0, 0, 0, 127));
+		imagesavealpha($img, true);
+
+		if (function_exists('imageantialias'))
+			imageantialias($img, true);
+
+		$center = $this->getWidth()/2;
+
+		$color = $this->getFgColor();
+		$fg = imagecolorallocatealpha($img, $color['r'], $color['g'], $color['b'], $color['a']);
+		$w = $this->getWidth();
+		imagefilledellipse($img, $center, $center, $w, $w, $fg);
+
+		$color = $this->getBgColor();
+		//$color = $this->pContent->getBgColor(); //XXX ?
+		$bg = imagecolorallocatealpha($img, $color['r'], $color['g'], $color['b'], $color['a']);
+		$w = $this->getWidth() - $this->pBorder*2;
+		imagefilledellipse($img, $center, $center, $w, $w, $bg);
+
+		$pos = ($this->getContentSide()*2 - $center)/2;
+		$cntPos = $this->pPadding + $this->pBorder + $this->getRay() - $this->getContentSide()/2;
+		$cntX = $cntPos + ($this->getContentSide()/2-$this->pContent->getWidth()/2);
+		$cntY = $cntPos + ($this->getContentSide()/2-$this->pContent->getHeight()/2);
+//		$cntX = intval(($this->getWidth() - $this->pContent->getWidth()) / 2);
+//		$cntY = intval(($this->getHeight() - $this->pContent->getHeight()) / 2);
+		imagecopy($img, $this->pContent->getImage(), $cntX, $cntY, 0, 0,
+		          $this->pContent->getWidth(), $this->pContent->getHeight());
+
+		return $img;
+	}
+}
+
 class TextBlock extends ImgBlock {
 	private $pText;
 	private $pFont;
