@@ -457,7 +457,6 @@ class TextBlock extends ImgBlock {
 
 			$timg = imagecreatetruecolor($this->pTextWidth, $lsize['h']+1);
 			imagefill($timg, 0, 0, imagecolorallocatealpha($timg, 0, 0, 0, 127));
-			imagefilledrectangle($timg, 0, 0, $this->pTextWidth, $lsize['h'], $background_color);
 
 			if ($this->pAlign == "center") {
 				$padding = intval(($this->pTextWidth - $lsize['w']) / 2);
