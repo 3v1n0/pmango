@@ -770,6 +770,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		$tstart = CTask::getActualStartDate($a["task_id"], $child);
 
 		$rMarkshow = true;
+		$prMarkshow = true;
 
 		if (!empty($tstart['task_log_start_date'])) {
 			$start = $tstart['task_log_start_date'];
@@ -784,6 +785,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 				if ($progress < 100 && strtotime($tend['task_log_finish_date']) < strtotime($now) ||
 				       strtotime($end) > strtotime($now) && strtotime($start) < strtotime($now)) {
 					$end = substr($now, 0, 10);
+					$prMarkshow = false;
 				} else {
 					$end = $tend['task_log_finish_date'];
 				}
@@ -813,9 +815,11 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 					$bar2->leftMark->SetFillColor($colors ? 'green' : 'gray6');
 				}
 
-				$bar2->rightMark->Show();
-				$bar2->rightMark->SetType(MARK_RIGHTTRIANGLE);
-				$bar2->rightMark->SetWidth(2);
+				if ($prMarkshow) {
+					$bar2->rightMark->Show();
+					$bar2->rightMark->SetType(MARK_RIGHTTRIANGLE);
+					$bar2->rightMark->SetWidth(2);
+				}
 
 				if ($progress != 100) {
 					$bar2->rightMark->SetColor($colors ? 'gray3' : 'white');
