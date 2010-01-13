@@ -1,8 +1,8 @@
 <?php
 
-putenv('GDFONTPATH=' . realpath('../fonts/Droid'));
-$font_bold = "DroidSans-Bold.ttf";
-$font_normal = "DroidSans.ttf";
+$font_path = realpath('../fonts/Droid');
+$font_bold = $font_path."/DroidSans-Bold.ttf";
+$font_normal = $font_path."/DroidSans.ttf";
 
 $font = $font_normal;
 $font_size = 12;
@@ -24,8 +24,6 @@ function getTextSize($text) {
 	$txtbox = imagettfbbox($font_size, 0, $font, $text);
 	$txtW = abs(max($txtbox[2], $txtbox[4])) + abs(max($txtbox[0], $txtbox[6]));
 	$txtH = abs(max($txtbox[5], $txtbox[7])) + abs(max($txtbox[1], $txtbox[3]));
-
-
 //echo "$text = $txtW x $txtH\n";print_r($txtbox);echo "\n";
 
 
@@ -65,17 +63,17 @@ function hex2dec($hex) {
 		'g' => hexdec(substr($color, 2, 2)),
 		'b' => hexdec(substr($color, 4, 2))
 	);
-                
+
   return $ret;
 }
 
 function newColorBlock($width, $height, $color) {
 	$img = imagecreate($width, $height);
 	$bgcolor = hex2dec($color);
-	
+
 	$bg = imagecolorallocate($img, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
 	imagefilledrectangle($img, 0, 0, $width-1, $height-1, $bg);
-	
+
 	return $img;
 }
 
@@ -112,12 +110,12 @@ function newTextBlock($text, $style = "normal", $align = "left", $maxlen = 0) {
 				} else {
 					$tsize = getTextSize(strip_tags(substr($line, 0, $start)));
 					$underline['start'] = $tsize['w'];
-					
+
 					// XXX code below tries to fix the intermediate underline position
 //					$pre_size = getTextSize(strip_tags(substr($line, 0, $start)));
 //					$part_size = getTextSize(substr($line, $start+3, $end-3-$start));
 //					$full_size = getTextSize(strip_tags(substr($line, 0, $end)));
-//					
+//
 //					$underline['start'] += $full_size['w'] - ($pre_size['w'] + $part_size['w']);
 
 //					//echo "checking part [$start - $end]:".substr($line, $start+3, $end-3-$start)."\n";
@@ -285,45 +283,45 @@ function newBlock($img, $align = "left", $padding = 1) {
 
 function boxHorizontalMerge($main, $child/*, $space = 0*/) {
 	global $bordersize, $background_color /*,$border_color*/;
-	
+
 //	foreach(func_get_args() as $arg) {}
 
 	$w = imagesx($main) + imagesx($child) - $bordersize;
 	$h = max(imagesy($main), imagesy($child));
-	
+
 	$box = imagecreate($w, $h);
-	
+
 //	$bc = imagecolorallocate($box, $border_color['r'], $border_color['g'], $border_color['b']);
 	$bgcolor = hex2dec($background_color);
 	$bg = imagecolorallocate($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
-	
+
 	imagefilledrectangle($box, 0, 0, $w-1, $h-1, $bg);
 //	imagefilledrectangle($box, $bordersize, $bordersize, $w-$bordersize-1, $h-$bordersize-1, $bg);
-	
+
 	imagecopy($box, $main, 0, 0, 0, 0, imagesx($main), imagesy($main));
 	imagecopy($box, $child, imagesx($main)-$bordersize, 0, 0, 0, imagesx($child), imagesy($child));
-	
+
 	//destroy child?
-	
+
 	return $box;
 }
 
 function boxPackEnd($top, $bottom) {
 	global $bordersize, $background_color;
-	
+
 	$w = max(imagesx($top), imagesx($bottom));
 	$h = imagesy($top) + imagesx($bottom) - $bordersize;
-	
+
 	$box = imagecreate($w, $h);
-	
+
 	$bgcolor = hex2dec($background_color);
 	$bg = imagecolorallocate($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
-	
+
 	imagefilledrectangle($box, 0, 0, $w-1, $h-1, $bg);
-	
+
 	imagecopy($box, $top, 0, 0, 0, 0, imagesx($top), imagesy($top));
 	imagecopy($box, $bottom, (imagesx($top)-imagesx($bottom))/2, imagesy($top)-$bordersize, 0, 0, imagesx($bottom), imagesy($bottom));
-	
+
 	return $box;
 }
 
@@ -374,22 +372,22 @@ imagepng($tbx);
 imagedestroy($tbx);
 
 /*
- * 
+ *
 class ImgBlock {
 	abstract function setBorder();
-	
+
 	abstract function getHeight();
 	abstract function getWidth();
-	
+
 	abstract function getImage();
 }
 
 class TextBlock extends ImgBlock {
-	
+
 }
 
 class ColorBlock extends ImgBlock {
-	
+
 }
 
 */
@@ -404,13 +402,13 @@ class ImgBox {
 	private $pMaxSize;
 	private $img;
 
-	public function ImgBox($border_size, $font, $font_size, $padding) { // $multiplier, $colors... 
+	public function ImgBox($border_size, $font, $font_size, $padding) { // $multiplier, $colors...
 		$pBorder = $border_size;
 		$pFont = $font;
 		$pFontSize = $font_size;
 		$pPadding = $padding;
 	}
-	
+
 	public function addLine() {}
 	public function addLine() {}
 
