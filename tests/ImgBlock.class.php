@@ -87,7 +87,7 @@ abstract class ImgBlock {
 	private function hex2dec($hex) {
 		$color = str_replace('#', '', $hex);
 
-		$rgba = array ('r' => 0, 'g' => 0, 'b' => 0, 'a' => 255);
+		$rgba = array ('r' => 0, 'g' => 0, 'b' => 0, 'a' => 0);
 
 		if (strlen($color) == 3) {
 			$rgba['r'] = hexdec($color[0].$color[0]);
@@ -100,8 +100,11 @@ abstract class ImgBlock {
 			$rgba['g'] = hexdec(substr($color, 2, 2));
 			$rgba['b'] = hexdec(substr($color, 4, 2));
 
-			if (strlen($color) == 8)
-				$rgba['a'] = hexdec(substr($color, 4, 2));
+			if (strlen($color) == 8) {
+				$rgba['a'] = hexdec(substr($color, 6, 2));
+				if ($rgba['a'] > 127)
+					$rgba['a'] = 127;
+			}
 		}
 
 		return $rgba;
@@ -115,11 +118,11 @@ class BorderedBlock extends ImgBlock {
 	private $pAlign;
 	private $pContent;
 
-	public function BorderedBlock($content, $size = 1, $hpad = 1, $vpad = 0, $align = "center") {
+	public function BorderedBlock($content, $bsize = 1, $hpad = 1, $vpad = 0, $align = "center") {
 		parent::ImgBlock();
 		$this->setContent($content);
 		$this->setBorderColor($color);
-		$this->setBorder($size);
+		$this->setBorder($bsize);
 		$this->setHPadding($hpad);
 		$this->setVPadding($vpad);
 		$this->setAlign($align);
@@ -142,7 +145,7 @@ class BorderedBlock extends ImgBlock {
 
 	public function setPadding($padding) {
 		$this->setHPadding($padding);
-		$this->setHPadding($padding);
+		$this->setVPadding($padding);
 	}
 
 	public function setHPadding($padding) {
@@ -154,7 +157,8 @@ class BorderedBlock extends ImgBlock {
 	}
 
 	public function setBorder($b) {
-		$this->pBorder = intval($b);
+		$b = intval($b);
+		if ($b > 0) $this->pBorder = $b;
 	}
 
 	public function getBorder() {
@@ -237,8 +241,8 @@ class BorderedBlock extends ImgBlock {
 
 		$bg = $this->getBgColor();
 		$fg = $this->getBorderColor();
-		$background_color = imagecolorallocate($blk, $bg['r'], $bg['g'], $bg['b']);
-		$border_color = imagecolorallocate($blk, $fg['r'], $fg['g'], $fg['b']);
+		$background_color = imagecolorallocatealpha($blk, $bg['r'], $bg['g'], $bg['b'], $bg['a']);
+		$border_color = imagecolorallocatealpha($blk, $fg['r'], $fg['g'], $fg['b'], $fg['a']);
 
 		imagefilledrectangle($blk, 0, 0, $w-1, $h-1, $border_color);
 		imagefilledrectangle($blk, $b, $b, $w-$b-1, $h-$b-1, $background_color);
@@ -437,7 +441,7 @@ class TextBlock extends ImgBlock {
 		$txtimg = imagecreatetruecolor($this->pTextWidth, $this->pTextHeight);
 
 		$bg = $this->getBgColor();
-		$background_color = imagecolorallocate($txtimg, $bg['r'], $bg['b'], $bg['g']);
+		$background_color = imagecolorallocatealpha($txtimg, $bg['r'], $bg['g'], $bg['b'], $bg['a']);
 		imagefilledrectangle($txtimg, 0, 0, $this->pTextWidth, $this->pTextHeight, $background_color);
 
 		for ($i = 0; $i < count($this->pTextLines); $i++) {
@@ -457,7 +461,7 @@ class TextBlock extends ImgBlock {
 			}
 
 			$fg = $this->getFgColor();
-			$font_color = imagecolorallocate($timg, $fg['r'], $fg['b'], $fg['g']);
+			$font_color = imagecolorallocatealpha($timg, $fg['r'], $fg['g'], $fg['b'], $fg['a']);
 
 			$txtX = $padding;
 			$txtY = $this->pFontSize ; //+ $lsize['box'][0] - $lsize['box'][1]
@@ -559,7 +563,7 @@ class ColorBlock extends ImgBlock {
 		$img = imagecreatetruecolor($this->getWidth(), $this->getHeight());
 		$color = $this->getFgColor();
 
-		$bg = imagecolorallocate($img, $color['r'], $color['g'], $color['b']);
+		$bg = imagecolorallocatealpha($img, $color['r'], $color['g'], $color['b'], $color['a']);
 		imagefilledrectangle($img, 0, 0, $this->getWidth()-1, $this->getHeight()-1, $bg);
 
 		return $img;
@@ -750,7 +754,7 @@ class HorizontalBoxBlock extends ImgBlock {
 		$box = imagecreatetruecolor($w, $h);
 
 		$bgcolor = $this->getBgColor();
-		$bg = imagecolorallocate($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
+		$bg = imagecolorallocatealpha($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b'], $bgcolor['a']);
 
 		imagefilledrectangle($box, 0, 0, $w-1, $h-1, $bg);
 
@@ -967,7 +971,7 @@ class VerticalBoxBlock extends ImgBlock {
 		$box = imagecreatetruecolor($w, $h);
 
 		$bgcolor = $this->getBgColor();
-		$bg = imagecolorallocate($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b']);
+		$bg = imagecolorallocatealpha($box, $bgcolor['r'], $bgcolor['g'], $bgcolor['b'], $bgcolor['a']);
 
 		imagefilledrectangle($box, 0, 0, $w-1, $h-1, $bg);
 
