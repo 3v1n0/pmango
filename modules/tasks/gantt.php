@@ -796,6 +796,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 					$prMarkshow = false;
 				} else {
 					$end = $tend['task_log_finish_date'];
+					$prMarkshow = false;
 				}
 			}
 
