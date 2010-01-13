@@ -560,7 +560,8 @@ $graph->scale->actinfo->SetFont(FF_USERFONT);
 $graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
 $graph->scale->tableTitle->SetFont(FF_USERFONT1, FS_BOLD, 12);
 
-$graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
+if ($colors)
+	$graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
 $graph->scale->tableTitle->Show(true);
 
 //-----------------------------------------
@@ -871,7 +872,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	$graph->Add($bar2);
 }
 $today = date("y-m-d");
-$vline = new GanttVLine(/*$today*/$now, $AppUI->_('Today', UI_OUTPUT_RAW));
+$vline = new GanttVLine(/*$today*/$now, $AppUI->_('Today', UI_OUTPUT_RAW), ($colors ? 'darkred' : 'gray3'));
 $vline->title->SetFont(FF_USERFONT3, FS_NORMAL, 9);
 
 $graph->Add($vline);
