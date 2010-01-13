@@ -507,8 +507,13 @@ if($row["task_finish_date"] == "0000-00-00 00:00:00") {
 $width      = dPgetParam($_GET, 'width', 600 );
 //consider critical (concerning finish date) tasks as well
 $start_date = dPgetParam($_GET, 'start_date', $projects[$project_id]["project_start_date"] );
-$show_names = dPgetParam($_GET, 'show_names', "true");
-$draw_deps  = dPgetParam($_GET, 'draw_deps', "true");
+$show_names = dPgetParam($_GET, 'show_names', true);
+$draw_deps  = dPgetParam($_GET, 'draw_deps', true);
+$colors  = dPgetParam($_GET, 'colors', true);
+
+$show_names = ($show_names == "true") ? true : false;
+$draw_deps = ($draw_deps == "true") ? true : false;
+$colors = ($colors == "true") ? true : false;
 
 if($projects[$project_id]["project_finish_date"] == "0000-00-00 00:00:00" || empty($projects[$project_id]["project_finish_date"])) {
 	$project_end = $start_date;
@@ -549,7 +554,7 @@ if ($start_date && $end_date) {
 $graph->scale->actinfo->vgrid->SetColor('gray');
 $graph->scale->actinfo->SetColor('darkgray');
 $graph->scale->actinfo->SetColTitles(array($AppUI->_('Task', UI_OUTPUT_RAW)),
-                                     ($show_names == "true" ? array($width/6) : null));
+                                     ($show_names ? array($width/6) : null));
 $graph->scale->actinfo->SetFont(FF_USERFONT);
 
 $graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
@@ -676,12 +681,12 @@ $now = "2009-12-05 12:00:00";//date("y-m-d");
 for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 	$a     = $gantt_arr[$i][0];
-	$level = $gantt_arr[$i][1];
+	$level = CTask::getTaskLevel($a["task_id"]);
 	$task_leaf = $gantt_arr[$i][2];
 
 	if($hide_task_groups) $level = 0;
 
-	$name = Ctask::getWBS($a["task_id"]).".".($show_names == "true" ? " ".$a["task_name"] : "");
+	$name = Ctask::getWBS($a["task_id"]).".".($show_names ? " ".$a["task_name"] : "");
 
 	if ( $locale_char_set=='utf-8' && function_exists("utf8_decode") ) {
 		$name = utf8_decode($name);
@@ -735,40 +740,25 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		$caption = substr($caption, 0, strlen($caption)-1);
 		}*/
 
-
-
-	//	$enddate = new CDate($end);
-	//	$startdate = new CDate($start);
-
-//	$task_leaf = (CTask::isLeafSt($a["task_id"]) || !in_array($a["task_id"], $tasks_opened) || in_array($a["task_id"], $tasks_closed));
-//
-//	$task_leaf = true;
-//
-//	if (empty($tasks_closed) && empty($tasks_opened) && CTask::isLeafSt($a["task_id"]))
-//		$task_leaf = true;
-//	else  {
-//
-//	if (!CTask::isLeafSt($a["task_id"]) && in_array($a["task_id"], $tasks_opened))
-//		$task_leaf = false;
-//
-//	if (!CTask::isLeafSt($a["task_id"]) && !in_array($a["task_id"], $tasks_closed))
-//		$task_leaf = false;}
-
-//	if (!CTask::isLeafSt($a["task_id"]) &&
-//	    (in_array($a["task_id"], $tasks_opened) || !in_array($a["task_id"], $tasks_closed)))
-//		$task_leaf = false;
-
 	$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.15);//se padre sarebbe meglio 1
-
 	$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
-	$tst = new Image();
-	$tst->ttf->SetUserFont2('DroidSerif-Regular.ttf');
 
-	$cut = 2;
-	while ($bar->title->GetWidth($tst) >= $width/6) {
-		$n = substr($name, 0, strlen($name)-(1+$cut))."...";
-		$bar->title->Set($n);
-		$cut++;
+	if (!$colors) {
+		$bar->SetColor('black');
+		$bar->SetFillColor('white');
+		$bar->SetPattern(BAND_SOLID,'white');
+	}
+
+	if ($show_names) {
+		$tst = new Image();
+		$tst->ttf->SetUserFont2('DroidSerif-Regular.ttf');
+
+		$cut = 2;
+		while ($bar->title->GetWidth($tst) >= $width/6) {
+			$n = substr($name, 0, strlen($name)-(1+$cut))."...";
+			$bar->title->Set($n);
+			$cut++;
+		}
 	}
 
 	$bar2 = null;
@@ -793,7 +783,8 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 			}
 
 			$bar2 = new PMGanttBar($row++, '', $start, $end, '', 0.3);
-			$bar2->SetFillColor('red');
+
+			$bar2->SetPattern(GANTT_RDIAG, $colors ? 'red' : 'black', 95);
 			$bar2->progress->Set($progress/100);
 		}
 	}
@@ -812,8 +803,8 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 			$bar->leftMark->SetColor('black');
 			$bar->leftMark->SetFillColor('black');
 		} else {
-			$bar->leftMark->SetColor('green');
-			$bar->leftMark->SetFillColor('green');
+			$bar->leftMark->SetColor($colors ? 'green' : 'gray6');
+			$bar->leftMark->SetFillColor($colors ? 'green' : 'gray6');
 		}
 
 		$bar->rightMark->Show();
@@ -823,15 +814,13 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 			$bar->rightMark->SetColor('black');
 			$bar->rightMark->SetFillColor('black');
 		} else {
-			$bar->rightMark->SetColor('green');
-			$bar->rightMark->SetFillColor('green');
+			$bar->rightMark->SetColor($colors ? 'green' : 'gray6');
+			$bar->rightMark->SetFillColor($colors ? 'green' : 'gray6');
 		}
 
 		$bar->progress->Set($progress/100);
-		$bar->progress->SetFillColor('green');
-		$bar->progress->SetPattern(BAND_SOLID,'green',98);
-
-		//        $bar->SetPattern(BAND_SOLID,'black');
+		$bar->progress->SetFillColor($colors ? 'green' : 'gray6');
+		$bar->progress->SetPattern(BAND_SOLID, $colors ? 'green' : 'gray6', 98);
 
 	}
 
@@ -858,7 +847,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		}
 	}
 
-	if ($draw_deps == "true") {
+	if ($draw_deps) {
 		$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE dependencies_req_task_id=" . $a["task_id"];
 		$query = db_exec($sql);
 
