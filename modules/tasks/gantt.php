@@ -794,8 +794,11 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 				if ($progress < 100 && strtotime($tend['task_log_finish_date']) < strtotime($now) ||
 				       strtotime($end) > strtotime($now) && strtotime($start) < strtotime($now)) {
+
+				    if (strtotime($end) <= strtotime($now))
+				    	$prMarkshow = $rMarkshow = false;
+
 					$end = substr($now, 0, 10);
-					$prMarkshow = $rMarkshow = false;
 				} else {
 					$end = $tend['task_log_finish_date'];
 				}
