@@ -31,11 +31,13 @@ class taskBoxDB {
 
 //inizio pezzo creato da matteo !!! ATTENZIONE!!!!!//
 //da aggiungere i casi dove i vari campi non sono definiti
+//caso_prova_1.3.1.1 la funzione ritorna il nome del task.
 	public function getTaskName() {
 		$sql = "SELECT task_name FROM tasks t where task_id = ".$this->pWBS_ID;
 		$query = $this->doQuery($sql); // devi usare $this->Funzione oppure taskBoxDB::Funzione !!!
 		return $query[0]['task_name'];
 	}
+//caso_prova_1.3.1.4 la funzione ritorna i numero dei giorni di lavoro assegnati ad un task, le ore effettive di lavoro, il totale del budget pianificate.
 	public function getPlannedData() {
 		$pDay = $this->doQuery("SELECT datediff(task_finish_date , task_start_date)
 			 		FROM tasks t 
@@ -51,16 +53,15 @@ class taskBoxDB {
 		return  "<br>".$pDay[0][0]." d <br> ".$pEffort[0][0]." ph <br> ".$pBudget[0][0]." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
 }
 
-	public function getPlannedTimeframe() {
-		
+//caso_prova_1.3.1.2 la funzione restituisce la data di inizio e fine di un task in un'unica stringa separate da una "|"
+	public function getPlannedTimeframe() 
+	{
 		$pStart = $this->doQuery("SELECT task_start_date
 			 		FROM tasks t 
-					WHERE task_id =".$this->pWBS_ID);
-		
+					WHERE task_id =".$this->pWBS_ID);	
 		$pFinish = $this->doQuery("SELECT task_finish_date
 			 		FROM tasks t 
 					WHERE task_id =".$this->pWBS_ID);
-		
 		$start = substr($pStart[0][0],8 ,2 )."/".substr($pStart[0][0],5 ,2 )."/".substr($pStart[0][0],0 ,4 );
 		$finish =  substr($pFinish[0][0],8 ,2 )."/".substr($pFinish[0][0],5 ,2 )."/".substr($pFinish[0][0],0 ,4 );
 		return  "<br>".$start."    |    ".$finish; //restituisce una stringa contenente tutte le variabili sopra elencate.
@@ -84,16 +85,12 @@ class taskBoxDB {
 		$aEffort = $x->getActualEffort($this->pWBS_ID,$x->getChildren());
 		$aBudget = $x->getActualCost($this->pWBS_ID);
 
-
 		return $aDay." d / ".$aEffort." ph / ".$aBudget." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
-
 	}
-	
+//caso_prova_1.3.1.3 la funzione restituisce la data di inizio e fine attuali di un task in un'unica stringa separate da una "|"	
 	public function getActualTimeframe(){
 		$x = new CTask($this->pWBS_ID);
-		
 		$pStart = $x->getActualStartDate();
-		
 		$pFinish = $x->getActualFinishDate();
 		
 	//	$start = substr($pStart[0][0],8 ,2 )."/".substr($pStart[0][0],5 ,2 )."/".substr($pStart[0][0],0 ,4 );
