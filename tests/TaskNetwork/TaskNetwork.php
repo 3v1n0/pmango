@@ -140,9 +140,9 @@ class TaskNetwork {
 			$imgTNx = $TN->x;
 			$imgTNy = $TN->y;
 
-			$imgb = $b->img;
-			$imgbx = $b->x;
-			$imgby = $b->y;
+			$imgb = $b->getImage();
+			$imgbx = $b->getX();
+			$imgby = $b->getY();
 
 			//alloco i punti mediani dei lati della tbx dentro b
 			$b->setLeft($imgTNx+250, ($imgby/2)+25);
@@ -172,6 +172,8 @@ class TaskNetwork {
 
 		}
 
+
+
 			//ingrandisco il disegno di 25 px in alto e in basso
 			$out = ImageCreate($TN->x , $TN->y+50);
 			$bianco = ImageColorAllocate($out,255,255,255);
@@ -198,7 +200,7 @@ class TaskNetwork {
 			$imgTNy = $TN->y;
 			$indexTN = $TN->index;
 
-			$imgTN2 = $TN->img;
+			$imgTN2 = $TN2->img;
 			$imgTN2x = $TN2->x;
 			$imgTN2y = $TN2->y;
 			$indexTN2 = $TN2->index[0];
@@ -247,9 +249,6 @@ class TaskNetwork {
 
 		}
 
-
-		//ora rendo assolute le coordinate relative delle tbx inserite
-		//	$TaskNetwork["index"] = transformCoordinateRow($TaskNetwork);
 
 		return $TN;
 	}
