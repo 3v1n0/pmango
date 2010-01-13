@@ -771,15 +771,15 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 		$rMarkshow = true;
 		$lMarkshow = true;
-		$prMarkshow = true;
-		$plMarkshow = true;
+		$prMarkshow = false;
+		$plMarkshow = false;
 
 		if (!empty($tstart['task_log_start_date'])) {
-			if (strtotime($tstart['task_log_start_date']) < strtotime($start))
-				$lMarkshow = false;
 
-			if (strtotime($tstart['task_log_start_date']) > strtotime($start))
-				$plMarkshow = false;
+			if (strtotime($tstart['task_log_start_date']) <= strtotime($start))
+				$plMarkshow = true;
+
+			$lMarkshow = (!$plMarkshow);
 
 			$start = $tstart['task_log_start_date'];
 
@@ -787,16 +787,17 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
 			if (!empty($tend['task_log_finish_date'])) {
 
-				if (strtotime($tend['task_log_finish_date']) > strtotime($end))
-					$rMarkshow = false;
+				if (strtotime($tend['task_log_finish_date']) >= strtotime($end))
+					$prMarkshow = true;
+
+				$rMarkshow = (!$prMarkshow);
 
 				if ($progress < 100 && strtotime($tend['task_log_finish_date']) < strtotime($now) ||
 				       strtotime($end) > strtotime($now) && strtotime($start) < strtotime($now)) {
 					$end = substr($now, 0, 10);
-					$prMarkshow = false;
+					$prMarkshow = $rMarkshow = false;
 				} else {
 					$end = $tend['task_log_finish_date'];
-					$prMarkshow = false;
 				}
 			}
 
