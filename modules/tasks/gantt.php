@@ -770,9 +770,17 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		$tstart = CTask::getActualStartDate($a["task_id"], $child);
 
 		$rMarkshow = true;
+		$lMarkshow = true;
 		$prMarkshow = true;
+		$plMarkshow = true;
 
 		if (!empty($tstart['task_log_start_date'])) {
+			if (strtotime($tstart['task_log_start_date']) < strtotime($start))
+				$lMarkshow = false;
+
+			if (strtotime($tstart['task_log_start_date']) > strtotime($start))
+				$plMarkshow = false;
+
 			$start = $tstart['task_log_start_date'];
 
 			$tend = CTask::getActualFinishDate($a["task_id"], $child);
@@ -803,30 +811,32 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 				$bar2->progress->SetFillColor($colors ? 'green' : 'gray6');
 				$bar2->progress->SetPattern(BAND_SOLID, $colors ? 'green' : 'gray6', 98);
 
-				$bar2->leftMark->Show();
-				$bar2->leftMark->SetType(MARK_LEFTTRIANGLE);
-				$bar2->leftMark->SetWidth(2);
+				if ($plMarkshow) {
+					$bar2->leftMark->Show();
+					$bar2->leftMark->SetType(MARK_LEFTTRIANGLE);
+					$bar2->leftMark->SetWidth(2);
 
-				if ($progress == 0) {
-					$bar2->leftMark->SetColor('black');
-					$bar2->leftMark->SetFillColor('black');
-				} else {
-					$bar2->leftMark->SetColor($colors ? 'green' : 'gray6');
-					$bar2->leftMark->SetFillColor($colors ? 'green' : 'gray6');
+					if ($progress == 0) {
+						$bar2->leftMark->SetColor('black');
+						$bar2->leftMark->SetFillColor('black');
+					} else {
+						$bar2->leftMark->SetColor($colors ? 'green' : 'gray6');
+						$bar2->leftMark->SetFillColor($colors ? 'green' : 'gray6');
+					}
 				}
 
 				if ($prMarkshow) {
 					$bar2->rightMark->Show();
 					$bar2->rightMark->SetType(MARK_RIGHTTRIANGLE);
 					$bar2->rightMark->SetWidth(2);
-				}
 
-				if ($progress != 100) {
-					$bar2->rightMark->SetColor($colors ? 'gray3' : 'white');
-					$bar2->rightMark->SetFillColor($colors ? 'gray3' : 'white');
-				} else {
-					$bar2->rightMark->SetColor($colors ? 'green' : 'gray6');
-					$bar2->rightMark->SetFillColor($colors ? 'green' : 'gray6');
+					if ($progress != 100) {
+						$bar2->rightMark->SetColor($colors ? 'gray3' : 'white');
+						$bar2->rightMark->SetFillColor($colors ? 'gray3' : 'white');
+					} else {
+						$bar2->rightMark->SetColor($colors ? 'green' : 'gray6');
+						$bar2->rightMark->SetFillColor($colors ? 'green' : 'gray6');
+					}
 				}
 			}
 
@@ -841,11 +851,13 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		$bar->SetFillColor('black');
 		$bar->SetPattern(BAND_SOLID,'black');
 
-		$bar->leftMark->Show();
-		$bar->leftMark->SetType(MARK_LEFTTRIANGLE);
-		$bar->leftMark->SetWidth(1);
-		$bar->leftMark->SetColor('black');
-		$bar->leftMark->SetFillColor('black');
+		if ($lMarkshow) {
+			$bar->leftMark->Show();
+			$bar->leftMark->SetType(MARK_LEFTTRIANGLE);
+			$bar->leftMark->SetWidth(1);
+			$bar->leftMark->SetColor('black');
+			$bar->leftMark->SetFillColor('black');
+		}
 
 		if ($rMarkshow) {
 			$bar->rightMark->Show();
