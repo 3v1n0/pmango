@@ -20,7 +20,7 @@
    Now the report's pages it's opened in a new windows.
  - 2007.05.08 Riccardo
    First version, created to manage .pdf files generation.
-   
+
 -------------------------------------------------------------------------------------------
 
  PMango - A web application for project planning and control.
@@ -28,12 +28,12 @@
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi, Riccardo Nicolini
  All rights reserved.
 
- PMango reuses part of the code of dotProject 2.0.1: dotProject code is 
+ PMango reuses part of the code of dotProject 2.0.1: dotProject code is
  released under GNU GPL, further information at: http://www.dotproject.net
  Copyright (C) 2003-2005 The dotProject Development Team.
 
  Other libraries used by PMango are redistributed under their own license.
- See ReadMe.txt in the root folder for details. 
+ See ReadMe.txt in the root folder for details.
 
  PMango is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -103,6 +103,7 @@ $tab = $AppUI->getState( 'ReportIdxTab' ) !== NULL ? $AppUI->getState( 'ReportId
 $active = intval( !$AppUI->getState( 'ReportIdxTab' ) );
 
 $titleBlock = new CTitleBlock( 'Project Reports', 'applet-report.png', $m, "$m.$a" );
+$titleBlock->addCrumb( "?m=projects&a=view&project_id=$project_id", "View project" );
 $titleBlock->addCell();
 
 $titleBlock->show();
@@ -120,8 +121,8 @@ $exist=db_loadList($sql);
 
 if(count($exist)==0){
 $sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete` , `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete` , `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary` )
-VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL);";		
-		
+VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL);";
+
 db_exec( $sql ); db_error();
 }
 
@@ -129,18 +130,18 @@ db_exec( $sql ); db_error();
 if($_GET['reset']){
 	if($_GET['reset']=='actual'){
 		$sql="UPDATE reports SET a_is_incomplete = NULL ,a_report_level = NULL ,a_report_roles = NULL ,a_report_sdate = NULL ,a_report_edate = NULL ,a_report_opened = NULL ,a_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
-		
+
 	if($_GET['reset']=='planned'){
 		$sql="UPDATE reports SET p_is_incomplete = NULL ,p_report_level = NULL ,p_report_roles = NULL ,p_report_sdate = NULL ,p_report_edate = NULL ,p_report_opened = NULL ,p_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
-		
+
 	if($_GET['reset']=='properties'){
 		$sql="UPDATE reports SET properties = NULL ,prop_summary = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
-		
+
 	if($_GET['reset']=='log'){
-		$sql="UPDATE reports SET l_hide_inactive = NULL ,l_hide_complete = NULL ,l_user_id = NULL ,l_report_sdate = NULL ,l_report_edate = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}			
-	
-	db_exec( $sql ); db_error();	
-	
+		$sql="UPDATE reports SET l_hide_inactive = NULL ,l_hide_complete = NULL ,l_user_id = NULL ,l_report_sdate = NULL ,l_report_edate = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
+
+	db_exec( $sql ); db_error();
+
 }
 
 
@@ -184,7 +185,7 @@ function check(){
 	<table border='0' cellpadding='1' cellspacing='0' width='100%'>
 			<tr style="border: outset #d1d1cd 1px;background-color:#<?php echo $p_color;?>" >
 				<td nowrap='nowrap' colspan='2'>
-					<?php 
+					<?php
 					echo '<font color="' . bestColor( $p_color ) . '"><strong>'. $name .'<strong></font>';
 					?>
 				</td>
@@ -370,7 +371,7 @@ $image_path='modules/report/logos/';
 if($_POST['delete_image']){
 	if(file_exists($image_path.$project_id.'.gif')) unlink($image_path.$project_id.".gif");
 	if(file_exists($image_path.$project_id.'.jpg')) unlink($image_path.$project_id.".jpg");
-	if(file_exists($image_path.$project_id.'.png')) unlink($image_path.$project_id.".png");	
+	if(file_exists($image_path.$project_id.'.png')) unlink($image_path.$project_id.".png");
 }
 
 do {
@@ -403,7 +404,7 @@ do {
 				$mesg = "<p>Errore nel caricamento dell'immagine!!</p>";
 		break;
 	}
-    
+
 	}
 } while (false);
 echo $mesg;
@@ -412,11 +413,11 @@ if(file_exists($image_path.$project_id.'.jpg')) $image_file=$image_path.$project
 else $image_file=$image_path.'nologo.gif';
 
 
-?>	
+?>
 <tr>
 
 	<td align="right" nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
-	
+
 	<table border="0" cellpadding="3" cellspacing="1">
 	<tr>
 		<td align="left" rowspan="2" nowrap="nowrap">
@@ -428,7 +429,7 @@ else $image_file=$image_path.'nologo.gif';
 		<td align="left" width="100%" nowrap="nowrap">
 		</td>
 		<td align="left" nowrap="nowrap">
-			<input type="radio" name="page" value="P" <?echo ($page=="P")? "checked":""?>> Portrait	
+			<input type="radio" name="page" value="P" <?echo ($page=="P")? "checked":""?>> Portrait
 		</td>
 		<td align="left" nowrap="nowrap">
 		</td>
@@ -456,7 +457,7 @@ else $image_file=$image_path.'nologo.gif';
   		<td align='center' nowrap="nowrap">
 		  	<?
 
-if(($_POST['do']==1)&&(!$_POST['load_image'])){	
+if(($_POST['do']==1)&&(!$_POST['load_image'])){
 	include('modules/report/makePDF.php');
 	include('modules/tasks/tasks.class.php');
 	if($image_file==$image_path.'nologo.gif') $image_file='';
@@ -464,7 +465,7 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 	$i=0;
 
 	for($k=1;$k<=4;$k++){
-	 
+
 	 	if(isset($_POST['add_properties'])&&($_POST['append_order_a']==$k)){
 			if($task_properties){
 			 	$i++;
@@ -472,7 +473,7 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 				PM_makePropPdf($pdf, $task_properties, $project_id, $page);
 				$pdf->Ln(8);
 			} else $msg.="No Tasks Properties computed!  -  ";
-		} 
+		}
 
 		if(isset($_POST['add_planned'])&&($_POST['append_order_b']==$k)){
 			if($task_planned!=0){
@@ -481,8 +482,8 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 				PM_makeTaskPdf($pdf, $project_id, $task_planned[5], $task_planned[1], $task_planned[0], $task_planned[4], false, $task_planned[2], $task_planned[3], $task_planned[6],$_POST['page']);
 				$pdf->Ln(8);
 			} else $msg.="No Planned Tasks Report defined!  -  ";
-		} 
-		
+		}
+
 		if(isset($_POST['add_actual'])&&($_POST['append_order_c']==$k)){
 			if($task_actual!=0){
 			 	$i++;
@@ -491,7 +492,7 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 				$pdf->Ln(8);
 			} else $msg.="No Actual Tasks Report defined!  -  ";
 		}
-		
+
 		if(isset($_POST['add_log'])&&($_POST['append_order_d']==$k)){
 		 	if($task_log!=0){
 			  $i++;
@@ -500,12 +501,12 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 			  $pdf->Ln(8);
 			}else $msg.="No Tasks Log Report defined!";
 		}
-}	
-	
+}
+
 	$filename = PM_footerPdf($pdf, $name, 0);
-	
+
 	if($msg!=null) $AppUI->setMsg($msg,6);
-	
+
 	if($i>0){?>
 	<a href="<?echo $filename;?>" TARGET="_new"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a><?}
 }?>
