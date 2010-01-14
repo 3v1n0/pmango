@@ -1,10 +1,10 @@
-<?php 
+<?php
 /**
 ---------------------------------------------------------------------------
 
  PMango Project
 
- Title:      effort profiles creation 
+ Title:      effort profiles creation
 
  File:       effort_analysis.php
  Location:   pmango\modules\projects
@@ -26,12 +26,12 @@
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi
  All rights reserved.
 
- PMango reuses part of the code of dotProject 2.0.1: dotProject code is 
+ PMango reuses part of the code of dotProject 2.0.1: dotProject code is
  released under GNU GPL, further information at: http://www.dotproject.net
  Copyright (c) 2003-2005 The dotProject Development Team.
 
  Other libraries used by PMango are redistributed under their own license.
- See ReadMe.txt in the root folder for details. 
+ See ReadMe.txt in the root folder for details.
 
  PMango is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ if (!($obj->project_current == '0')) {
 	$observerDate = intval($observerDate) ? new CDate($observerDate) : null;
 	$observerDate = $observerDate ? $observerDate->format($df) : $AppUI->_('not defined');
 }
-else 
+else
 	$observerDate = $today;
 
 $tt = explode ('/', $observerDate);
@@ -147,7 +147,7 @@ $q->clear();
 if (sizeof($logs)<=1) {
 	// ERRORE: non ci sono abbastanza log per fare l'analisi!
 	$ydata = array(0,0);
-	$graph = new Graph(485,300);	
+	$graph = new Graph(485,300);
 	$graph->SetScale("textlin");
 	$graph->img->SetMargin(40,30,30,40);
 	$graph->xaxis->SetFont(FF_FONT1,FS_BOLD);
@@ -181,14 +181,14 @@ else {
 		$tdif = (int)((strtotime($row['task_log_finish_date'])-strtotime($row['task_log_start_date']))/86400);//number day
 		if ($tdif <= 0) {
 			$in = (int)((strtotime($row['task_log_finish_date'])-$ts)/86400);
-			if ($in < $n)
+			if ($in < $n && $in >= 0)
 				$ydata[$in] += $row['task_log_hours'];
 		}
 		else {
 			$tdh = $row['task_log_hours'] / ($tdif+1);
 			for($i=0; $i<=$tdif; $i++) {
 				$in = (int)(((strtotime($row['task_log_finish_date'])-$ts)/86400)-$i);
-				if ($in < $n)
+				if ($in < $n && $in >= 0)
 					$ydata[$in] += $tdh;
 			}
 		}
@@ -199,7 +199,7 @@ else {
 	$bplot->SetWidth(1);
 	$bplot->SetLegend($AppUI->_('Actual Effort Profile'));
 	$graph->Add($bplot);
-	
+
 	//Definisco le etichette delle assi.
 	if ($n<=35) {
 		for ($i=0; $i<=$n; $i++) {
@@ -222,10 +222,13 @@ else {
 			}
 		}
 	}
-	
+
+	unset($xdata);
+	unset($ydata);
+
 	// Disegno della curva
 	if ($le == 0) {// curva secondo il progetto
-		// Creo la curva di attività in base alle informazioni pianificate ed al time delivery fissato...
+		// Creo la curva di attivitï¿½ in base alle informazioni pianificate ed al time delivery fissato...
 		$totalHours = 0;
 		foreach ($logs as $l)
 			$totalHours += $l['task_log_hours'];
@@ -241,10 +244,11 @@ else {
 			$ef = $obj->project_effort / ($n+1);
 			$af = $totalHours / ($t+1);
 		}
+
 		for ($i=0; $i<=$n; $i++) {
 			$xdata[$i] = $i;
 			if ($obj->model_type == 2) {
-				if ($i==0) 
+				if ($i==0)
 					$ydata[$i] = 0.0001;
 				$temp=1-exp(-($te*$te)/(2*$td*$td));
 				if ($temp == 0)
@@ -255,7 +259,8 @@ else {
 				$ydata[$i] = $ef; // Uniform distribution
 			}
 		}
-		// Disegno la curva di attività.
+
+		// Disegno la curva di attivitï¿½.
 		$lineplot = new linePlot($ydata, $xdata);
 		$lineplot->SetColor("blue");
 		$lineplot->SetWeight(2);
@@ -298,11 +303,11 @@ else {
 		$sp1->mark->SetWidth(3);
 		$graph->Add($sp1);
 
-		// Creo la curva PREVISTA di attività... in base al consuntivato ed al time delivery impostato...
+		// Creo la curva PREVISTA di attivitï¿½... in base al consuntivato ed al time delivery impostato...
 		for ($i=0; $i<=$n; $i++) {
 			$xdata[$i] = $i;
 			if ($obj->model_type == 2) {
-				if ($i==0) 
+				if ($i==0)
 					$ydata[$i] = 0.0001;
 				else {
 					$temp=1-exp(-($t*$t)/(2*$td*$td));
@@ -315,8 +320,9 @@ else {
 				$ydata[$i] = $af; // Uniform distribution
 			}
 		}
-		
+
 		// Disegno la curva di previsione.
+
 		$lineplot = new linePlot($ydata, $xdata);
 		$lineplot->SetColor("red");
 		$lineplot->SetWeight(2);
@@ -367,7 +373,7 @@ else {
 		$sTasks		= dPgetParam( $_REQUEST, 'tasks', 0 );
 		//$tasks = explode(',',$sTasks);
 		$totalHours = 0;
-		
+
 		$q->clear();
 		$q->addQuery('t.task_id, t.task_start_date, t.task_finish_date, SUM(ut.effort) as task_effort, m.model_type, m.model_delivery_day');
 		$q->addTable('tasks','t');
@@ -381,51 +387,51 @@ else {
 			$ydata[$i] = 0.0001;
 			$ydataf[$i] = 0.0001;
 		}
-		
+
 		$beginProject = $ts;$sum = 0;
 		foreach ($tasks as $ta) {
 			//if ($ta['task_id']==20){
-			//$sum += $ta['task_effort'];	
+			//$sum += $ta['task_effort'];
 			$startDate = intval($ta['task_start_date']) ? new CDate($ta['task_start_date']) : null;
 			$startDate = $startDate ? $startDate->format($df) : $AppUI->_('not defined');
-			
+
 			$finishDate = intval($ta['task_finish_date']) ? new CDate($ta['task_finish_date']) : null;
 			$finishDate = $finishDate ? $finishDate->format($df) : $AppUI->_('not defined');
-			
+
 			$totalHours = 0;
 			$tobj = new CTask();
 			$childs = $tobj->getChild($ta['task_id'],$project_id);
 			$totalHours = $tobj->getActualEffort($ta['task_id'],$childs);
-			
+
 			$t=0;
 			$t = $tobj->getActualFinishDate($ta['task_id'],$childs);
 			$t = intval($t['task_log_finish_date']) ? new CDate($t['task_log_finish_date']) : null;
 			$t = $t ? $t->format($df) : $AppUI->_('not defined');
-			
+
 			$ts = explode ('/', $startDate);
 			$ts = $ts[2]."-".$ts[1]."-".$ts[0];
 			$ts = strtotime($ts);
 			if ($ts > $beginProject)
 				$ba = round(($ts-$beginProject)/86400);
-			else 
+			else
 				$ba = 0;
 			$ar_ba[] = $ba;
-			
+
 			$te = explode ('/', $finishDate);
 			$te = $te[2]."-".$te[1]."-".$te[0];
 			$te = strtotime($te);//echo $finishDate."<br>";
 			$te = ($te-$ts)/86400;
 			$te = round($te);
 			$ar_te[] = $ba+$te;
-			
+
 			$t = explode ('/', $t);
 			$t = $t[2]."-".$t[1]."-".$t[0];
 			$t = strtotime($t);
 			$t = ($t-$ts)/86400;
-			$t = round($t);	
+			$t = round($t);
 			if ($t < 0)
 				$t = 0;
-			
+
 			if ($ta['model_type'] == 2) {
 				$deliveryDate = intval($ta['model_delivery_day']) ? new CDate($ta['model_delivery_day']) : null;
 				$deliveryDate = $deliveryDate ? $deliveryDate->format($df) : $AppUI->_('not defined');
@@ -457,7 +463,7 @@ else {
 					}
 				}
 			}
-			
+
 			for ($i=0; $i<=$te; $i++) {
 				$ii = $i + $ba;
 				if ($ii <= $n) {
@@ -475,18 +481,18 @@ else {
 				}
 			}
 		}
-		// Disegno la curva di attività.
+		// Disegno la curva di attivitï¿½.
 		$lineplot = new linePlot($ydata, $xdata);
 		$lineplot->SetColor("blue");
 		$lineplot->SetWeight(2);
 		$lineplot->SetLegend($AppUI->_('Planned Effort Profile'));
 		$graph->Add($lineplot);
-		
+
 		$lineplot = new linePlot($ydataf, $xdata);
 		$lineplot->SetColor("red");
 		$lineplot->SetWeight(2);
 		$lineplot->SetLegend($AppUI->_('Foreseen Effort Profile'));
-		
+
 		$graph->Add($lineplot);
 		if (count($ar_ba) > 0) {
 			foreach ($ar_ba as $r) {
@@ -533,7 +539,7 @@ else {
 			}
 			$sp1->SetLegend($AppUI->_("Delivery Dates"));
 		}
-		
+
 		$datay = array($ydata[$tt], $ydata[$tt]);
 		$datax = array($xdata[$tt], $xdata[$tt]);
 		$sp1 = new linePlot($datay,$datax);
@@ -549,20 +555,20 @@ else {
 		$sp1->mark->SetWidth(3);
 		$sp1->SetLegend($AppUI->_('Observer Date'));//." (".date("j/n/Y", $ts+$tt*86400).")");
 		$graph->Add($sp1);
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	}	
+
+
+
+
+
+
+
+
+
+
+
+
+
+	}
 	$graph->title->Set("Project: $obj->project_name at $observerDate - Planned effort profile level: $le");
 	$graph->title->SetFont(FF_FONT1,FS_BOLD);
 
@@ -576,7 +582,7 @@ else {
 	// Disegno il grafico.
 	$graph->Stroke();
 }
-			
+
 /********************************************************************************************/
 
 /*$AppUI->setMsg( 'Graph displayed', UI_MSG_OK);

@@ -1,0 +1,33 @@
+Index: modules/projects/effort_analysis.php
+===================================================================
+--- modules/projects/effort_analysis.php	(revision 388)
++++ modules/projects/effort_analysis.php	(working copy)
+@@ -181,14 +181,14 @@
+ 		$tdif = (int)((strtotime($row['task_log_finish_date'])-strtotime($row['task_log_start_date']))/86400);//number day
+ 		if ($tdif <= 0) {
+ 			$in = (int)((strtotime($row['task_log_finish_date'])-$ts)/86400);
+-			if ($in < $n)
++			if ($in < $n && $in >= 0)
+ 				$ydata[$in] += $row['task_log_hours'];
+ 		}
+ 		else {
+ 			$tdh = $row['task_log_hours'] / ($tdif+1);
+ 			for($i=0; $i<=$tdif; $i++) {
+ 				$in = (int)(((strtotime($row['task_log_finish_date'])-$ts)/86400)-$i);
+-				if ($in < $n)
++				if ($in < $n && $in >= 0)
+ 					$ydata[$in] += $tdh;
+ 			}
+ 		}
+@@ -222,7 +222,10 @@
+ 			}
+ 		}
+ 	}
+-	
++
++	unset($xdata);
++	unset($ydata);
++
+ 	// Disegno della curva
+ 	if ($le == 0) {// curva secondo il progetto
+ 		// Creo la curva di attivit� in base alle informazioni pianificate ed al time delivery fissato...
