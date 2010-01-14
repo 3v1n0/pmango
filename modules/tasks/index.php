@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
 ---------------------------------------------------------------------------
 
@@ -15,12 +15,12 @@
  This file is part of the PMango project
  Further information at: http://pmango.sourceforge.net
 
- Version history. 
+ Version history.
  - 2006.07.30 Lorenzo
    Second version, modified to view PMango task.
  - 2006.07.30 Lorenzo
    First version, unmodified from dotProject 2.0.1.
-   
+
 ---------------------------------------------------------------------------
 
  PMango - A web application for project planning and control.
@@ -28,12 +28,12 @@
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi
  All rights reserved.
 
- PMango reuses part of the code of dotProject 2.0.1: dotProject code is 
+ PMango reuses part of the code of dotProject 2.0.1: dotProject code is
  released under GNU GPL, further information at: http://www.dotproject.net
  Copyright (C) 2003-2005 The dotProject Development Team.
 
  Other libraries used by PMango are redistributed under their own license.
- See ReadMe.txt in the root folder for details. 
+ See ReadMe.txt in the root folder for details.
 
  PMango is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -133,13 +133,34 @@ if (dPgetParam($_GET, 'actual') != 1) {
 	$m1 = 'Actual view';
 }
 $u3='';
-$u4='&explode=1';
+
+$q = new DBQuery();
+$q->addQuery('project_id');
+$q->addTable('projects');
+$q->addWhere('project_active = 1');
+$projects = $q->loadList();
+$q->clear();
+
+$explode = dPgetParam($_GET, 'explode', 1);
+$reset_level = dPgetParam($_GET, 'reset_level', 0);
+
+if ($explode <= 1) {
+	$max_level = 1;
+	foreach($projects as $project) {
+		$max_level = max($max_level, CTask::getLevel($project['project_id']));
+	}
+
+	$u4='&explode='.$max_level;
+} else {
+	$u4='&explode='.$explode;
+}
+
 $m2='Implode tasks';
-if (dPgetParam($_GET, 'explode') != 1) {
+if ($explode <= 1) {
 	$u3 .= $u4;
 	$u4 ='';
 	$m2 = 'Explode tasks';
-}	
+}
 
 $titleBlock->addCrumb( '?m=tasks'.$u.$u4,$m1  );
 $titleBlock->addCrumb( '?m=tasks'.$u3.$u2,$m2  );
