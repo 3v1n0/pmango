@@ -28,6 +28,8 @@ class TaskBox {
 	private $pGDImage;
 	private $pUpdate;
 
+	
+	private $pAlertSize;
 	///
 	private $pFont;
 	private $pFontBold;
@@ -321,6 +323,7 @@ class TaskBox {
 			$alert = new CircleBlock(new TextBlock($txt, $this->pFont, $this->pFontSize*3/2));
 			$alert->setPadding(1);
 			$alert->setBorder($this->pBorderSize*2);
+			$this->pAlertSize = $alert->getHeight();
 
 			$tmp = new FixedBlock();
 			$tmp->addContent($outBox, 0, $alert->getHeight()/2);
@@ -340,6 +343,11 @@ class TaskBox {
 	public function getHeight() {
 		$this->buildTaskBox();
 		return $this->pImgBlock->getHeight();
+	}
+	
+	public function getAlertSize(){
+		$this->buildTaskBox();
+		return $this->pAlertSize;
 	}
 
 	private function buildImage() {
@@ -370,6 +378,11 @@ class TaskBox {
 	}
 
 	public function getProgress() {}
+	
+	public function isLeaf(){
+		if($this->pShowExpand) return false;
+		else return true;
+	}
 
 	public function getXxxx() {}
 

@@ -359,7 +359,7 @@ function connect($TaskNetwork,$mapBlank, $ID1,$ID2,$criticalPath=false, $dash = 
 	
 
 	//interi					ordinate												ascisse
-	$tbx1rx = $tbx1["rightx"]; $tbx1BlankUp = $mapBlank["y"][$ID1["riga"]]+$dist; $tbx1BlankLeft = $mapBlank[$ID1["riga"]][$ID1["colonna"]]+$dist;
+	$tbx1rx = $tbx1["rightx"]-$tbx1["halfalert"]; $tbx1BlankUp = $mapBlank["y"][$ID1["riga"]]+$dist; $tbx1BlankLeft = $mapBlank[$ID1["riga"]][$ID1["colonna"]]+$dist;
 	$tbx1ry = $tbx1["righty"]; $tbx1BlankDown = $mapBlank["y"][$ID1["riga"]+1]-$dist; $tbx1BlankRight =($ID1["colonna"]<sizeof($mapBlank[$ID1["riga"]])-3/*comprese 2 posizioni di inizio e fine*/) ? $mapBlank[$ID1["riga"]][$ID1["colonna"]+1]-$dist : $tbx1["rightx"]+50-$dist;
 	$tbx1BlankFirst = $mapBlank[$ID1["riga"]]["inizio"]+$dist;$tbx1BlankLast = $mapBlank[$ID1["riga"]]["fine"]-$dist; 
 	
@@ -411,7 +411,7 @@ function connect($TaskNetwork,$mapBlank, $ID1,$ID2,$criticalPath=false, $dash = 
 					$line($img, $tbx2BlankLeft,$tbx2BlankUp, $tbx2BlankLeft ,$tbx2ly, $black);
 					$arrow($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
 				}else{
-					$arrow($img, $tbx2lx+($tbx2["x"]/2),$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2) ,$tbx2ly-($tbx2["y"]/2),5,5, $black);
+					$arrow($img, $tbx2lx+($tbx2["x"]/2),$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2) ,$tbx2ly-($tbx2["y"]/2)+$tbx2["halfalert"],5,5, $black);
 				}
 			}
 			else{//tbx1 e tbx2 sono a sinistra
@@ -441,7 +441,7 @@ function connect($TaskNetwork,$mapBlank, $ID1,$ID2,$criticalPath=false, $dash = 
 					$arrow($img,  $tbx2BlankLeft ,$tbx2ly, $tbx2lx ,$tbx2ly,5,5, $black);
 				}	
 				else{
-					$arrow($img,  $tbx2lx+($tbx2["x"]/2) ,$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2) ,$tbx2ly-($tbx2["y"]/2),5,5, $black);
+					$arrow($img,  $tbx2lx+($tbx2["x"]/2) ,$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2) ,$tbx2ly-($tbx2["y"]/2)+$tbx2["halfalert"],5,5, $black);
 				}
 			}
 	}
@@ -470,7 +470,7 @@ function connect($TaskNetwork,$mapBlank, $ID1,$ID2,$criticalPath=false, $dash = 
 				}else{
 					$line($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2BlankUp, $black);
 					$line($img,$tbx2BlankLeft ,$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2),$tbx2BlankUp, $black);
-					$arrow($img, $tbx2lx+($tbx2["x"]/2) ,$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2) ,$tbx2ly-($tbx2["y"]/2),5,5, $black);
+					$arrow($img, $tbx2lx+($tbx2["x"]/2) ,$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2) ,$tbx2ly-($tbx2["y"]/2)+$tbx2["halfalert"],5,5, $black);
 				}
 		}
 		else{//tbx1 e tbx2 sono a sinistra
@@ -496,7 +496,7 @@ function connect($TaskNetwork,$mapBlank, $ID1,$ID2,$criticalPath=false, $dash = 
 				}else{
 					$line($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2BlankUp, $black);
 					$line($img,$tbx2BlankLeft ,$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2),$tbx2BlankUp, $black);
-					$arrow($img, $tbx2lx+($tbx2["x"]/2) ,$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2) ,$tbx2ly-($tbx2["y"]/2),5,5, $black);
+					$arrow($img, $tbx2lx+($tbx2["x"]/2) ,$tbx2BlankUp, $tbx2lx+($tbx2["x"]/2) ,$tbx2ly-($tbx2["y"]/2)+$tbx2["halfalert"],5,5, $black);
 				}
 		}
 	}
@@ -573,10 +573,12 @@ $l = rand ( 1 , 5 );
 		                   "14 ph, Wally, Sales Manager\n".
 		                   "04 ph, The Boss, Manager");
 		$tbx->setProgress(rand(0,100));
+		$tbx->setAlerts(TaskBox::ALERT_ERROR);
 
 		$im["x"] =  $tbx->getWidth();
 		$im["y"] =  $tbx->getHeight();
 		$im["img"] = $tbx->getImage();
+		$im["halfalert"] = ($tbx->getAlertSize()/2);
 
 		$array[$r][$j] = $im;
 	}
@@ -601,14 +603,26 @@ for($a=0;$a<$finalpm["h"];$a++){
 		for($b=0;$b<sizeof($finalpm["index"][$a]);$b++){
 			$ID1["riga"] = $a; $ID1["colonna"] = $b;
 								//img	 map			cr.path dash  under upper dist
-			$finalpm = connect($finalpm,$mapB,$ID1,$ID2, false, true,true,false, $space);
+			$finalpm = connect($finalpm,$mapB,$ID1,$ID2, false, true,false,false, $space);
 		}
 $space--;
 }
 
 $ID1["riga"] = $finalpm["h"]; $ID1["colonna"] = 0; //Spm
-$ID2["riga"] = 2; $ID2["colonna"] = 0; //Epm
-//$finalpm = connect($finalpm,$mapB,$ID1,$ID2, false,false,false, true,0);
+//$ID2["riga"] = $finalpm["h"]; $ID2["colonna"] = 1; //Epm
+$space=10;
+for($a=0;$a<$finalpm["h"];$a++){
+		for($b=0;$b<sizeof($finalpm["index"][$a]);$b++){
+			$ID2["riga"] = $a; $ID2["colonna"] = $b;
+								//img	 map			cr.path dash  under upper dist
+			$finalpm = connect($finalpm,$mapB,$ID1,$ID2, false, true,false,false);
+		}
+$space--;
+}
+
+$ID1["riga"] = 0; $ID1["colonna"] = 0; //Spm
+$ID2["riga"] = 3; $ID2["colonna"] = 0; //Epm
+$finalpm = connect($finalpm,$mapB,$ID1,$ID2, true,false,true, true,4);
 
 
 
