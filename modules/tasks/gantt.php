@@ -450,6 +450,7 @@ if (!$tasks_opened) $tasks_opened = array();
 //pull the tasks into an array
 for ($x=0; $x < $nums; $x++) {
 	$row = db_fetch_assoc( $ptrc );
+	$add = false;
 
 	if($row["task_start_date"] == "0000-00-00 00:00:00"){
 		$row["task_start_date"] = date("Y-m-d H:i:s");
@@ -460,8 +461,9 @@ for ($x=0; $x < $nums; $x++) {
 		$row["task_finish_date"] = "";
 	}
 
-
-	$add = false;
+	if($row["task_finish_date"] == "0000-00-00 00:00:00") {
+		$row["task_finish_date"] = "";
+	}
 
 	if ($row["task_id"] == $row["task_parent"]) {
 		$add = true;
@@ -483,19 +485,8 @@ for ($x=0; $x < $nums; $x++) {
 		$project['tasks'][] = $row;
 }
 
-if($row["task_finish_date"] == "0000-00-00 00:00:00") {
-	$row["task_finish_date"] = "";
-}
 $width      = dPgetParam($_GET, 'width', 600 );
-//consider critical (concerning finish date) tasks as well
-$start_date = dPgetParam($_GET, 'start_date', $project["project_start_date"] );
-$show_names = dPgetParam($_GET, 'show_names', true);
-$draw_deps  = dPgetParam($_GET, 'draw_deps', true);
-$colors  = dPgetParam($_GET, 'colors', true);
-
-$show_names = ($show_names == "true") ? true : false;
-$draw_deps = ($draw_deps == "true") ? true : false;
-$colors = ($colors == "true") ? true : false;
+$start_date = dPgetParam($_GET, 'start_date', $project["project_start_date"]);
 
 if($project["project_finish_date"] == "0000-00-00 00:00:00" || empty($project["project_finish_date"])) {
 	$project_end = $start_date;
@@ -504,9 +495,75 @@ if($project["project_finish_date"] == "0000-00-00 00:00:00" || empty($project["p
 	//XXX find the latest logged task and use it as the end
 }
 
-$end_date   = dPgetParam( $_GET, 'finish_date', $project_end );
+$end_date   = dPgetParam($_GET, 'finish_date', $project_end);
 
-$count = 0;
+$show_names = dPgetParam($_GET, 'show_names', true);
+$draw_deps  = dPgetParam($_GET, 'draw_deps', true);
+$colors     = dPgetParam($_GET, 'colors', true);
+
+$show_names = ($show_names == "true") ? true : false;
+$draw_deps = ($draw_deps == "true") ? true : false;
+$colors = ($colors == "true") ? true : false;
+
+
+//This kludgy function echos children tasks as threads
+
+function showgtask(&$a, $level=0) {
+	// Add tasks to gantt chart
+
+	global $gantt_arr;
+
+	$a['level'] = $level;
+	$gantt_arr[] = $a;
+
+}
+
+function findgchild(&$tarr, $parent, $level = 0){
+	$level = $level+1;
+
+	foreach ($tarr as &$t) {
+		if($t["task_parent"] == $parent && $t["task_parent"] != $t["task_id"]){
+			showgtask($t, $level);
+			findgchild($tarr, $t["task_id"], $level);
+		}
+	}
+}
+
+reset($project);
+foreach ($project['tasks'] as $task) {
+	if ($task["task_parent"] == $task["task_id"]) {
+		showgtask($task);
+		findgchild($project['tasks'], $task["task_id"]);
+	}
+}
+
+$hide_task_groups = false;
+
+if($hide_task_groups) {
+	for($i = 0; $i < count($gantt_arr); $i ++ ) {
+		// remove task groups
+		if($i != count($gantt_arr)-1 && $gantt_arr[$i + 1]['level'] > $gantt_arr[$i]['level']) {
+			// it's not a leaf => remove
+			array_splice($gantt_arr, $i, 1);
+			continue;
+		}
+	}
+}
+
+foreach ($gantt_arr as &$task) {
+	$found = false;
+
+	foreach ($gantt_arr as $gitem) {
+		if ($task['task_id'] == $gitem['task_parent'] &&
+			$task['task_id'] != $gitem['task_id']) {
+			$found = true;
+			break;
+		}
+	}
+
+	$task['is_leaf'] = !$found;
+}
+
 
 $graph = new GanttGraph($width);
 
@@ -546,13 +603,7 @@ if ($colors)
 	$graph->scale->SetTableTitleBackground("#".$project["project_color_identifier"]);
 $graph->scale->tableTitle->Show(true);
 
-//-----------------------------------------
-// nice Gantt image
-// if diff(end_date,start_date) > 90 days it shows only
-//week number
-// if diff(end_date,start_date) > 240 days it shows only
-//month number
-//-----------------------------------------
+// show only week or month (if diff > 240 days)
 if ($start_date && $end_date){
 	$min_d_start = new CDate($start_date);
 	$max_d_end = new CDate($end_date);
@@ -596,75 +647,13 @@ if ($day_diff > 300){
 }
 
 
-//This kludgy function echos children tasks as threads
-
-function showgtask( &$a, $level=0 ) {
-	// Add tasks to gantt chart
-
-	global $gantt_arr;
-
-	$a['level'] = $level;
-	$gantt_arr[] = $a;
-
-}
-
-function findgchild( &$tarr, $parent, $level=0 ){
-	GLOBAL $project;
-	$level = $level+1;
-	$n = count( $tarr );
-	for ($x=0; $x < $n; $x++) {
-		if($tarr[$x]["task_parent"] == $parent && $tarr[$x]["task_parent"] != $tarr[$x]["task_id"]){
-			showgtask( $tarr[$x], $level );
-			findgchild( $tarr, $tarr[$x]["task_id"], $level);
-		}
-	}
-}
-
-reset($project);
-$tnums = count( $project['tasks'] );
-
-foreach ($project['tasks'] as $task) {
-	if ($task["task_parent"] == $task["task_id"]) {
-		showgtask($task);
-		findgchild($project['tasks'], $task["task_id"]);
-	}
-}
-
-$hide_task_groups = false;
-
-if($hide_task_groups) {
-	for($i = 0; $i < count($gantt_arr); $i ++ ) {
-		// remove task groups
-		if($i != count($gantt_arr)-1 && $gantt_arr[$i + 1]['level'] > $gantt_arr[$i]['level']) {
-			// it's not a leaf => remove
-			array_splice($gantt_arr, $i, 1);
-			continue;
-		}
-	}
-}
-
-foreach ($gantt_arr as &$task) {
-	$found = false;
-
-	foreach ($gantt_arr as $gitem) {
-		if ($gantt_arr[$i]['task_id'] == $gitem['task_parent'] &&
-			$gantt_arr[$i]['task_id'] != $gitem['task_id']) {
-			$found = true;
-			break;
-		}
-	}
-
-	$task['is_leaf'] = !$found;
-}
-
-$row = 0;
 $now = "2009-12-05 12:00:00";//date("y-m-d");
-//print_r($gantt_arr); exit;
-for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
+
+for($i = 0, $row = 0; $i < count(@$gantt_arr); $i ++) {
 
 	$a     = $gantt_arr[$i];
-	$level = CTask::getTaskLevel($a["task_id"]);
-	$task_leaf = $gantt_arr[$i]['is_leaf'];
+	$level = $a['level'];
+	$task_leaf = $a['is_leaf'];
 
 	if($hide_task_groups) $level = 0;
 
