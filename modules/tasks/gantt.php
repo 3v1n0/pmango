@@ -379,11 +379,6 @@ $task_level = $AppUI->getState('ExplodeTasks', 1);
 $tasks_closed = $AppUI->getState("tasks_closed");
 $tasks_opened = $AppUI->getState("tasks_opened");
 
-require_once $AppUI->getModuleClass('projects');
-$project =& new CProject;
-//$allowedProjects = $project->getAllowedRecords($AppUI->user_id, 'project_id, project_name');
-//$criticalTasks = ($project_id > 0) ? $project->getCriticalTasks($project_id) : NULL;
-// pull valid projects and their percent complete information
 $project_id = ($project_id > 0) ? $project_id : 0;
 $psql = "
 SELECT project_id, project_color_identifier, project_name, project_start_date, project_finish_date, project_group
@@ -394,18 +389,10 @@ GROUP BY project_id
 ORDER BY project_name
 ";
 $prc = db_exec( $psql );
-echo db_error();
-$pnums = db_num_rows( $prc );
+$project = db_fetch_row($prc);
 
-$projects = array();
-for ($x=0; $x < $pnums; $x++) {
-	$z = db_fetch_assoc( $prc );
-	$projects[$z["project_id"]] = $z;
-	$pg = $z["project_group"];
-}
-
-if (!$perms->checkModule('projects','view','',intval($pg),1))
-$AppUI->redirect( "m=public&a=access_denied" );
+if (!$perms->checkModule('projects','view','',intval($project['project_group']),1))
+	$AppUI->redirect( "m=public&a=access_denied" );
 
 // pull tasks
 
@@ -493,7 +480,7 @@ for ($x=0; $x < $nums; $x++) {
 		$add = true;
 
 	if ($add)
-		$projects[$row['task_project']]['tasks'][] = $row;
+		$project['tasks'][] = $row;
 }
 
 if($row["task_finish_date"] == "0000-00-00 00:00:00") {
@@ -501,7 +488,7 @@ if($row["task_finish_date"] == "0000-00-00 00:00:00") {
 }
 $width      = dPgetParam($_GET, 'width', 600 );
 //consider critical (concerning finish date) tasks as well
-$start_date = dPgetParam($_GET, 'start_date', $projects[$project_id]["project_start_date"] );
+$start_date = dPgetParam($_GET, 'start_date', $project["project_start_date"] );
 $show_names = dPgetParam($_GET, 'show_names', true);
 $draw_deps  = dPgetParam($_GET, 'draw_deps', true);
 $colors  = dPgetParam($_GET, 'colors', true);
@@ -510,10 +497,10 @@ $show_names = ($show_names == "true") ? true : false;
 $draw_deps = ($draw_deps == "true") ? true : false;
 $colors = ($colors == "true") ? true : false;
 
-if($projects[$project_id]["project_finish_date"] == "0000-00-00 00:00:00" || empty($projects[$project_id]["project_finish_date"])) {
+if($project["project_finish_date"] == "0000-00-00 00:00:00" || empty($project["project_finish_date"])) {
 	$project_end = $start_date;
 } else {
-	$project_end = $projects[$project_id]["project_finish_date"];
+	$project_end = $project["project_finish_date"];
 	//XXX find the latest logged task and use it as the end
 }
 
@@ -552,11 +539,11 @@ $graph->scale->actinfo->SetColTitles(array($AppUI->_('Task', UI_OUTPUT_RAW)),
                                      ($show_names ? array($width/6) : null));
 $graph->scale->actinfo->SetFont(FF_USERFONT);
 
-$graph->scale->tableTitle->Set($projects[$project_id]["project_name"]);
+$graph->scale->tableTitle->Set($project["project_name"]);
 $graph->scale->tableTitle->SetFont(FF_USERFONT1, FS_BOLD, 12);
 
 if ($colors)
-	$graph->scale->SetTableTitleBackground("#".$projects[$project_id]["project_color_identifier"]);
+	$graph->scale->SetTableTitleBackground("#".$project["project_color_identifier"]);
 $graph->scale->tableTitle->Show(true);
 
 //-----------------------------------------
@@ -575,7 +562,7 @@ if ($start_date && $end_date){
 	$d_start = new CDate();
 	$d_end = new CDate();
 	for($i = 0; $i < count(@$gantt_arr); $i++ ){
-		$a = $gantt_arr[$i][0];
+		$a = $gantt_arr[$i];
 		$start = substr($a["task_start_date"], 0, 10);
 		$end = substr($a["task_finish_date"], 0, 10);
 
@@ -616,12 +603,13 @@ function showgtask( &$a, $level=0 ) {
 
 	global $gantt_arr;
 
-	$gantt_arr[] = array($a, $level);
+	$a['level'] = $level;
+	$gantt_arr[] = $a;
 
 }
 
 function findgchild( &$tarr, $parent, $level=0 ){
-	GLOBAL $projects;
+	GLOBAL $project;
 	$level = $level+1;
 	$n = count( $tarr );
 	for ($x=0; $x < $n; $x++) {
@@ -632,15 +620,13 @@ function findgchild( &$tarr, $parent, $level=0 ){
 	}
 }
 
-reset($projects);
-$p = &$projects[$project_id];
-$tnums = count( $p['tasks'] );
+reset($project);
+$tnums = count( $project['tasks'] );
 
-for ($i=0; $i < $tnums; $i++) {
-	$t = $p['tasks'][$i];
-	if ($t["task_parent"] == $t["task_id"]) {
-		showgtask( $t );
-		findgchild( $p['tasks'], $t["task_id"] );
+foreach ($project['tasks'] as $task) {
+	if ($task["task_parent"] == $task["task_id"]) {
+		showgtask($task);
+		findgchild($project['tasks'], $task["task_id"]);
 	}
 }
 
@@ -649,7 +635,7 @@ $hide_task_groups = false;
 if($hide_task_groups) {
 	for($i = 0; $i < count($gantt_arr); $i ++ ) {
 		// remove task groups
-		if($i != count($gantt_arr)-1 && $gantt_arr[$i + 1][1] > $gantt_arr[$i][1]) {
+		if($i != count($gantt_arr)-1 && $gantt_arr[$i + 1]['level'] > $gantt_arr[$i]['level']) {
 			// it's not a leaf => remove
 			array_splice($gantt_arr, $i, 1);
 			continue;
@@ -657,18 +643,18 @@ if($hide_task_groups) {
 	}
 }
 
-for ($i = 0; $i < count(@$gantt_arr); $i++) {
+foreach ($gantt_arr as &$task) {
 	$found = false;
 
 	foreach ($gantt_arr as $gitem) {
-		if ($gantt_arr[$i][0]['task_id'] == $gitem[0]['task_parent'] &&
-			$gantt_arr[$i][0]['task_id'] != $gitem[0]['task_id']) {
+		if ($gantt_arr[$i]['task_id'] == $gitem['task_parent'] &&
+			$gantt_arr[$i]['task_id'] != $gitem['task_id']) {
 			$found = true;
 			break;
 		}
 	}
 
-	$gantt_arr[$i][2] = !$found;
+	$task['is_leaf'] = !$found;
 }
 
 $row = 0;
@@ -676,9 +662,9 @@ $now = "2009-12-05 12:00:00";//date("y-m-d");
 //print_r($gantt_arr); exit;
 for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 
-	$a     = $gantt_arr[$i][0];
+	$a     = $gantt_arr[$i];
 	$level = CTask::getTaskLevel($a["task_id"]);
-	$task_leaf = $gantt_arr[$i][2];
+	$task_leaf = $gantt_arr[$i]['is_leaf'];
 
 	if($hide_task_groups) $level = 0;
 
@@ -898,7 +884,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		while($dep = db_fetch_assoc($query)) {
 			// find row num of dependencies
 			for($d = 0; $d < count($gantt_arr); $d++ ) {
-				if($gantt_arr[$d][0]["task_id"] == $dep["dependencies_task_id"] && $d != $bar->GetLineNbr()) {
+				if($gantt_arr[$d]["task_id"] == $dep["dependencies_task_id"] && $d != $bar->GetLineNbr()) {
 					$bar->SetConstrain($d, CONSTRAIN_ENDSTART, $colors ? 'brown' : 'gray4');
 				}
 			}
