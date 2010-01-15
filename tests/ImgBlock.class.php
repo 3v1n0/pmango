@@ -461,6 +461,16 @@ class TextBlock extends ImgBlock {
 		$this->processText();
 	}
 
+	public function setFont($font) {
+		$this->pFont = $font;
+		$this->processText();
+	}
+
+	public function setFontSize($font_size) {
+		$this->pFontSize = $font_size;
+		$this->processText();
+	}
+
 	public function setAlign($align) {
 		$this->pAlign = $align;
 	}
