@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
 ---------------------------------------------------------------------------
 
@@ -15,12 +15,12 @@
  This file is part of the PMango project
  Further information at: http://pmango.sourceforge.net
 
- Version history. 
+ Version history.
  - 2006.07.30 Lorenzo
    Second version, modified to view PMango task.
  - 2006.07.30 Lorenzo
    First version, unmodified from dotProject 2.0.1.
-   
+
 ---------------------------------------------------------------------------
 
  PMango - A web application for project planning and control.
@@ -28,12 +28,12 @@
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi
  All rights reserved.
 
- PMango reuses part of the code of dotProject 2.0.1: dotProject code is 
+ PMango reuses part of the code of dotProject 2.0.1: dotProject code is
  released under GNU GPL, further information at: http://www.dotproject.net
  Copyright (C) 2003-2005 The dotProject Development Team.
 
  Other libraries used by PMango are redistributed under their own license.
- See ReadMe.txt in the root folder for details. 
+ See ReadMe.txt in the root folder for details.
 
  PMango is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -112,11 +112,11 @@ if (isset( $_GET['tab'] )) {
 $tab = $AppUI->getState( 'TaskLogVwTab' ) !== NULL ? $AppUI->getState( 'TaskLogVwTab' ) : 0;
 
 // get the prefered date format
-$df = $AppUI->getPref('SHDATEFORMAT'); 
+$df = $AppUI->getPref('SHDATEFORMAT');
 $df1 = $df;
 //Also view the time
 $df .= " " . $AppUI->getPref('TIMEFORMAT');
-$childs = $obj->getChild(); 
+$childs = $obj->getChild();
 $start_date = intval( $obj->task_start_date ) ? new CDate( $obj->task_start_date ) : null;
 $end_date = intval( $obj->task_finish_date ) ? new CDate( $obj->task_finish_date ) : null;
 
@@ -210,7 +210,7 @@ function setCalendar( idate, fdate ) {
 
 function updateTask() {
 	var f = document.editFrm;
-	
+
 	if ( f.task_log_finish_date.value == f.task_log_start_date.value && f.start_hour.value > f.end_hour.value) {
 		alert( 'Finish date is before start date!');
 		f.start_hour.focus();
@@ -223,7 +223,7 @@ function updateTask() {
 	}
 	if ( f.task_log_start_date.value.length > 0 ) {
 		f.task_log_start_date.value += f.start_hour.value + f.start_minute.value + '00';
-	} 
+	}
 	if ( f.task_log_finish_date.value.length > 0 ) {
 		f.task_log_finish_date.value += f.end_hour.value + f.end_minute.value + '00';
 	}
@@ -297,7 +297,7 @@ function delIt() {
 				<td align="right" nowrap="nowrap"><?php echo $AppUI->_('Task');?>:</td>
 				<td colspan="3" class="hilite"><strong><?php echo @$obj->getWBS($task_id)." ".@$obj->task_name;?></strong></td>
 			</tr>
-			<?php if ( $obj->task_parent != $obj->task_id ) { 
+			<?php if ( $obj->task_parent != $obj->task_id ) {
 				$obj_parent = new CTask();
 				$obj_parent->load($obj->task_parent);
 			?>
@@ -361,7 +361,7 @@ function delIt() {
 				<td class="hilite" nowrap width="25%"><?php echo $obj->getBudgetFromTask($task_id,$childs)." ".$dPconfig['currency_symbol']; ?></td>
 				<td align="right" nowrap width="25%"><?php echo $AppUI->_('Actual Cost');?>:</td>
 				<td class="hilite" nowrap width="25%"><?php $ac = $obj->getActualCost($task_id, $childs); echo $ac." ".$dPconfig['currency_symbol']; ?></td>
-			</tr>	
+			</tr>
 			<tr>
 				<td align="right" nowrap width="25%"><?php echo $AppUI->_('Progress');?>:</td>
 				<td class="hilite" nowrap width="25%"><?php $pr = $obj->getProgress($task_id, $te);echo $pr;?>%</td>
@@ -383,7 +383,7 @@ function delIt() {
 					<td align="center" nowrap width="40%" bgcolor="#DDCC68"><?php echo $AppUI->_('Role');?>:</td>
 					<td align="center" nowrap width="20%" bgcolor="#DDCC68"><?php echo $AppUI->_('Effort');?>:</td>
 				</tr>
-				<?php  
+				<?php
 					$q->clear();
 					$q->addTable('user_tasks','ut');
 					$q->addQuery('CONCAT_WS(", ",u.user_last_name,u.user_first_name) as nm, u.user_email as um, pr.proles_name as pn, ut.effort as ue');
@@ -422,7 +422,7 @@ function delIt() {
 		</tr>
 		<tr>
 			<td colspan="3" width="50%" nowrap valign="top">
-				<?php 
+				<?php
 				$s = count( $taskDep ) == 0 ? "<tr><td bgcolor=#ffffff>".$AppUI->_('none')."</td></tr>" : '';
 				foreach($taskDep as $key => $value) {
 					$s .= '<tr><td class="hilite">';
@@ -453,7 +453,7 @@ function delIt() {
 				echo '<table width="100%" cellspacing=1 bgcolor="black">'.$s.'</table>';
 				?>
 			</td>
-		</tr>		 
+		</tr>
 		<?php
 		require_once  $AppUI->getSystemClass( 'CustomFields' );
 		$custom_fields = New CustomFields( $m, $a, $task_id, "view" );
@@ -541,8 +541,8 @@ function delIt() {
 				</form>
 			</tr>
 		</table>
-		
-	
+
+
 	</td>
 </tr>
 </table>
