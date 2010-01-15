@@ -28,12 +28,12 @@ class TaskBox {
 	private $pGDImage;
 	private $pUpdate;
 
-	
-	private $pAlertSize;
 	///
 	private $pFont;
 	private $pFontBold;
 	private $pFontSize;
+	private $pFontPath;
+	private $pAlertSize;
 	private $pMinWidth;
 	private $pMaxWidth;
 	private $pMaxLineHeight;
@@ -41,11 +41,7 @@ class TaskBox {
 	const ALERT_WARNING = 0;
 	const ALERT_ERROR = 1;
 
-	public function TaskBox($id, $alert = false, $expand = false,
-								 $name = null, $progress = null,
-	                             $p_data = null, $a_data = null,
-	                             $p_timeframe = null, $a_timeframe = null,
-                                 $resources = null) {
+	public function TaskBox($id) {
 		$this->pID = $id;
 		$this->pName = $name;
 		$this->pPlannedData = $p_data;
@@ -59,8 +55,6 @@ class TaskBox {
 		$this->pImgBlock = null;
 		$this->pGDImage = null;
 		$this->pChanged = true;
-
-		$this->init();
 	}
 
 	public function setName($n) {
@@ -115,10 +109,35 @@ class TaskBox {
 
 	public function setAlerts($a) {
 		$this->pShowAlerts = $a;
+		$this->pChanged = true;
 	}
 
 	public function showExpand($e) {
 		$this->pShowExpand = $e;
+		$this->pChanged = true;
+	}
+
+	public function setFontPath($p) {
+		$this->pFontPath = $p;
+	}
+
+	public function setBorderSize($b) {
+		$this->pBorderSize = intval($b) > 0 ? $b : 1;
+	}
+
+	public function setFont($f) {
+		$this->pFont = $f;
+		$this->pChanged = true;
+	}
+
+	public function setFontBold($f) {
+		$this->pFontBold = $f;
+		$this->pChanged = true;
+	}
+
+	public function setFontSize($s) {
+		$this->pFontSize = intval($b) > 0 ? $b : 10;
+		$this->pChanged = true;
 	}
 
 	private function computeFontSize() {
@@ -126,18 +145,24 @@ class TaskBox {
 	}
 
 	private function init() {
-		$font_path = dirname($_SERVER['SCRIPT_FILENAME']).'/../fonts/Droid/';
+		if (!$this->pFontPath) $this->pFontPath = '../fonts/Droid/';
+		if (!$this->pFont) $this->pFont = "DroidSans.ttf";
+		if (!$this->pFontBold) $this->pFontBold = "DroidSans-Bold.ttf";
+
+		$this->pFont = $this->pFontPath.'/'.$this->pFont;
+		$this->pFontBold = $this->pFontPath.'/'.$this->pFontBold;
 		$this->pFontSize = 10;
-		$this->pFont = $font_path."DroidSans.ttf";
-		$this->pFontBold = $font_path."DroidSans-Bold.ttf";
+
+		if (!file_exists($this->pFont) || !file_exists($this->pFontBold))
+			exit("You must provide valid font files and path!\n");
+
+		$this->pBorderSize = 1;
 
 		$tmp = new TextBlock("3.3.3", $this->pFontBold, $this->pFontSize);
 		$tmp = new BorderedBlock($tmp, $this->pBorderSize*2, $this->pFontSize);
 		$this->pMinWidth = $tmp->getWidth();
 		$this->pMaxWidth = $this->pMinWidth * 3;
-		$this->pMinHeight = $tmp->getHeight() + intval(($tmp->getHeight()/100) * 50);
-
-		$this->pBorderSize = 1;
+		$this->pMinHeight = $tmp->getHeight() + intval(($tmp->getHeight()/100) * 30);
 	}
 
 	private function isMinimal() {
@@ -154,8 +179,11 @@ class TaskBox {
 	}
 
 	private function buildTaskBox() {
+
 		if ($this->pImgBlock != null && !$this->pChanged)
 			return;
+
+		$this->init();
 
 		$mainVBox = new VerticalBoxBlock(0);
 		$mainVBox->setSpace(-1);
@@ -344,7 +372,7 @@ class TaskBox {
 		$this->buildTaskBox();
 		return $this->pImgBlock->getHeight();
 	}
-	
+
 	public function getAlertSize(){
 		$this->buildTaskBox();
 		return $this->pAlertSize;
@@ -378,7 +406,7 @@ class TaskBox {
 	}
 
 	public function getProgress() {}
-	
+
 	public function isLeaf(){
 		if($this->pShowExpand) return false;
 		else return true;
