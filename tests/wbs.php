@@ -10,8 +10,22 @@ include "TaskBox.class.php";
 
 include "$baseDir/lib/fpdf/fpdf.php";
 
+include "$baseDir/classes/ui.class.php";
+if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
+    if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
+    {
+        $AppUI =& $_SESSION['AppUI'];
+		$user_id = $AppUI->user_id;
+        addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+    }
+
+	$_SESSION['AppUI'] = new CAppUI;
+}
+$AppUI =& $_SESSION['AppUI'];
+include "$baseDir/modules/tasks/tasks.class.php";
+
 $project_id = 5;
-$query = "SELECT task_id, task_name, task_parent FROM tasks t ".
+$query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t ".
          "WHERE t.task_project = ".$project_id." ORDER BY task_id";
 
 $result = db_exec($query);
@@ -38,13 +52,19 @@ foreach ($results as $project) {
 	$items[$id]['parent'] = isset($translate[$project['task_parent']]) ? $translate[$project['task_parent']] : 1;
 	if ($items[$id]['parent'] == $id)
 		$items[$id]['parent'] = 1;
-	$tbx = new TaskBox($id);
+
+	$child = CTask::getChild($project['task_id'], $project_id);
+	$tstart = CTask::getActualStartDate($project['task_id'], $child);
+
+	$tbx = new TaskBox(CTask::getWBS($project['task_id']).".");
 	$tbx->setName($project['task_name']);
-	$tbx->setProgress(rand(0, 100));
+	$tbx->setProgress(CTask::getPr($project['task_id']));
 	$tbx->setPlannedData("14 d", "40 ph", "1350 €");
 	$tbx->setActualData("4 d", "6 ph", "230 €");
-	$tbx->setPlannedTimeframe("2009.10.15", "2009.10.29");
-	$tbx->setActualTimeframe("2009.10.16", "NA");
+	$tbx->setPlannedTimeframe(substr($project['task_start_date'], 0, 10), substr($project['task_finish_date'], 0, 10));
+	$tbx->setActualTimeframe(substr($tstart['task_log_start_date'], 0, 10),
+	                         "");
+	$tbx->setAlerts(rand(0,2)); //FIXME
 
 	$items[$id]['tbx'] = $tbx;
 
@@ -53,7 +73,7 @@ foreach ($results as $project) {
 //print_r($items);
 $tbx = new TaskBox(null);
 $tbx->setName("G3-sw4us");
-$objTree->add(1, 0, "", imagesx($tbx->getImage()), imagesy($tbx->getImage()), $tbx->getImage());
+$objTree->add(1, 0, "", $tbx->getWidth(), $tbx->getHeight(), $tbx->getImage());
 foreach ($items as $item) {
 	$objTree->add($item['id'], $item['parent'], '', $item['tbx']->getWidth(), $item['tbx']->getHeight(), $item['tbx']->getImage());
 }
@@ -72,11 +92,11 @@ function makeWBSPdf($im){
 
 	// TODO center the image (vertically and horizontally)
 	if (imagesx($im) > imagesy($im))  {
-		$w = $pdf->CurPageFormat[($mode == 'P' ? 0 : 1)] - $pdf->lMargin - $pdf->rMargin;
+		$w = $pdf->w - $pdf->lMargin - $pdf->rMargin;
 		$h = 0;
 	} else {
 		$w = 0;
-		$h = $pdf->CurPageFormat[($mode == 'P' ? 1 : 0)] - $pdf->tMargin - $pdf->bMargin;
+		$h = $pdf->h - $pdf->tMargin - $pdf->bMargin;
 	}
 
 	$pdf->Image($tmp, null, null, $w, $h, 'png');
