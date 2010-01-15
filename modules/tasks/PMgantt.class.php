@@ -452,6 +452,10 @@ class PMGantt /*implements PMGraph TODO */ {
 		$this->pUseColors = $uc ? true : false;
 	}
 
+	public function getWidth() {
+		return $this->pGraph->img->width;
+	}
+
 	public function getType() {
 		return "GANTT";
 	}
@@ -625,7 +629,7 @@ class PMGantt /*implements PMGraph TODO */ {
 
 		$this->pGraph->scale->actinfo->vgrid->SetColor('gray');
 		$this->pGraph->scale->actinfo->SetColor('darkgray');
-		$titles_size = ($this->pShowNames && $this->pGraph->img->width != 0) ? array($width/6) : null;
+		$titles_size = ($this->pShowNames && $this->getWidth() != 0) ? array($this->getWidth()/6) : null;
 		$this->pGraph->scale->actinfo->SetColTitles(array('Task'), $titles_size);
 		$this->pGraph->scale->actinfo->SetFont(FF_USERFONT);
 
@@ -766,7 +770,7 @@ class PMGantt /*implements PMGraph TODO */ {
 				$tst->ttf->SetUserFont2('DroidSerif-Regular.ttf');
 
 				$cut = 2;
-				while ($bar->title->GetWidth($tst) >= $this->pGraph->img->width/6 && $cut < strlen($name)) {
+				while ($bar->title->GetWidth($tst) >= $this->getWidth()/6 && $cut < strlen($name)) {
 					$n = substr($name, 0, strlen($name)-(1+$cut))."...";
 					$bar->title->Set($n);
 					$cut++;
