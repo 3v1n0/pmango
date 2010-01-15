@@ -64,6 +64,8 @@ $project_id = defVal( @$_GET['project_id'], 0);
 if (!empty($_POST)) {
 	$task_level = dPgetParam($_POST, 'explode_tasks', '1');
 	$AppUI->setState('ExplodeTasks', $task_level);
+	$AppUI->setState('tasks_opened', array());
+	$AppUI->setState('tasks_closed', array());
 }
 
 $sql = "SELECT project_start_date, project_finish_date FROM projects WHERE project_id = $project_id";
