@@ -215,9 +215,9 @@ function showFullProject() {
 function doSubmit() {
 //	document.editFrm.display_option.value = "custom";
 //
-//	if (document.editFrm.edate.value < document.editFrm.sdate.value)
-//		alert("Start date must before end date");
-//	else
+	if (document.editFrm.edate.value < document.editFrm.sdate.value)
+		alert("Start date must before end date");
+	else
 		document.editFrm.submit();
 }
 
