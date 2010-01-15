@@ -408,10 +408,6 @@ for ($x=0; $x < $pnums; $x++) {
 if (!$perms->checkModule('projects','view','',intval($pg),1))
 $AppUI->redirect( "m=public&a=access_denied" );
 
-// get any specifically denied tasks
-$task =& new CTask;
-//$deny = $task->getDeniedRecords($AppUI->user_id); PERMESSI!!!!!!!!!!!
-
 // pull tasks
 
 $select = "
@@ -755,7 +751,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 		$tst->ttf->SetUserFont2('DroidSerif-Regular.ttf');
 
 		$cut = 2;
-		while ($bar->title->GetWidth($tst) >= $width/6) {
+		while ($bar->title->GetWidth($tst) >= $width/6 && $cut < strlen($name)) {
 			$n = substr($name, 0, strlen($name)-(1+$cut))."...";
 			$bar->title->Set($n);
 			$cut++;
