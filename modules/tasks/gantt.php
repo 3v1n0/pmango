@@ -339,9 +339,7 @@ class PMGanttBar extends GanttPlotObject {
 
 			if( $this->rightMark->GetType() == MARK_RIGHTTRIANGLE ) {
 				$y = $yb ;
-			}
 
-			if ($this->rightMark->GetType()) {
 				$bmark = new PlotMark();
 				$bmark->SetType($this->rightMark->GetType());
 				$bmark->SetColor($this->iFrameColor);
@@ -357,6 +355,7 @@ class PMGanttBar extends GanttPlotObject {
 			$margin = $this->iCaptionMargin;
 			if( $this->rightMark->show )
 			$margin += $this->rightMark->GetWidth();
+
 			$this->caption->Stroke($aImg,$xb+$margin,$middle);
 		}
 	}
