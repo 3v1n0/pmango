@@ -158,7 +158,7 @@ class TaskBox {
 
 		$this->pBorderSize = 1;
 
-		$tmp = new TextBlock("3.3.3", $this->pFontBold, $this->pFontSize);
+		$tmp = new TextBlock("3.3.", $this->pFontBold, $this->pFontSize);
 		$tmp = new BorderedBlock($tmp, $this->pBorderSize*2, $this->pFontSize);
 		$this->pMinWidth = $tmp->getWidth();
 		$this->pMaxWidth = $this->pMinWidth * 3;
@@ -312,7 +312,7 @@ class TaskBox {
 				$progress_width = ($w * $this->pProgress / 100);
 				if ($this->pProgress == 50 && $w % 2 == 0) $progress_width--;
 				$progress_blk = new ColorBlock("#bbb");
-				$progress_blk->setHeight($this->pFontSize);
+				$progress_blk->setHeight($this->pFontSize*2/3);
 				$progress_blk->setWidth($progress_width);
 				$hbox->addBlock($progress_blk);
 			}
@@ -322,7 +322,7 @@ class TaskBox {
 				if ($this->pProgress == 50 && $w % 2 == 0) $missing_width--;
 				if ($missing_width < 1) $missing_width = 1;
 				$missing_blk = new ColorBlock("#fff");
-				$missing_blk->setHeight($this->pFontSize);
+				$missing_blk->setHeight($this->pFontSize*2/3);
 				$missing_blk->setWidth($missing_width);
 				$hbox->addBlock($missing_blk);
 			}
