@@ -54,28 +54,25 @@
 
 include "PMgantt.class.php";
 
-$project_id = defVal( @$_REQUEST['project_id'], 0 );
-
-// get the prefered date format
-//$df = $AppUI->getPref('SHDATEFORMAT');
+$project_id = defVal(@$_REQUEST['project_id'], 0);
 
 $task_level = $AppUI->getState('ExplodeTasks', 1);
 $tasks_closed = $AppUI->getState("tasks_closed");
 $tasks_opened = $AppUI->getState("tasks_opened");
 
 $project_id = ($project_id > 0) ? $project_id : 0;
-$psql = "SELECT project_group FROM projects WHERE " . $project_id . "= project_id";
+$psql = "SELECT project_group FROM projects WHERE ".$project_id."= project_id";
 $prc = db_exec( $psql );
 echo db_error();
-$pnums = db_num_rows( $prc );
+$pnums = db_num_rows($prc);
 
-$prc = db_exec( $psql );
+$prc = db_exec($psql);
 $project = db_fetch_row($prc);
 
-if (!$perms->checkModule('projects','view','',intval($project['project_group']),1))
-	$AppUI->redirect( "m=public&a=access_denied" );
+if (!$perms->checkModule('projects', 'view', '', intval($project['project_group']), 1))
+	$AppUI->redirect("m=public&a=access_denied");
 
-$width      = dPgetParam($_GET, 'width', 600 );
+$width      = dPgetParam($_GET, 'width', 600);
 $start_date = dPgetParam($_GET, 'start_date', null);
 $end_date   = dPgetParam($_GET, 'finish_date', null);
 
