@@ -465,9 +465,9 @@ class PMGantt /*implements PMGraph TODO */ {
 		return $this->pGraph->Stroke(_IMG_HANDLER);
 	}
 
-	public function draw() {
+	public function draw($file = null) {
 		$this->buildGANTT();
-		$this->pGraph->Stroke();
+		$this->pGraph->Stroke($file);
 	}
 
 	//--
@@ -712,17 +712,17 @@ class PMGantt /*implements PMGraph TODO */ {
 
 			//using new jpGraph determines using Date object instead of string
 			$start = $a["task_start_date"];
-			$end_date = $a["task_finish_date"];
+			$end = $a["task_finish_date"];
 
-			$end_date = new CDate($end_date);
-			//	$end->addDays(0);
-			$end = $end_date->getDate();
+			$end_date = new CDate($end);
+			//	$start_date->addDays(0);
+			$end_date->getDate();
 
-			$start = new CDate($start);
-			//	$start->addDays(0);
-			$start = $start->getDate();
+			$start_date = new CDate($start);
+			//	$start_date->addDays(0);
+			$start = $start_date->getDate();
 
-			$progress = intval($a["task_id"]) > 0 ? CTask::getPr($a["task_id"]) : 0;
+			$progress = intval(CTask::getPr($a["task_id"]));
 			//$ac = );
 			//$progress = 0;//$progress > 0 ? intval($progress) : 0;
 
@@ -797,7 +797,6 @@ class PMGantt /*implements PMGraph TODO */ {
 					$lMarkshow = (!$plMarkshow);
 
 					$start = $tstart['task_log_start_date'];
-
 					$tend = CTask::getActualFinishDate($a["task_id"], $child);
 
 					if (!empty($tend['task_log_finish_date'])) {
