@@ -1,20 +1,36 @@
 <?php
 include ("../TaskBox.class.php");
 
+$baseDir = "../..";
+//TODO effort sulle linee
+include "$baseDir/includes/config.php";
+include "$baseDir/includes/db_adodb.php";
+include "$baseDir/includes/db_connect.php";
+include "$baseDir/includes/main_functions.php";
+include "$baseDir/classes/ui.class.php";
+if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
+    if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
+    {
+        $AppUI =& $_SESSION['AppUI'];
+		$user_id = $AppUI->user_id;
+        addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+    }
+
+	$_SESSION['AppUI'] = new CAppUI;
+}
+$AppUI =& $_SESSION['AppUI'];
+include "$baseDir/modules/tasks/tasks.class.php";
+
 Header("Content-Type: image/jpeg");
 
-class TBXNode {
+class TNNode extends TaskBox {
 
-	var $tbx,$leftx, $lefty, $rightx, $righty;
+	private $leftx, $lefty, $rightx, $righty;
 
 	//leftx = ascissa punto mediano sx del tb (dove arrivano le frecce)
 	//lefty = ordinata punto mediano sx del tb (dove arrivano le frecce)
 	//rightx = ascissa punto mediano dx del tb (dove partono le frecce)
 	//righty = ordinata punto mediano dx del tb (dove partono le frecce)
-
-	function TBXNode(TaskBox $tbx){
-		 $this->tbx = $tbx;
-	}
 
 	function setLeft($x,$y){
 		$this->leftx = $x;
@@ -24,18 +40,6 @@ class TBXNode {
 	function setRight($x,$y){
 		$this->rightx = $x;
 		$this->righty = $y;
-	}
-
-	function getImage(){
-		return $this->tbx->getImage();
-	}
-
-	function getX(){
-		return $this->tbx->getWidth();
-	}
-
-	function getY(){
-		return $this->tbx->getHeight();
 	}
 
 	function getLeftX(){
@@ -52,14 +56,6 @@ class TBXNode {
 
 	function getRightY(){
 		return $this->righty;
-	}
-
-	function getAlertSize(){
-		return $this->tbx->getAlertSize();
-	}
-
-	function isLeaf(){
-		return $this->tbx->isLeaf();
 	}
 }
 
@@ -114,26 +110,23 @@ class TaskNetwork {
 			$index = $TN->getIndex();
 
 			//start to tbx dependancies
-			$space=10;
 			for($a=0;$a<sizeof($index);$a++){
 					for($b=0;$b<sizeof($index[$a]);$b++){
 						$ID2["riga"] = $a; $ID2["colonna"] = $b;
 										 //TN  			 cr.path dash  under upper dist color
 						$TN = $TN->connect($TN,null,$ID2, false, true,false,false,0,"gray");
 					}
-			$space--;
 			}
-
-			$space=10;
+	
 			for($a=0;$a<sizeof($index);$a++){
 					for($b=0;$b<sizeof($index[$a]);$b++){
 						$ID1["riga"] = $a; $ID1["colonna"] = $b;
 										 //TN  			 cr.path dash  under upper dist
-						$TN = $TN->connect($TN,$ID1,null, false, false,false,false,$space,"gray");
+						$TN = $TN->connect($TN,$ID1,null, false, false,false,false,10,"gray");
 					}
 
 			}
-			return $TN;
+			
 		}
 
 	public function printTN(){
@@ -149,6 +142,7 @@ class TaskNetwork {
 	//da perfezionare che ricerchi se i figli della tbx hanno dipendenze
 	public function drawConnections($TN){
 		$index = $TN->getIndex();
+		
 		for($i=0;$i<sizeof($TN->connections);$i++){
 			$upper =false; $under=false;
 
@@ -159,15 +153,15 @@ class TaskNetwork {
 			$tbx2 = $index[$ID2["riga"]][$ID2["colonna"]];
 
 
-
-			if($tbx1 && !$tbx1->isLeaf()){
+//FIXME get from DB
+			if($tbx1 && rand(0,1)){
 				$under = true;
 			}
-			if($tbx2 && !$tbx2->isLeaf()){
+			if($tbx2 && rand(0,1)){
 				$upper =true;
 			}
 
-			$TN = $TN->connect($this,$ID1,$ID2,false,false,$under,$upper,2*$i);
+			$TN = $TN->connect($this,$ID1,$ID2,false,false,$under,$upper,$i*2);
 
 		}
 		return $TN;
@@ -179,6 +173,8 @@ class TaskNetwork {
 		$img = ImageCreate(50,50);
 		$bianco = ImageColorAllocate($img,255,255,255);
 		$nero = ImageColorAllocate($img,0,0,0);
+		if (function_exists('imageantialias'))
+			imageantialias($img, true);
 
 		$spm["x"] =  50;
 		$spm["y"] =  50;
@@ -191,7 +187,8 @@ class TaskNetwork {
 		$img = ImageCreate(50,50);
 		$bianco = ImageColorAllocate($img,255,255,255);
 		$nero = ImageColorAllocate($img,0,0,0);
-
+		if (function_exists('imageantialias'))
+			imageantialias($img, true);
 		$epm["x"] =  50;
 		$epm["y"] =  50;
 		imageFilledEllipse($img,25,25,40,40,$nero);
@@ -202,27 +199,10 @@ class TaskNetwork {
 	}
 
 	private function imageboldline($image, $x1, $y1, $x2, $y2, $color, $thick = 3){
-	   /* this way it works well only for orthogonal lines
+	   
 	   imagesetthickness($image, $thick);
 	   return imageline($image, $x1, $y1, $x2, $y2, $color);
-	   */
-	   if ($thick == 1) {
-	       return imageline($image, $x1, $y1, $x2, $y2, $color);
-	   }
-	   $t = $thick / 2 - 0.5;
-	   if ($x1 == $x2 || $y1 == $y2) {
-	       return imagefilledrectangle($image, round(min($x1, $x2) - $t), round(min($y1, $y2) - $t), round(max($x1, $x2) + $t), round(max($y1, $y2) + $t), $color);
-	   }
-	   $k = ($y2 - $y1) / ($x2 - $x1); //y = kx + q
-	   $a = $t / sqrt(1 + pow($k, 2));
-	   $points = array(
-	       round($x1 - (1+$k)*$a), round($y1 + (1-$k)*$a),
-	       round($x1 - (1-$k)*$a), round($y1 - (1+$k)*$a),
-	       round($x2 + (1+$k)*$a), round($y2 - (1-$k)*$a),
-	       round($x2 + (1-$k)*$a), round($y2 + (1+$k)*$a),
-	   );
-	   imagefilledpolygon($image, $points, 4, $color);
-	   return imagepolygon($image, $points, 4, $color);
+	  
 	}
 
 	//wrapper fiunzioni di base disegno
@@ -299,20 +279,47 @@ class TaskNetwork {
 	}
 
 
+	//traccia una freccia passante per tutti i punti dell'array dato
+	private function patharrow($im,$points/*array*/,$color,$type){
+		$line;$arrow;
+		switch($type){
+			case "criticalPath":$line="imageboldline";$arrow="boldarrow";break;
+			case "dash": $line="imagedashedline";$arrow="dashedarrow";break;
+			default: 
+			case "normal":$line="imageline";$arrow="arrow";break;
+		}
+		$points = TaskNetwork::trimArray($points);
+		$fx=$points[0]["x"];
+		$fy=$points[0]["y"];
+		if(isset($points)){
+			for($i=1;$i<sizeof($points)-1;$i++){
+				$tx=$points[$i]["x"];
+				$ty=$points[$i]["y"];
+				
+				TaskNetwork::$line($im, $fx,$fy, $tx,$ty, $color);
+				
+				$fx=$tx;
+				$fy=$ty;
+			}
+			
+			$tx=$points[sizeof($points)-1]["x"];
+			$ty=$points[sizeof($points)-1]["y"];
+			TaskNetwork::$arrow($im, $fx,$fy, $tx,$ty,5,5, $color);
+			
+		}		
+	}
+//TODO debugging generale delle connessioni
 	function connect(TaskNetwork $TaskNetwork, $ID1,$ID2,$criticalPath=false, $dash = false,$under= false,$upper=false, $dist=0,$color="black"){
-		$line;$arrow;$colore;
+		$type;$colore;
 		if(!$criticalPath){
 			if($dash){
-				$line="imagedashedline";
-				$arrow="dashedarrow";
+				$type="dash";
 			}
 			else{
-				$line="imageline";
-				$arrow="arrow";
+				$type="normal";
 			}
 		}else{
-			$line="imageboldline";
-			$arrow="boldarrow";
+			$type="criticalPath";
 		}
 
 		$img = $TaskNetwork->img;
@@ -322,7 +329,7 @@ class TaskNetwork {
 			case "red":$colore = ImageColorAllocate($img,255,0,0);break;//rosso
 			case "green":$colore = ImageColorAllocate($img,0,255,0);break;//verde
 			case "blue":$colore = ImageColorAllocate($img,0,0,255);break;//blu
-			case "gray":$colore = ImageColorAllocate($img,150,150,150);break;//grigio
+			case "gray":$colore = ImageColorAllocate($img,130,130,130);break;//grigio
 			default:$colore = ImageColorAllocate($img,0,0,0);break;//nero
 		}
 
@@ -348,7 +355,7 @@ class TaskNetwork {
 			$tbx1rx = $tbx1->getRightX(); $tbx1BlankUp = $TaskNetwork->mapBlank["y"][$ID1["riga"]]+$dist; $tbx1BlankLeft = $TaskNetwork->mapBlank[$ID1["riga"]][$ID1["colonna"]]+$dist;
 			$tbx1ry = $tbx1->getRightY(); $tbx1BlankDown = $TaskNetwork->mapBlank["y"][$ID1["riga"]+1]-$dist; $tbx1BlankRight =($ID1["colonna"]<sizeof($TaskNetwork->mapBlank[$ID1["riga"]])-1) ? $TaskNetwork->mapBlank[$ID1["riga"]][$ID1["colonna"]+1]-$dist : $tbx1->getRightX()+50-$dist;
 			$tbx1BlankFirst = $TaskNetwork->mapBlank["inizio"]-$dist;$tbx1BlankLast = $TaskNetwork->mapBlank["fine"]+$dist;
-			$tbx1x = $tbx1->getX(); $tbx1y = $tbx1->getY();
+			$tbx1x = $tbx1->GetWidth(); $tbx1y = $tbx1->GetHeight();
 
 			$tbx1shift = $tbx1->getAlertSize()/2;
 		}
@@ -367,147 +374,135 @@ class TaskNetwork {
 			$tbx2lx = $tbx2->getLeftX(); $tbx2BlankUp = $TaskNetwork->mapBlank["y"][$ID2["riga"]]+$dist; $tbx2BlankLeft = $TaskNetwork->mapBlank[$ID2["riga"]][$ID2["colonna"]]+$dist;
 			$tbx2ly = $tbx2->getLeftY(); $tbx2BlankDown = $TaskNetwork->mapBlank["y"][$ID2["riga"]+1]-$dist; $tbx2BlankRight =($ID2["colonna"]<sizeof($TaskNetwork->mapBlank[$ID2["riga"]])-1) ? $TaskNetwork->mapBlank[$ID2["riga"]][$ID2["colonna"]+1]-$dist : $tbx2->getRightX()+50-$dist;
 			$tbx2BlankFirst = $TaskNetwork->mapBlank["inizio"]-$dist;$tbx2BlankLast = $TaskNetwork->mapBlank["fine"]+$dist;
-			$tbx2x = $tbx2->getX(); $tbx2y = $tbx2->getY();
+			$tbx2x = $tbx2->GetWidth(); $tbx2y = $tbx2->GetHeight();
 
 			$tbx2shift = $tbx2->getAlertSize()/2;
 		}
 
 		/////////////////////////////////
-		if($tbx1ry<$tbx2ly){//se tbx1 è piu in alto di tbx2
-				if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
-					if(!$under){
-						TaskNetwork::$line($img, $tbx1rx-$tbx1shift,$tbx1ry+($tbx1shift/2), $tbx1BlankRight,$tbx1ry+($tbx1shift/2), $colore);
-						TaskNetwork::$line($img, $tbx1BlankRight,$tbx1ry+($tbx1shift/2), $tbx1BlankRight,$tbx1BlankDown, $colore);
-					}else{
-						TaskNetwork::$line($img, $tbx1rx-($tbx1x/2)-($tbx1shift/2),$tbx1ry+($tbx1y/2), $tbx1rx-($tbx1x/2)-($tbx1shift/2),$tbx1BlankDown, $colore);
-						TaskNetwork::$line($img, $tbx1rx-($tbx1x/2)-($tbx1shift/2),$tbx1BlankDown,$tbx1BlankRight,$tbx1BlankDown, $colore);
+		if(abs($tbx1ry-$tbx2ly)<10){//le tbx sono sulla stessa riga
+			$points;
+			if(abs($tbx2lx-$tbx1rx)<300){ //adiacenti
+
+				if(!$under){
+					$points[0]["x"]= $tbx1rx-$tbx1shift	;$points[0]["y"]=$tbx1ry+($tbx1shift/2);
+					$points[1]["x"]= $tbx1BlankRight	;$points[1]["y"]=$tbx1ry+($tbx1shift/2);
+				}else{
+					$points[0]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[0]["y"]=$tbx1ry+($tbx1y/2);
+					$points[1]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[1]["y"]=$tbx1BlankDown;
+					$points[2]["x"]= $tbx1BlankRight				   ;$points[2]["y"]=$tbx1BlankDown;
+					$points[3]["x"]= $tbx1BlankRight				   ;$points[3]["y"]=$tbx1ry+($tbx1shift/2);
 					}
-					if($tbx1BlankDown!=$tbx2BlankUp){
-						if(!$under){
-							TaskNetwork::$line($img,$tbx1BlankRight,$tbx1BlankDown, $tbx1BlankLast,$tbx1BlankDown, $colore);
-						}else{
-							TaskNetwork::$line($img,$tbx1rx-($tbx1x/2)+$tbx1shift,$tbx1BlankDown, $tbx1BlankLast,$tbx1BlankDown, $colore);
-						}
-						TaskNetwork::$line($img,$tbx1BlankLast,$tbx1BlankDown,$tbx1BlankLast,$tbx2BlankUp, $colore);
-						if(!$upper){
-							TaskNetwork::$line($img,$tbx1BlankLast,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $colore);
-						}else{
-							TaskNetwork::$line($img,$tbx1BlankLast,$tbx2BlankUp,$tbx2lx+($tbx2x/2)-($tbx2shift/2),$tbx2BlankUp, $colore);
-						}
-					}else{
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx1BlankDown,$tbx2BlankLeft,$tbx1BlankDown, $colore);
-					}
-					if(!$upper){
-						TaskNetwork::$line($img, $tbx2BlankLeft,$tbx2BlankUp, $tbx2BlankLeft ,$tbx2ly+($tbx2shift/2), $colore);
-						TaskNetwork::$arrow($img,  $tbx2BlankLeft ,$tbx2ly+($tbx2shift/2), $tbx2lx ,$tbx2ly+($tbx2shift/2),5,5, $colore);
-					}else{
-						TaskNetwork::$arrow($img, $tbx2lx+($tbx2x/2)-($tbx2shift/2),$tbx2BlankUp, $tbx2lx+($tbx2x/2)-($tbx2shift/2),$tbx2ly-($tbx2y/2)+$tbx2shift,5,5, $colore);
-					}
+					
+				if(!$upper){
+					$points[4]["x"]= $tbx2lx	;$points[4]["y"]=$tbx2ly+($tbx2shift/2); //arrivato
+				}else{
+					$points[4]["x"]= $tbx1BlankRight					;$points[4]["y"]=$tbx2BlankUp; 
+					$points[5]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[5]["y"]=$tbx2BlankUp;
+					$points[6]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[6]["y"]=$tbx2ly-($tbx2y/2)+$tbx2shift;//arrivato
 				}
-				else{//tbx1 e tbx2 sono a sinistra
-					if(!$under){
-						TaskNetwork::$line($img, $tbx1rx-$tbx1shift,$tbx1ry+($tbx1shift/2), $tbx1BlankRight,$tbx1ry+($tbx1shift/2), $colore);
-						TaskNetwork::$line($img, $tbx1BlankRight,$tbx1ry+($tbx1shift/2), $tbx1BlankRight,$tbx1BlankDown, $colore);
-					}else{
-						TaskNetwork::$line($img, $tbx1rx-($tbx1x/2)-($tbx1shift/2),$tbx1ry+($tbx1y/2), $tbx1rx-($tbx1x/2)-($tbx1shift/2),$tbx1BlankDown, $colore);
-					}
-					if($tbx1BlankDown!=$tbx2BlankUp){
-						if(!$under){
-							TaskNetwork::$line($img,$tbx1BlankRight,$tbx1BlankDown, $tbx1BlankFirst,$tbx1BlankDown, $colore);
-						}else{
-							TaskNetwork::$line($img,$tbx1rx-($tbx1x/2)-($tbx1shift/2),$tbx1BlankDown, $tbx1BlankFirst,$tbx1BlankDown, $colore);
-						}
-						TaskNetwork::$line($img,$tbx1BlankFirst,$tbx1BlankDown,$tbx1BlankFirst,$tbx2BlankUp, $colore);
-						if(!$upper){
-							TaskNetwork::$line($img,$tbx1BlankFirst,$tbx2BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $colore);
-						}else{
-							TaskNetwork::$line($img,$tbx1BlankFirst,$tbx2BlankUp,$tbx2lx+($tbx2x/2)-($tbx2shift/2),$tbx2BlankUp, $colore);
-						}
-					}else{
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx1BlankDown,$tbx2BlankLeft,$tbx2BlankUp, $colore);
-					}
-					if(!$upper){
-						TaskNetwork::$line($img, $tbx2BlankLeft,$tbx2BlankUp, $tbx2BlankLeft ,$tbx2ly+($tbx2shift/2), $colore);
-						TaskNetwork::$arrow($img,  $tbx2BlankLeft ,$tbx2ly+($tbx2shift/2), $tbx2lx ,$tbx2ly+($tbx2shift/2),5,5, $colore);
-					}
-					else{
-						TaskNetwork::$arrow($img,  $tbx2lx+($tbx2x/2)-($tbx2shift/2) ,$tbx2BlankUp, $tbx2lx+($tbx2x/2)-($tbx2shift/2),$tbx2ly-($tbx2y/2)+$tbx2shift,5,5, $colore);
-					}
+				TaskNetwork::patharrow($img,$points,$colore,$type);
+					
+			}
+			else{// non adiacenti
+				if(!$under){
+					$points[0]["x"]= $tbx1rx-$tbx1shift	;$points[0]["y"]=$tbx1ry+($tbx1shift/2);
+					$points[1]["x"]= $tbx1BlankRight	;$points[1]["y"]=$tbx1ry+($tbx1shift/2);
+				}else{
+					$points[0]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[0]["y"]=$tbx1ry+($tbx1y/2);
+					$points[1]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[1]["y"]=$tbx1BlankDown;
+					$points[2]["x"]= $tbx1BlankRight				   ;$points[2]["y"]=$tbx1BlankDown;
 				}
+
+				$points[3]["x"]= $tbx1BlankRight	;$points[3]["y"]=$tbx1BlankUp;
+
+				if(!$upper){
+					$points[4]["x"]= $tbx2BlankLeft	;$points[4]["y"]=$tbx2BlankUp;
+					$points[5]["x"]= $tbx2BlankLeft	;$points[5]["y"]=$tbx2ly+($tbx2shift/2);
+					$points[6]["x"]= $tbx2lx		;$points[6]["y"]=$tbx2ly+($tbx2shift/2); //arrivato
+					
+				}else{
+					$points[4]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[4]["y"]=$tbx2BlankUp;
+					$points[5]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[5]["y"]=$tbx2ly-($tbx2y/2)+$tbx2shift;//arrivato
+				}
+				TaskNetwork::patharrow($img,$points,$colore,$type);
+			}
+			
+			$TaskNetwork->img = $img;
+			return $TaskNetwork;
 		}
-/**/	else{//tbx2 è piu in alto o uguale a tbx1
-			if($tbx1ry==$tbx2ly){//le tbx sono sulla stessa riga
-				if(abs($tbx2lx-$tbx1rx)<300){ //adiacenti
-					TaskNetwork::$arrow($img,  $tbx1rx-$tbx1shift ,$tbx1ry+($tbx1shift/2), $tbx2lx ,$tbx2ly+($tbx1shift/2),5,5, $colore);$TaskNetwork->img = $img;return $TaskNetwork;
+		else{
+			if($tbx1ry<$tbx2ly){//se tbx1 è piu in alto di tbx2
+			
+				$points;
+				if(!$under){
+					$points[0]["x"]= $tbx1rx-$tbx1shift	;$points[0]["y"]=$tbx1ry+($tbx1shift/2);
+					$points[1]["x"]= $tbx1BlankRight	;$points[1]["y"]=$tbx1ry+($tbx1shift/2);
+					$points[2]["x"]= $tbx1BlankRight	;$points[2]["y"]=$tbx1BlankDown;
+				}else{
+					$points[0]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[0]["y"]=$tbx1ry+($tbx1y/2);
+					$points[1]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[1]["y"]=$tbx1BlankDown;
+					}
+					
+				if($tbx1BlankDown!=$tbx2BlankUp){
+					if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
+						$points[3]["x"]= $tbx1BlankLast	;$points[3]["y"]=$tbx1BlankDown;
+						$points[4]["x"]= $tbx1BlankLast	;$points[4]["y"]=$tbx2BlankUp;
+					}
+					else{//tbx1 e tbx2 sono a sinistra
+						$points[3]["x"]= $tbx1BlankFirst ;$points[3]["y"]=$tbx1BlankDown;
+						$points[4]["x"]= $tbx1BlankFirst ;$points[4]["y"]=$tbx2BlankUp;
+					}
 				}
-				else{//non adiacenti
-					if($tbx2lx>$tbx1rx){//tbx1 viene prima di tbx2
-						TaskNetwork::$line($img,$tbx1rx-$tbx1shift ,$tbx1ry+($tbx1shift/2),$tbx1BlankRight, $tbx1ry+($tbx1shift/2), $colore);
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx1ry+($tbx1shift/2),$tbx1BlankRight,$tbx1BlankUp, $colore);
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx1BlankUp,$tbx2BlankLeft,$tbx2BlankUp, $colore);
-						TaskNetwork::$line($img,$tbx2BlankLeft,$tbx2BlankUp,$tbx2BlankLeft,$tbx2ly+($tbx2shift/2),$colore);
-						TaskNetwork::$arrow($img,$tbx2BlankLeft,$tbx2ly+($tbx2shift/2), $tbx2lx,$tbx2ly+($tbx2shift/2),5,5, $colore);
-						$TaskNetwork->img = $img;return $TaskNetwork;
-					}
-					//TODO fare i casi under e upper
-
+									
+				if(!$upper){
+					$points[5]["x"]= $tbx2BlankLeft	;$points[5]["y"]=$tbx2BlankUp;
+					$points[6]["x"]= $tbx2BlankLeft	;$points[6]["y"]=$tbx2ly+($tbx2shift/2);
+					$points[7]["x"]= $tbx2lx		;$points[7]["y"]=$tbx2ly+($tbx2shift/2); //arrivato
+						
+				}else{
+					$points[5]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[5]["y"]=$tbx2BlankUp;
+					$points[6]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[6]["y"]=$tbx2ly-($tbx2y/2)+$tbx2shift;//arrivato
 				}
+				TaskNetwork::patharrow($img,$points,$colore,$type);
 			}
-
-			if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
-					if(!$under){
-						TaskNetwork::$line($img, $tbx1rx-$tbx1shift,$tbx1ry+($tbx1shift/2), $tbx1BlankRight,$tbx1ry+($tbx1shift/2), $colore);
-						TaskNetwork::$line($img, $tbx1BlankRight,$tbx1ry+($tbx1shift/2), $tbx1BlankRight,$tbx1BlankUp, $colore);
-					}else{
-						TaskNetwork::$line($img, $tbx1rx-($tbx1x/2)-($tbx1shift/2),$tbx1ry+($tbx1y/2), $tbx1rx-($tbx1x/2)-($tbx1shift/2),$tbx1BlankDown, $colore);
-						TaskNetwork::$line($img, $tbx1rx-($tbx1x/2)-($tbx1shift/2),$tbx1BlankDown, $tbx1BlankRight,$tbx1BlankDown, $colore);
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx1BlankDown,$tbx1BlankRight,$tbx1BlankUp,$colore);
+			elseif($tbx1ry>$tbx2ly){//tbx2 è piu in alto di tbx1
+				$points;
+				if(!$under){
+					$points[0]["x"]= $tbx1rx-$tbx1shift	;$points[0]["y"]=$tbx1ry+($tbx1shift/2);
+					$points[1]["x"]= $tbx1BlankRight	;$points[1]["y"]=$tbx1ry+($tbx1shift/2);
+				}else{
+					$points[0]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[0]["y"]=$tbx1ry+($tbx1y/2);
+					$points[1]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[1]["y"]=$tbx1BlankDown;
+					$points[2]["x"]= $tbx1BlankRight				   ;$points[2]["y"]=$tbx1BlankDown;
+				}
+				$points[3]["x"]= $tbx1BlankRight	;$points[3]["y"]=$tbx1BlankUp;
+					
+				if($tbx1BlankDown!=$tbx2BlankUp){
+					if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
+						$points[4]["x"]= $tbx1BlankLast	;$points[4]["y"]=$tbx1BlankUp;
+						$points[5]["x"]= $tbx1BlankLast	;$points[5]["y"]=$tbx2BlankDown;
 					}
-					if($tbx1BlankUp!=$tbx2BlankDown){
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx1BlankUp, $tbx1BlankLast,$tbx1BlankUp, $colore);
-						TaskNetwork::$line($img,$tbx1BlankLast,$tbx1BlankUp,$tbx1BlankLast,$tbx2BlankDown, $colore);
-						TaskNetwork::$line($img,$tbx1BlankLast,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $colore);
+					else{//tbx1 e tbx2 sono a sinistra
+						$points[4]["x"]= $tbx1BlankFirst ;$points[4]["y"]=$tbx1BlankUp;
+						$points[5]["x"]= $tbx1BlankFirst ;$points[5]["y"]=$tbx2BlankDown;
 					}
-					else{
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $colore);
-					}
-					if(!$upper){
-						TaskNetwork::$line($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2ly+($tbx2shift/2), $colore);
-						TaskNetwork::$arrow($img,  $tbx2BlankLeft ,$tbx2ly+($tbx2shift/2), $tbx2lx ,$tbx2ly+($tbx2shift/2),5,5, $colore);
-
-					}else{
-						TaskNetwork::$line($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2BlankUp, $colore);
-						TaskNetwork::$line($img,$tbx2BlankLeft ,$tbx2BlankUp, $tbx2lx+($tbx2x/2)-($tbx2shift/2),$tbx2BlankUp, $colore);
-						TaskNetwork::$arrow($img, $tbx2lx+($tbx2x/2)-($tbx2shift/2) ,$tbx2BlankUp, $tbx2lx+($tbx2x/2)-($tbx2shift/2) ,$tbx2ly-($tbx2y/2)+$tbx2shift,5,5, $colore);
-					}
-			}
-			else{//tbx1 e tbx2 sono a sinistra
-					if(!$under){
-						TaskNetwork::$line($img, $tbx1rx-$tbx1shift,$tbx1ry+($tbx1shift/2), $tbx1BlankRight,$tbx1ry+($tbx1shift/2), $colore);
-						TaskNetwork::$line($img, $tbx1BlankRight,$tbx1ry+($tbx1shift/2), $tbx1BlankRight,$tbx1BlankUp, $colore);
-					}else{
-						TaskNetwork::$line($img, $tbx1rx-($tbx1x/2),$tbx1ry+($tbx1y/2), $tbx1rx-($tbx1x/2),$tbx1BlankDown, $colore);
-						TaskNetwork::$line($img,$tbx1rx-($tbx1x/2),$tbx1BlankDown,$tbx1BlankRight,$tbx1BlankDown,$colore);
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx1BlankDown,$tbx1BlankRight,$tbx1BlankUp,$colore);
-					}
-					if($tbx1BlankUp!=$tbx2BlankDown){
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx1BlankUp, $tbx1BlankFirst,$tbx1BlankUp, $colore);
-						TaskNetwork::$line($img,$tbx1BlankFirst,$tbx1BlankUp,$tbx1BlankFirst,$tbx2BlankDown, $colore);
-						TaskNetwork::$line($img,$tbx1BlankFirst,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $colore);
-					}else{
-						TaskNetwork::$line($img,$tbx1BlankRight,$tbx2BlankDown,$tbx2BlankLeft,$tbx2BlankDown, $colore);
-					}
-					if(!$upper){
-						TaskNetwork::$line($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2ly+($tbx2shift/2), $colore);
-						TaskNetwork::$arrow($img,  $tbx2BlankLeft ,$tbx2ly+($tbx2shift/2), $tbx2lx ,$tbx2ly+($tbx2shift/2),5,5, $colore);
-
-					}else{
-						TaskNetwork::$line($img, $tbx2BlankLeft,$tbx2BlankDown, $tbx2BlankLeft ,$tbx2BlankUp, $colore);
-						TaskNetwork::$line($img,$tbx2BlankLeft ,$tbx2BlankUp, $tbx2lx+($tbx2x/2),$tbx2BlankUp, $colore);
-						TaskNetwork::$arrow($img, $tbx2lx+($tbx2x/2) ,$tbx2BlankUp, $tbx2lx+($tbx2x/2) ,$tbx2ly-($tbx2y/2),5,5, $colore);
-					}
+				}
+				$points[6]["x"]= $tbx2BlankLeft	;$points[6]["y"]=$tbx2BlankDown;				
+				
+				if(!$upper){
+					$points[7]["x"]= $tbx2BlankLeft	;$points[7]["y"]=$tbx2ly+($tbx2shift/2);
+					$points[8]["x"]= $tbx2lx		;$points[8]["y"]=$tbx2ly+($tbx2shift/2); //arrivato
+					
+				}else{
+					$points[7]["x"]= $tbx2BlankLeft						;$points[7]["y"]=$tbx2BlankUp;
+					$points[8]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[8]["y"]=$tbx2BlankUp;
+					$points[9]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[9]["y"]=$tbx2ly-($tbx2y/2)+$tbx2shift;//arrivato
+				}
+				TaskNetwork::patharrow($img,$points,$colore,$type);
 			}
 		}
+		
 
 		$TaskNetwork->img = $img;
 		return $TaskNetwork;
@@ -518,7 +513,6 @@ class TaskNetwork {
 //------Funzioni di merging------------
 //esegue il merging di due immagini separete da 50 px di spazio
 	private function mergeArrayRight($array){
-
 		$TN = new TaskNetwork();
 
 		for($val=0;$val<sizeof($array);$val++){
@@ -529,26 +523,33 @@ class TaskNetwork {
 			$imgTNy = $TN->y;
 
 			$imgb = $b->getImage();
-			$imgbx = $b->getX();
-			$imgby = $b->getY();
-
-
-			//alloco i punti mediani dei lati della tbx dentro b
-			$b->setLeft($imgTNx+250, ($imgby/2)+25);
-			$b->setRight( $imgTNx+250+$imgbx, $imgby/2+25);
+			$imgbx = $b->GetWidth();
+			$imgby = $b->GetHeight();
 
 			$outx = ($imgTNx+$imgbx+100);
 			$outy = max($imgTNy, $imgby);
-
-
+						
+			$centerTN = $outy-$imgTNy;
+			$centerb = $outy-$imgby;
+			
+			//alloco i punti mediani dei lati della tbx dentro b
+			$b->setLeft($imgTNx+250, ($imgby/2)+25+$centerb);
+			$b->setRight( $imgTNx+250+$imgbx, ($imgby/2)+25+$centerb);
+			
+			if($centerTN!=0){
+				for($i=0;$i<$val;$i++){
+					$array[$i]->setLeft($array[$i]->getLeftX(),$array[$i]->getLeftY()+$centerTN);
+					$array[$i]->setRight($array[$i]->getRightX(),$array[$i]->getRightY()+$centerTN);
+				}
+			}
 
 			$out = ImageCreate($outx , $outy);
 			$bianco = ImageColorAllocate($out,255,255,255);
 
 			//copio la prima immagine nell'output
-			imagecopy($out,$imgTN,0,0,0,0,$imgTNx,$imgTNy);
+			imagecopy($out,$imgTN,0,$centerTN,0,0,$imgTNx,$imgTNy);
 			//e poi la seconda
-			imagecopy($out,$imgb,$outx-($imgbx+50),0,0,0,$imgbx,$imgby);
+			imagecopy($out,$imgb,$outx-($imgbx+50),$centerb,0,0,$imgbx,$imgby);
 
 			imagedestroy($imgTN);
 			imagedestroy($imgb);
@@ -742,7 +743,7 @@ class TaskNetwork {
 
 		//codifico nella prima riga della mappa tutte gli indici degli spazi tra righe della TN
 		for($j=1;$j<sizeof($index);$j++){
-			$map["y"][$j] =  ($index[$j][0]->getLeftY()-($index[$j][0]->getY()/2))-25;
+			$map["y"][$j] =  ($index[$j][0]->getLeftY()-($index[$j][0]->GetHeight()/2))-25;
 		}
 		//alloco l'ultimo spazio in fondo alla TN
 		$map["y"][(sizeof($index))] =  $TN->y - 1;
@@ -756,6 +757,15 @@ class TaskNetwork {
 		return $map;
 	}
 
+	private function trimArray($array){
+		$result;$j=0;
+		foreach($array as $coord){
+			$result[$j] = $coord;
+			$j++; 
+		}
+		return $result;
+	}
+	
 //------Funzioni di setting------------fine
 
 }
@@ -774,7 +784,7 @@ for($r=0;$r<4;$r++){
 
 		for ($j=0;$j<$l;$j++){
 
-			$tbx = new TaskBox(($r+1).".$j.");
+			$tbx = new TNNode(($r+1).".$j.".CTask::getWBS(120));
 			$tbx->setFontPath("../../fonts/Droid");
 			//$tbx->setName("TaskBox test row $r, col $j");
 			$tbx->setPlannedData("14 d", "40 ph", "1350 €");
@@ -785,15 +795,16 @@ for($r=0;$r<4;$r++){
 			   //                "14 ph, Wally, Sales Manager\n".
 			  //                 "04 ph, The Boss, Manager");
 			$tbx->setProgress(rand(0,100));
-			$tbx->setAlerts(TaskBox::ALERT_ERROR);
+			$tbx->setAlerts(rand(0,2));
 
-			$TN->addTbx(new TBXNode($tbx),$r,$j);
+			$TN->addTbx($tbx,$r,$j);
 		}
 }
 
 $TN = $TN->createTN();
+
+$TN->addDefaultDependancies($TN);
 /*
-$TN = $TN->addDefaultDependancies($TN);
 $index = $TN->getIndex();
 for($i=0;$i<5;$i++){
 	$r = rand(0,3);
@@ -810,8 +821,8 @@ for($i=0;$i<5;$i++){
 	$TN->addDependence($ID1,$ID2);
 }*/
 
-	$ID1["riga"] = 0; $ID1["colonna"] = 2;
-	$ID2["riga"] = 0; $ID2["colonna"] = 1;
+	$ID1["riga"] = 0; $ID1["colonna"] = 0;
+	$ID2["riga"] = 1; $ID2["colonna"] = 0;
 	$TN->addDependence($ID1,$ID2);
 
 
