@@ -407,11 +407,6 @@ class TaskBox {
 
 	public function getProgress() {}
 
-	public function isLeaf(){
-		if($this->pShowExpand) return false;
-		else return true;
-	}
-
 	public function getXxxx() {}
 
 	//public function getSize() {/*return gd_size($pGDImage);*/}
