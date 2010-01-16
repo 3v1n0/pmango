@@ -2,7 +2,7 @@
 include ("../TaskBox.class.php");
 
 $baseDir = "../..";
-//TODO effort sulle linee
+//TODO time gap sulle linee
 include "$baseDir/includes/config.php";
 include "$baseDir/includes/db_adodb.php";
 include "$baseDir/includes/db_connect.php";
@@ -166,6 +166,10 @@ class TaskNetwork {
 		}
 		return $TN;
 	}
+	
+	public function drawCriticalPath(){//TODO
+		
+	}
 //------Funzioni di classe------------fine
 
 //------Funzioni di disegno------------
@@ -217,7 +221,7 @@ class TaskNetwork {
 
 	private function arrow($im, $x1, $y1, $x2, $y2, $alength, $awidth, $color) {
 	    $distance = sqrt(pow($x1 - $x2, 2) + pow($y1 - $y2, 2));
-
+		if($distance==0){$distance=1;}
 	    $dx = $x2 + ($x1 - $x2) * $alength / $distance;
 	    $dy = $y2 + ($y1 - $y2) * $alength / $distance;
 
@@ -238,7 +242,7 @@ class TaskNetwork {
 
 	private function dashedarrow($im, $x1, $y1, $x2, $y2, $alength, $awidth, $color) {
 	    $distance = sqrt(pow($x1 - $x2, 2) + pow($y1 - $y2, 2));
-
+		if($distance==0){$distance=1;}
 	    $dx = $x2 + ($x1 - $x2) * $alength / $distance;
 	    $dy = $y2 + ($y1 - $y2) * $alength / $distance;
 
@@ -259,7 +263,7 @@ class TaskNetwork {
 
 	private function boldarrow($im, $x1, $y1, $x2, $y2, $alength, $awidth, $color) {
 	   $distance = sqrt(pow($x1 - $x2, 2) + pow($y1 - $y2, 2));
-
+		if($distance==0){$distance=1;}
 	    $dx = $x2 + ($x1 - $x2) * $alength / $distance;
 	    $dy = $y2 + ($y1 - $y2) * $alength / $distance;
 
@@ -296,7 +300,8 @@ class TaskNetwork {
 				$tx=$points[$i]["x"];
 				$ty=$points[$i]["y"];
 				
-				TaskNetwork::$line($im, $fx,$fy, $tx,$ty, $color);
+				TaskNetwork::$arrow($im, $fx,$fy, $tx,$ty,3,3, $color);
+				//TaskNetwork::$line($im, $fx,$fy, $tx,$ty, $color);
 				
 				$fx=$tx;
 				$fy=$ty;
@@ -309,7 +314,7 @@ class TaskNetwork {
 		}		
 	}
 //TODO debugging generale delle connessioni
-	function connect(TaskNetwork $TaskNetwork, $ID1,$ID2,$criticalPath=false, $dash = false,$under= false,$upper=false, $dist=0,$color="black"){
+	private function connect(TaskNetwork $TaskNetwork, $ID1,$ID2,$criticalPath=false, $dash = false,$under= false,$upper=false, $dist=0,$color="black"){
 		$type;$colore;
 		if(!$criticalPath){
 			if($dash){
@@ -414,15 +419,15 @@ class TaskNetwork {
 					$points[2]["x"]= $tbx1BlankRight				   ;$points[2]["y"]=$tbx1BlankDown;
 				}
 
-				$points[3]["x"]= $tbx1BlankRight	;$points[3]["y"]=$tbx1BlankUp;
+				$points[3]["x"]= $tbx1BlankRight	;$points[3]["y"]=min($tbx2BlankUp,$tbx1BlankUp);
 
 				if(!$upper){
-					$points[4]["x"]= $tbx2BlankLeft	;$points[4]["y"]=$tbx2BlankUp;
+					$points[4]["x"]= $tbx2BlankLeft	;$points[4]["y"]=min($tbx2BlankUp,$tbx1BlankUp);
 					$points[5]["x"]= $tbx2BlankLeft	;$points[5]["y"]=$tbx2ly+($tbx2shift/2);
 					$points[6]["x"]= $tbx2lx		;$points[6]["y"]=$tbx2ly+($tbx2shift/2); //arrivato
 					
 				}else{
-					$points[4]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[4]["y"]=$tbx2BlankUp;
+					$points[4]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[4]["y"]=min($tbx2BlankUp,$tbx1BlankUp);
 					$points[5]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[5]["y"]=$tbx2ly-($tbx2y/2)+$tbx2shift;//arrivato
 				}
 				TaskNetwork::patharrow($img,$points,$colore,$type);
@@ -775,31 +780,53 @@ class TaskNetwork {
 
 
 
-//ogni immagine Image è dentro un array im dove im["img"] è l'immagine, im["x"] e im["y"] la x e la y
+$project_id = 5;
+$query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t ".
+         "WHERE t.task_project = ".$project_id." ORDER BY task_id";
 
-for($r=0;$r<4;$r++){
-
-	$l = rand ( 1 , 5 );
-
-
-		for ($j=0;$j<$l;$j++){
-
-			$tbx = new TNNode(($r+1).".$j.".CTask::getWBS(120));
-			$tbx->setFontPath("../../fonts/Droid");
-			//$tbx->setName("TaskBox test row $r, col $j");
-			$tbx->setPlannedData("14 d", "40 ph", "1350 €");
-			$tbx->setActualData("4 d", "6 ph", "230 €");
-			//$tbx->setPlannedTimeframe("2009.10.15", "2009.10.29");
-			//$tbx->setActualTimeframe("2009.10.16", "NA");
-			//$tbx->setResources("22 ph, Dilbert, Requirement Engineering\n".
-			   //                "14 ph, Wally, Sales Manager\n".
-			  //                 "04 ph, The Boss, Manager");
-			$tbx->setProgress(rand(0,100));
-			$tbx->setAlerts(rand(0,2));
-
-			$TN->addTbx($tbx,$r,$j);
-		}
+$result = db_exec($query);
+$error = db_error();
+if ($error) {
+	echo $error;
+	exit;
 }
+$results = array();
+for ($i = 0; $i < db_num_rows($result); $i++) {
+	$results[] = db_fetch_assoc($result);
+}
+
+$res;
+foreach($results as $task){
+	$wbslv = CTask::getWBS($task['task_id']);
+	
+	$wbs = intval(substr($wbslv,0,1));
+	$res[$wbs-1][sizeof($res[$wbs-1])]= $task;
+}
+
+for($j=0;$j<sizeof($res);$j++){
+	for($k=0;$k<sizeof($res[$j]);$k++){	
+		$wbslv = CTask::getWBS($res[$j][$k]['task_id']);
+		
+		
+				$tbx = new TNNode($res[$j][$k]['task_id']);
+				$tbx->setFontPath("../../fonts/Droid");
+				$tbx->setName($wbslv.".".$res[$j][$k]['task_name']);
+				$tbx->setPlannedData("14 d", "40 ph", "1350 €");
+				$tbx->setActualData("4 d", "6 ph", "230 €");
+				$tbx->setPlannedTimeframe(substr($res[$j][$k]['task_start_date'], 0, 10), substr($res[$j][$k]['task_finish_date'], 0, 10));
+				//$tbx->setActualTimeframe(substr($tstart['task_log_start_date'], 0, 10),"");
+				//$tbx->setResources("22 ph, Dilbert, Requirement Engineering\n".
+				   //                "14 ph, Wally, Sales Manager\n".
+				  //                 "04 ph, The Boss, Manager");
+				$tbx->setProgress(CTask::getPr($res[$j][$k]['task_id']));
+				$tbx->setAlerts(rand(0,2));
+	
+				$TN->addTbx($tbx,$j,$k);
+				
+	}
+}
+	
+
 
 $TN = $TN->createTN();
 
@@ -823,7 +850,7 @@ for($i=0;$i<5;$i++){
 
 	$ID1["riga"] = 0; $ID1["colonna"] = 0;
 	$ID2["riga"] = 1; $ID2["colonna"] = 0;
-	$TN->addDependence($ID1,$ID2);
+	$TN->addDependence(null,$ID2);
 
 
 $TN = $TN->drawConnections($TN);
