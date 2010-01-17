@@ -159,10 +159,10 @@ class TaskBox {
 		$this->pBorderSize = 1;
 
 		$tmp = new TextBlock("+ 3.3.", $this->pFontBold, $this->pFontSize);
-		$tmp = new BorderedBlock($tmp, $this->pBorderSize*2, $this->pFontSize);
+		$tmp = new BorderedBlock($tmp, 0, $this->pFontSize);
 		$this->pMinWidth = $tmp->getWidth();
 		$this->pMaxWidth = $this->pMinWidth * 3;
-		$this->pMinHeight = $tmp->getHeight() + intval(($tmp->getHeight()/100) * 25);
+		$this->pMinHeight = $tmp->getHeight() + intval(($tmp->getHeight()/100) * 50);
 	}
 
 	private function isMinimal() {
