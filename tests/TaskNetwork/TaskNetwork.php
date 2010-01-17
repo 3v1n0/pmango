@@ -2,7 +2,7 @@
 include ("../TaskBox.class.php");
 
 $baseDir = "../..";
-//TODO time gap sulle linee
+
 include "$baseDir/includes/config.php";
 include "$baseDir/includes/db_adodb.php";
 include "$baseDir/includes/db_connect.php";
@@ -284,7 +284,7 @@ class TaskNetwork {
 
 
 	//traccia una freccia passante per tutti i punti dell'array dato
-	private function patharrow($im,$points/*array*/,$color,$type){
+	private function patharrow($im,$points/*array*/,$color,$type,$text=""){
 		$line;$arrow;
 		switch($type){
 			case "criticalPath":$line="imageboldline";$arrow="boldarrow";break;
@@ -311,9 +311,14 @@ class TaskNetwork {
 			$ty=$points[sizeof($points)-1]["y"];
 			TaskNetwork::$arrow($im, $fx,$fy, $tx,$ty,5,5, $color);
 			
+			//aggiungo il testo
+			if($tx-$fx==0){$px=$fx+5;$py=$fy + (abs($ty-$fy))/4;}
+			else{$px=$fx + (abs($tx-$fx))/4;$py=$fy-15;}
+			imagestring($im, 5, $px, $py, "2d", $color);
+			
+			
 		}		
 	}
-//TODO debugging generale delle connessioni
 	private function connect(TaskNetwork $TaskNetwork, $ID1,$ID2,$criticalPath=false, $dash = false,$under= false,$upper=false, $dist=0,$color="black"){
 		$type;$colore;
 		if(!$criticalPath){
@@ -808,9 +813,9 @@ for($j=0;$j<sizeof($res);$j++){
 		$wbslv = CTask::getWBS($res[$j][$k]['task_id']);
 		
 		
-				$tbx = new TNNode($res[$j][$k]['task_id']);
+				$tbx = new TNNode($wbslv);
 				$tbx->setFontPath("../../fonts/Droid");
-				$tbx->setName($wbslv.".".$res[$j][$k]['task_name']);
+				$tbx->setName($res[$j][$k]['task_name']);
 				$tbx->setPlannedData("14 d", "40 ph", "1350 €");
 				$tbx->setActualData("4 d", "6 ph", "230 €");
 				$tbx->setPlannedTimeframe(substr($res[$j][$k]['task_start_date'], 0, 10), substr($res[$j][$k]['task_finish_date'], 0, 10));
@@ -848,9 +853,9 @@ for($i=0;$i<5;$i++){
 	$TN->addDependence($ID1,$ID2);
 }*/
 
-	$ID1["riga"] = 0; $ID1["colonna"] = 0;
-	$ID2["riga"] = 1; $ID2["colonna"] = 0;
-	$TN->addDependence(null,$ID2);
+	$ID1["riga"] = 2; $ID1["colonna"] = 10;
+	$ID2["riga"] = 2; $ID2["colonna"] = 1;
+	$TN->addDependence($ID1,$ID2);
 
 
 $TN = $TN->drawConnections($TN);
