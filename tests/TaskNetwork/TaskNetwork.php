@@ -153,23 +153,36 @@ class TaskNetwork {
 			$tbx2 = $index[$ID2["riga"]][$ID2["colonna"]];
 
 
-//FIXME get from DB
-			if($tbx1 && rand(0,1)){
+			//FIXME check internal dependences
+			if(false/*!CTask::isLeafSt($tbx1->getId())*/){
 				$under = true;
 			}
-			if($tbx2 && rand(0,1)){
+			if(false/*!CTask::isLeafSt($tbx2->getId())*/){
 				$upper =true;
 			}
 
-			$TN = $TN->connect($this,$ID1,$ID2,false,false,$under,$upper,$i*2);
+			$TN = $TN->connect($this,$ID1,$ID2,false,false,$under,$upper);
 
 		}
 		return $TN;
 	}
 	
-	public function drawCriticalPath(){//TODO
+	public function drawCriticalPath(TaskNetwork $TaskNetwork){//TODO
+		$tbxarray ;// qua ci va la query che mi restituisce i task del critical path
 		
+		$tbxfrom = $tbxarray[0];
+		for($i=1;$i<sizeof($tbxarray);$i++){
+			$tbxto =  $tbxarray[$i];
+			$coordfrom = $TaskNetwork->getTbxIndex($tbxfrom);
+			$coordto = $TaskNetwork->getTbxIndex($tbxto);
+			$under;//controlli del caso
+			$upper;//controlli del caso
+			
+			$TaskNetwork = $TaskNetwork->connect($TaskNetwork,$coordfrom,$coordto,true,$under,$upper);
+		}
 	}
+
+	
 //------Funzioni di classe------------fine
 
 //------Funzioni di disegno------------
@@ -319,6 +332,7 @@ class TaskNetwork {
 			
 		}		
 	}
+	
 	private function connect(TaskNetwork $TaskNetwork, $ID1,$ID2,$criticalPath=false, $dash = false,$under= false,$upper=false, $dist=0,$color="black"){
 		$type;$colore;
 		if(!$criticalPath){
@@ -488,7 +502,7 @@ class TaskNetwork {
 				}
 				$points[3]["x"]= $tbx1BlankRight	;$points[3]["y"]=$tbx1BlankUp;
 					
-				if($tbx1BlankDown!=$tbx2BlankUp){
+				if($tbx1BlankUp!=$tbx2BlankDown){
 					if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
 						$points[4]["x"]= $tbx1BlankLast	;$points[4]["y"]=$tbx1BlankUp;
 						$points[5]["x"]= $tbx1BlankLast	;$points[5]["y"]=$tbx2BlankDown;
@@ -776,6 +790,20 @@ class TaskNetwork {
 		return $result;
 	}
 	
+	public function getTbxIndex($tid){
+		$tid = CTask::getWBS($tid);
+		$index= $this->index;
+		for($i=0;$i<sizeof($index);$i++){
+			for($j=0;$j<sizeof($index[$i]);$j++){
+				if($tid==$index[$i][$j]->getId()){
+					$coord["riga"]=$i;
+					$coord["colonna"]=$j;
+					
+					return $coord;
+				}
+			}
+		}
+	}
 //------Funzioni di setting------------fine
 
 }
@@ -836,6 +864,26 @@ for($j=0;$j<sizeof($res);$j++){
 $TN = $TN->createTN();
 
 $TN->addDefaultDependancies($TN);
+
+$query = "SELECT * FROM task_dependencies t";
+
+$result = db_exec($query);
+$error = db_error();
+if ($error) {
+	echo $error;
+	exit;
+}
+$results = array();
+for ($i = 0; $i < db_num_rows($result); $i++) {
+	$results[] = db_fetch_assoc($result);
+}
+
+
+
+foreach($results as $conn){
+ 	$TN->addDependence($TN->getTbxIndex($conn[2]),$TN->getTbxIndex($conn[0]));
+}
+
 /*
 $index = $TN->getIndex();
 for($i=0;$i<5;$i++){
@@ -853,9 +901,9 @@ for($i=0;$i<5;$i++){
 	$TN->addDependence($ID1,$ID2);
 }*/
 
-	$ID1["riga"] = 2; $ID1["colonna"] = 10;
-	$ID2["riga"] = 2; $ID2["colonna"] = 1;
-	$TN->addDependence($ID1,$ID2);
+	$ID1["riga"] = 2; $ID1["colonna"] = 12;
+	$ID2["riga"] = 1; $ID2["colonna"] = 7;
+	//$TN->addDependence($ID1,$ID2);
 
 
 $TN = $TN->drawConnections($TN);
