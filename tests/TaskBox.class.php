@@ -363,6 +363,10 @@ class TaskBox {
 		$this->pChanged = false;
 	}
 
+	public function getId() {
+		return $this->pID;
+	}
+	
 	public function getWidth() {
 		$this->buildTaskBox();
 		return $this->pImgBlock->getWidth();
