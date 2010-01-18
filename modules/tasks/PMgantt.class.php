@@ -607,6 +607,8 @@ class PMGantt /*implements PMGraph TODO */ {
 	}
 
 	private function initGraph() {
+		global $AppUI;
+
 		$this->pGraph->SetUserFont1('DroidSans.ttf', 'DroidSans-Bold.ttf');
 		$this->pGraph->SetUserFont2('DroidSerif-Regular.ttf', 'DroidSerif-Bold.ttf',
 		                     'DroidSerif-Italic.ttf', 'DroidSerif-BoldItalic.ttf');
@@ -630,7 +632,7 @@ class PMGantt /*implements PMGraph TODO */ {
 		$this->pGraph->scale->actinfo->vgrid->SetColor('gray');
 		$this->pGraph->scale->actinfo->SetColor('darkgray');
 		$titles_size = ($this->pShowNames && $this->getWidth() != 0) ? array($this->getWidth()/6) : null;
-		$this->pGraph->scale->actinfo->SetColTitles(array('Task'), $titles_size);
+		$this->pGraph->scale->actinfo->SetColTitles(array($AppUI->_('Task', UI_OUTPUT_RAW)), $titles_size);
 		$this->pGraph->scale->actinfo->SetFont(FF_USERFONT);
 
 		$this->pGraph->scale->tableTitle->Set($this->pProject["project_name"]);
@@ -689,6 +691,8 @@ class PMGantt /*implements PMGraph TODO */ {
 
 
 	private function populateGraph() {
+		global $AppUI;
+
 		$now = "2009-12-05 12:00:00";//date("y-m-d");
 
 		for($i = 0, $row = 0; $i < count(@$this->pTasks); $i++) {
@@ -933,7 +937,7 @@ class PMGantt /*implements PMGraph TODO */ {
 				$this->pGraph->Add($bar2);
 		}
 		//$today = date("y-m-d");
-		$vline = new GanttVLine(/*$today*/$now, 'Today', ($this->pUseColors ? 'darkred' : 'gray3'));
+		$vline = new GanttVLine(/*$today*/$now, $AppUI->_('Today', UI_OUTPUT_RAW), ($this->pUseColors ? 'darkred' : 'gray3'));
 		$vline->title->SetFont(FF_USERFONT3, FS_NORMAL, 9);
 		$this->pGraph->Add($vline);
 	}
