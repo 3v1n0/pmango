@@ -27,13 +27,17 @@ class taskBoxDB {
 	private $pPlannedData;
 	private $pActualData;
 	private $pPlannedTimeframe;
-	private $pActualTimeFrame;
+	private $pActualTimeframe;
 	private $pPlannedResources;
 	private $pActualResources;
 
 	private $pUseCache;
 
-	public function taskBoxDB($id) {
+	const ALERT_NONE = 0;
+	const ALERT_WARNING = 1;
+	const ALERT_ERROR = 2;
+
+	public function TaskBoxDB($id) {
 		$this->pTaskID = $id;
 		$this->pCTask = new CTask($id);
 
@@ -107,7 +111,7 @@ class taskBoxDB {
 		if (!$this->pActualTimeframe || !$this->pUseCache)
 			$this->computeActualTimeframe();
 
-		$tf = $this->pActualTimeFrame;
+		$tf = $this->pActualTimeframe;
 		$duration = $this->getTimediff($tf['start'], $tf['end']);
 		$effort = $this->pCTask->getActualEffort(null, $this->pChild);
 		$cost = $this->pCTask->getActualCost(null, $this->pChild);
@@ -136,10 +140,10 @@ class taskBoxDB {
 	}
 
 	public function getActualTimeframe(){
-		if (!$this->pActualTimeFrame || !$this->pUseCache)
+		if (!$this->pActualTimeframe || !$this->pUseCache)
 			$this->computeActualTimeframe();
 
-		$tf = $this->pActualTimeFrame;
+		$tf = $this->pActualTimeframe;
 
 		return array("start" => $this->dateFormat($tf['start']),
 		             "end"   => $this->dateFormat($tf['end']));
@@ -152,8 +156,8 @@ class taskBoxDB {
 		if ($this->getProgress() < 100)
 			$end = null;
 
-		$this->pActualTimeFrame['start'] = $start['task_log_start_date'];
-		$this->pActualTimeFrame['end'] = $end['task_log_finish_date'];
+		$this->pActualTimeframe['start'] = $start['task_log_start_date'];
+		$this->pActualTimeframe['end'] = $end['task_log_finish_date'];
 	}
 
 	public function getPlannedResources() {
@@ -170,7 +174,62 @@ class taskBoxDB {
 		return $this->pActualResources;
 	}
 
-	public function isAlerted() {}
+	public function isAlerted() {
+		$alert = TaskBoxDB::ALERT_NONE;
+
+		//TODO check for unfinished tasks!
+
+		if (!$this->pPlannedTimeframe || !$this->pUseCache)
+			$this->computePlannedTimeframe();
+
+		if (!$this->pActualTimeframe || !$this->pUseCache)
+			$this->computeActualTimeframe();
+
+		$p = $this->pPlannedTimeframe;
+		$a = $this->pActualTimeframe;
+
+		if ($p['start'] != $a['start'] || $p['end'] != $a['end']) {
+			$alert = TaskBoxDB::ALERT_WARNING;
+
+			if (strtotime($p['start']) < strtotime($a['start']) ||
+			    strtotime($p['end']) < strtotime($a['end'])) {
+				  $alert = TaskBoxDB::ALERT_ERROR;
+				  return $alert;
+			    }
+		}
+
+		if (!$this->pPlannedData || !$this->pUseCache)
+			$this->computePlannedData();
+
+		if (!$this->pActualData || !$this->pUseCache)
+			$this->computeActualData();
+
+		$p = $this->pPlannedData;
+		$a = $this->pActualData;
+
+		if ($p['effort'] != $a['effort'] || $p['cost'] != $a['cost']) {
+			$alert = TaskBoxDB::ALERT_WARNING;
+
+			if ($p['effort'] < $a['effort'] || $p['cost'] < $a['cost']) {
+				$alert = TaskBoxDB::ALERT_ERROR;
+				return $alert;
+			}
+		}
+
+		$pa = $this->getActualResources();
+		foreach($pa as $r) {
+			if ($r['planned_effort'] != $r['actual_effort']) {
+				$alert = TaskBoxDB::ALERT_WARNING;
+
+				if ($r['planned_effort'] < $r['actual_effort']) {
+					$alert = TaskBoxDB::ALERT_ERROR;
+					break;
+				}
+			}
+		}
+
+		return $alert;
+	}
 
 	//--
 
@@ -249,7 +308,7 @@ class taskBoxDB {
 
 //////////////////// Test classe ////////////////////
 
-$tdb = new taskBoxDB(86);
+$tdb = new TaskBoxDB(86);
 echo $tdb->getWBS()."\n";
 echo $tdb->getTaskName()."\n";
 print_r($tdb->getPlannedData());
