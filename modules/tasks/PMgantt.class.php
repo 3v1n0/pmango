@@ -694,6 +694,7 @@ class PMGantt /*implements PMGraph TODO */ {
 		global $AppUI;
 
 		$now = "2009-12-05 12:00:00";//date("y-m-d");
+		//$now = date("Y-m-d")." 12:00:00";
 
 		for($i = 0, $row = 0; $i < count(@$this->pTasks); $i++) {
 
@@ -727,6 +728,8 @@ class PMGantt /*implements PMGraph TODO */ {
 			$start = $start_date->getDate();
 
 			$progress = intval(CTask::getPr($a["task_id"]));
+			if ($progress > 100) $progress = 100;
+			else if ($progress < 0) $progress = 0;
 			//$ac = );
 			//$progress = 0;//$progress > 0 ? intval($progress) : 0;
 
@@ -862,7 +865,6 @@ class PMGantt /*implements PMGraph TODO */ {
 							}
 						}
 					}
-
 
 					$bar2->progress->Set($progress/100);
 				}
