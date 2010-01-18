@@ -180,6 +180,21 @@ class taskBoxDB {
 		$q->addWhere('ut.proles_id > 0 && ut.task_id = '.$this->pTaskID);
 		$resources = $q->loadList();
 
+		$max_p = -1;
+		$max_a = -1;
+
+		foreach ($resources as $res) {
+			$max_p = max(strlen($res['planned_effort']), $max_p);
+			$max_a = max(strlen($res['actual_effort']), $max_a);
+		}
+
+		foreach ($resources as &$res) {
+			$res['planned_effort'] = str_pad($res['planned_effort'], $max_p, "0", STR_PAD_LEFT);
+
+			if (isset($res['actual_effort']))
+				$res['actual_effort'] = str_pad($res['actual_effort'], $max_a, "0", STR_PAD_LEFT);
+		}
+
 		return !empty($resources) ? $resources : null;
 	}
 
