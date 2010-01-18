@@ -24,15 +24,30 @@ class taskBoxDB {
 	private $pCTask;
 	private $pChild;
 
+	private $pPlannedData;
+	private $pActualData;
+	private $pPlannedTimeframe;
+	private $pActualTimeFrame;
+	private $pPlannedResources;
+	private $pActualResources;
+
+	private $pUseCache;
+
 	public function taskBoxDB($id) {
 		$this->pTaskID = $id;
 		$this->pCTask = new CTask($id);
 
-		if (!$this->pCTask->isLeaf()){
+		if (!$this->pCTask->isLeaf()) {
 			$this->pChild = $this->pCTask->getChild(null, $this->pCTask->getProjectID());
 		} else {
 			$this->pChild = null;
 		}
+
+		$this->pUseCache = true;
+	}
+
+	public function useCache($use) {
+		$this->pUseCache = $use ? true : false;
 	}
 
 	public function getWBS() {
@@ -48,7 +63,19 @@ class taskBoxDB {
 	}
 
 	public function getPlannedData() {
+		if (!$this->pPlannedData || !$this->pUseCache)
+			$this->computePlannedData();
 
+		$duration = $this->pPlannedData['duration'];
+		$effort = $this->pPlannedData['effort'];
+		$cost = $this->pPlannedData['cost'];
+
+		return array("duration" => !is_null($duration) ? $duration : "NA",
+		             "effort"   => !is_null($effort) ? $effort." ph" : "NA",
+		             "cost"     => !is_null($cost) ? $cost." ".$dPconfig['currency_symbol'] : "NA");
+	}
+
+	private function computePlannedData() {
 		$start = $this->pCTask->getStartDateFromTask(null, $this->pChild);
 		$end = $this->pCTask->getFinishDateFromTask(null, $this->pChild);
 
@@ -56,19 +83,18 @@ class taskBoxDB {
 		$effort = $this->pCTask->getEffort();
 		$cost = $this->pCTask->getBudget();
 
-		return array("duration" => !is_null($duration) ? $duration : "NA",
-		             "effort"   => !is_null($effort) ? $effort." ph" : "NA",
-		             "cost"     => !is_null($cost) ? $cost.$dPconfig['currency_symbol'] : "NA");
+		$this->pPlannedData['duration'] = $duration;
+		$this->pPlannedData['effort'] = $effort;
+		$this->pPlannedData['cost'] = $cost;
 	}
 
 	public function getActualData() {
+		if (!$this->pActualData || !$this->pUseCache)
+			$this->computePlannedData();
 
-		$start = $this->pCTask->getActualStartDate(null, $this->pChild);
-		$end = $this->pCTask->getActualFinishDate(null, $this->pChild);
-
-		$duration = $this->getTimediff($start['task_log_start_date'], $end['task_log_finish_date']);
-		$effort = $this->pCTask->getActualEffort(null, $this->pChild);
-		$cost = $this->pCTask->getActualCost(null, $this->pChild);
+		$duration = $this->pActualData['duration'];
+		$effort = $this->pActualData['effort'];
+		$cost = $this->pActualData['cost'];
 
 		// TODO check for progress < 100;
 		return array("duration" => !is_null($duration) ? $duration : "NA",
@@ -76,31 +102,66 @@ class taskBoxDB {
 		             "cost"     => !is_null($cost) ? $cost.$dPconfig['currency_symbol'] : "NA");
 	}
 
+	private function computeActualData() {
+		$start = $this->pCTask->getActualStartDate(null, $this->pChild);
+		$end = $this->pCTask->getActualFinishDate(null, $this->pChild);
+
+		$duration = $this->getTimediff($start['task_log_start_date'], $end['task_log_finish_date']);
+		$effort = $this->pCTask->getActualEffort(null, $this->pChild);
+		$cost = $this->pCTask->getActualCost(null, $this->pChild);
+
+		$this->pActualData['duration'] = $duration;
+		$this->pActualData['effort'] = $effort;
+		$this->pActualData['cost'] = $cost;
+	}
+
 	public function getPlannedTimeframe() {
+		if (!$this->pPlannedTimeframe || !$this->pUseCache)
+			$this->computePlannedTimeframe();
+
+		return array("start" => $this->dateFormat($this->pPlannedTimeframe['start']),
+		             "end"   => $this->dateFormat($this->pPlannedTimeframe['end']));
+	}
+
+	private function computePlannedTimeframe() {
 		$start = $this->pCTask->getStartDateFromTask(null, $this->pChild);
 		$end = $this->pCTask->getFinishDateFromTask(null, $this->pChild);
 
-		return array("start" => $this->dateFormat($start['task_start_date']),
-		             "end"   => $this->dateFormat($end['task_finish_date']));
+		$this->pPlannedTimeframe['start'] = $start['task_start_date'];
+		$this->pPlannedTimeframe['end'] = $end['task_finish_date'];
 	}
 
 	public function getActualTimeframe(){
+		if (!$this->pActualTimeFrame || !$this->pUseCache)
+			$this->computeActualTimeframe();
+
+		return array("start" => $this->dateFormat($this->pActualTimeFrame['start']),
+		             "end"   => $this->dateFormat($this->pActualTimeFrame['end']));
+	}
+
+	private function computeActualTimeframe() {
 		$start = $this->pCTask->getActualStartDate(null, $this->pChild);
 		$end = $this->pCTask->getActualFinishDate(null, $this->pChild);
 
 		if ($this->getProgress() < 100)
 			$end = null;
 
-		return array("start" => $this->dateFormat($start['task_log_start_date']),
-		             "end"   => $this->dateFormat($end['task_log_finish_date']));
+		$this->pActualTimeFrame['start'] = $start['task_start_date'];
+		$this->pActualTimeFrame['end'] = $end['task_finish_date'];
 	}
 
 	public function getPlannedResources() {
-		return $this->getPeopleEffort(false);
+		if (!$this->pPlannedResources || !$this->pUseCache)
+			$this->pPlannedResources = $this->getPeopleEffort(false);
+
+		return $this->pPlannedResources;
 	}
 
 	public function getActualResources() {
-		return $this->getPeopleEffort(true);
+		if (!$this->pActualResources || !$this->pUseCache)
+			$this->pActualResources = $this->getPeopleEffort(true);
+
+		return $this->pActualResources;
 	}
 
 	public function isAlerted() {}
