@@ -19,112 +19,129 @@ if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
 $AppUI =& $_SESSION['AppUI'];
 include "$baseDir/modules/tasks/tasks.class.php";
 
-$query = "SELECT task_id, task_name, task_parent FROM tasks t ".
-         " ORDER BY task_id";
-
 class taskBoxDB {
-	private $pWBS_ID;
+	private $pTaskID;
 	private $pCTask;
+	private $pChild;
 
 	public function taskBoxDB($id) {
-		$this->pWBS_ID = $id;
+		$this->pTaskID = $id;
 		$this->pCTask = new CTask($id);
-		if ($this->pCtask->isLeaf())
-	}
 
-	private function doQuery($query) {
-		$result = db_exec($query);
-		$error = db_error();
-
-		if ($error)
-			return null;
-
-		for ($i = 0; $i < db_num_rows($result); $i++)
-			$results[] = db_fetch_assoc($result);
-
-		return $results;
+		if (!$this->pCTask->isLeaf()){
+			$this->pChild = $this->pCTask->getChild(null, $this->pCTask->getProjectID());
+		} else {
+			$this->pChild = null;
+		}
 	}
 
 	public function getWBS() {
 		return $this->pCTask->getWBS();
 	}
 
-//inizio pezzo creato da matteo !!! ATTENZIONE!!!!!//
-//da aggiungere i casi dove i vari campi non sono definiti
-//caso_prova_1.3.1.1 la funzione ritorna il nome del task.
 	public function getTaskName() {
-		$sql = "SELECT task_name FROM tasks t where task_id = ".$this->pWBS_ID;
-		$query = $this->doQuery($sql); // devi usare $this->Funzione oppure taskBoxDB::Funzione !!!
-		return $query[0]['task_name'];
-	}
-//caso_prova_1.3.1.4 la funzione ritorna i numero dei giorni di lavoro assegnati ad un task, le ore effettive di lavoro, il totale del budget pianificate.
-	public function getPlannedData() {
-		$pDay = $this->doQuery("SELECT datediff(task_finish_date , task_start_date)
-			 		FROM tasks t
-					WHERE task_id =".$this->pWBS_ID);
-		$pEffort = $this->doQuery("SELECT sum(effort) FROM user_tasks u WHERE task_id = ".$this->pWBS_ID);
-		$pBudget = $this->doQuery("SELECT SUM(ut.effort * pr.proles_hour_cost)
-				  	   FROM (user_tasks as ut JOIN project_roles as pr)
-	 				   WHERE ut.proles_id = pr.proles_id and task_id = ".$this->pWBS_ID);
-
-
-//TODO connettere i vari pezzi dentro allo stessa riga, da fare prob a una classe di liv superiore
-
-		return  "<br>".$pDay[0][0]." d <br> ".$pEffort[0][0]." ph <br> ".$pBudget[0][0]." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
-}
-
-//caso_prova_1.3.1.2 la funzione restituisce la data di inizio e fine di un task in un'unica stringa separate da una "|"
-	public function getPlannedTimeframe()
-	{
-		$pStart = $this->doQuery("SELECT task_start_date
-			 		FROM tasks t
-					WHERE task_id =".$this->pWBS_ID);
-		$pFinish = $this->doQuery("SELECT task_finish_date
-			 		FROM tasks t
-					WHERE task_id =".$this->pWBS_ID);
-		$start = substr($pStart[0][0],8 ,2 )."/".substr($pStart[0][0],5 ,2 )."/".substr($pStart[0][0],0 ,4 );
-		$finish =  substr($pFinish[0][0],8 ,2 )."/".substr($pFinish[0][0],5 ,2 )."/".substr($pFinish[0][0],0 ,4 );
-		return  "<br>".$start."    |    ".$finish; //restituisce una stringa contenente tutte le variabili sopra elencate.
-
+		return $this->pCTask->getName();
 	}
 
 	public function getProgress() {
-		return $this->pCTask->getProgress();
+		return intval($this->pCTask->getProgress());
+	}
+
+	public function getPlannedData() {
+
+		$start = $this->pCTask->getStartDateFromTask(null, $this->pChild);
+		$end = $this->pCTask->getFinishDateFromTask(null, $this->pChild);
+
+		$duration = $this->getTimediff($start['task_start_date'], $end['task_finish_date']);
+		$effort = $this->pCTask->getEffort();
+		$cost = $this->pCTask->getBudget();
+
+		return array("duration" => !is_null($duration) ? $duration : "NA",
+		             "effort"   => !is_null($effort) ? $effort." ph" : "NA",
+		             "cost"     => !is_null($cost) ? $cost.$dPconfig['currency_symbol'] : "NA");
 	}
 
 	public function getActualData() {
 
-		$x = $this->pCTask;
+		$start = $this->pCTask->getActualStartDate(null, $this->pChild);
+		$end = $this->pCTask->getActualFinishDate(null, $this->pChild);
 
-		$today =$this->doQuery("SELECT task_today FROM tasks t WHERE task_id = ".$this->pWBS_ID);
+		$duration = $this->getTimediff($start['task_log_start_date'], $end['task_log_finish_date']);
+		$effort = $this->pCTask->getActualEffort(null, $this->pChild);
+		$cost = $this->pCTask->getActualCost(null, $this->pChild);
 
-		$aDay = $this->doQuery("SELECT datediff(".($today>$x->getActualFinishDate(null, null)) ? $x->getActualFinishDate(null, null) : $today." , ".$x->getActualStartDate(null, null).")
-				 FROM tasks t
-				 WHERE task_id =".$this->pWBS_ID); // stampa il numero dei giorni che corrono tra la data di inizio e quella attuale (task non ancora concluso) o a quella di fine
-		$aEffort = $x->getActualEffort(null, null);
-		$aBudget = $x->getActualCost(null, null);
-		//$d = new Date_Calc();$d->dateDiff();
-		//$d->compare($a, $b);
-
-		return $aDay." d / ".$aEffort." ph / ".$aBudget." ".$dPconfig['currency_symbol']; //restituisce una stringa contenente tutte le variabili sopra elencate.
+		// TODO check for progress < 100;
+		return array("duration" => !is_null($duration) ? $duration : "NA",
+		             "effort"   => !is_null($effort) ? $effort." ph" : "NA",
+		             "cost"     => !is_null($cost) ? $cost.$dPconfig['currency_symbol'] : "NA");
 	}
-//caso_prova_1.3.1.3 la funzione restituisce la data di inizio e fine attuali di un task in un'unica stringa separate da una "|"
+
+	public function getPlannedTimeframe() {
+		$start = $this->pCTask->getStartDateFromTask(null, $this->pChild);
+		$end = $this->pCTask->getFinishDateFromTask(null, $this->pChild);
+
+		return array("start" => $this->dateFormat($start['task_start_date']),
+		             "end"   => $this->dateFormat($end['task_finish_date']));
+	}
+
 	public function getActualTimeframe(){
-		$x = new CTask($this->pWBS_ID);
-		$pStart = $x->getActualStartDate(null, null);
-		$pFinish = $x->getActualFinishDate(null, null);
+		$start = $this->pCTask->getActualStartDate(null, $this->pChild);
+		$end = $this->pCTask->getActualFinishDate(null, $this->pChild);
 
-	//	$start = substr($pStart[0][0],8 ,2 )."/".substr($pStart[0][0],5 ,2 )."/".substr($pStart[0][0],0 ,4 );
-	//	$finish =  substr($pFinish[0][0],8 ,2 )."/".substr($pFinish[0][0],5 ,2 )."/".substr($pFinish[0][0],0 ,4 );
-		return  "<br>".$start."    |    ".$finish; //restituisce una stringa contenente tutte le variabili sopra elencate.
+		if ($this->getProgress() < 100)
+			$end = null;
 
+		return array("start" => $this->dateFormat($start['task_log_start_date']),
+		             "end"   => $this->dateFormat($end['task_log_finish_date']));
+	}
+
+	public function getPlannedResources() {
+			$q = new DBQuery();
+			$q->clear();
+			$q->addTable('user_tasks','ut');
+			$q->addQuery('CONCAT_WS(" ", u.user_last_name, u.user_first_name) as name, '.
+			             'pr.proles_name as role, ut.effort as effort');
+			$q->addJoin('users','u','u.user_id=ut.user_id');
+			$q->addJoin('project_roles','pr','pr.proles_id = ut.proles_id');
+			$q->addWhere('ut.proles_id > 0 && ut.task_id = '.$this->pTaskID);
+			$resources = $q->loadList();
+
+			return !empty($resources) ? $resources : null;
 	}
 
 	public function getActualResources() {
-		$x = new CTask($this->pWBS_ID);
 
+	}
 
+	public function isAlerted() {}
 
+	//--
+
+	private function getTimediff($start, $end) {
+		$start = strtotime($start);
+		$end = strtotime($end);
+
+		$diff = $end - $start;
+
+		if ($diff == 0)
+			return null;
+		else if ($diff < 60)
+			$unit = "s";
+		else if ($diff < 3600) {
+			$diff = intval($diff/60 + 0.5);
+			$unit = "m";
+		} else if ($diff < 86400) {
+			$diff = intval($diff/3600 + 0.5);
+			$unit = "h";
+		} else /*if ($diff < 2592000)*/ {
+			$diff = intval($diff/86400 + 0.5);
+			$unit = "d";
+		} /* else {
+			$diff = intval($diff/2592000 + 0.5);
+			$unit = "M";
+		}*/
+
+		return $diff." ".$unit;
 	}
 
 	private function getActualPersonEffort($tid = null, $setTid, $pID) {
@@ -147,38 +164,24 @@ class taskBoxDB {
         return round($r,2);
 	}
 
-	public function getPlannedResources() {
-		$x = new CTask($this->pWBS_ID);
-
-		// trovo tutti le persone assegnate al task, il loro ruolo e l'effort
-			$q->clear();
-			$q->addTable('user_tasks','ut');
-			$q->addQuery('CONCAT_WS(", ",u.user_last_name,u.user_first_name) as nm, u.user_email as um, pr.proles_name as pn, ut.effort as ue');
-			$q->addJoin('users','u','u.user_id=ut.user_id');
-			$q->addJoin('project_roles','pr','pr.proles_id = ut.proles_id');
-			$q->addWhere('ut.proles_id > 0 && ut.task_id = '.$task_id);
-			$ar_ur = $q->loadList();
-
-			if (!is_null($ar_ur)){
-				foreach ($ar_ur as $ur) {
-					echo "nome: ".$ur['nm']."|";
-					echo "ruolo: ".$ur['pn']."|";
-					echo "effort: ".$ur['ue']." ph<br>";
-				}
-			}
-
-
+	private function dateFormat($date) {
+		if (!empty($date) && $date != null) {
+			return date("Y.m.d", strtotime($date));
+		} else {
+			return "NA";
+		}
 	}
-	//FINE PEZZO CREATO DA MATTEO!!! DA QUI SI VA TRANQUILLI//
 }
 
 //////////////////// Test classe ////////////////////
 
 $tdb = new taskBoxDB(86);
-echo $tdb->getTaskName();
-echo $tdb->getPlannedData();
-echo $tdb->getActualData();
-echo $tdb ->getPlannedTimeframe();
-echo $tdb ->getActualTimeframe();
-echo $tdb ->getProgress();
+echo $tdb->getWBS()."\n";
+echo $tdb->getTaskName()."\n";
+print_r($tdb->getPlannedData());
+print_r($tdb->getActualData());
+print_r($tdb->getPlannedTimeframe());
+print_r($tdb->getActualTimeframe());
+print_r($tdb->getPlannedResources());
+echo $tdb ->getProgress()."\n";
 ?>
