@@ -97,7 +97,8 @@ class CTask extends CDpObject {
 	var $task_type   = NULL;
 
 
-	function CTask() {
+	function CTask($task_id = null) {
+		$this->task_id = $task_id;
 		$this->CDpObject( 'tasks', 'task_id' );
 	}
 
@@ -1006,9 +1007,43 @@ class CTask extends CDpObject {
 			return true;
 	}
 
-	static function getWBSIndexFromParent($tid, $pid=null) {
+	function getName($tid = null) {
+		if (!is_null($this->task_name))
+			return $this->task_name;
+
 		if (is_null($tid))
-			return "";
+			if (!is_null($this->task_id))
+				$tid = $this->task_id;
+			else
+				return "";
+
+		$sql = "SELECT task_name FROM tasks where task_id = ".$tid;
+
+		return db_loadResult($sql);
+	}
+
+	function getProjectID($tid = null) {
+		if (!is_null($this->task_project))
+			return $this->task_project;
+
+		if (is_null($tid))
+			if (!is_null($this->task_id))
+				$tid = $this->task_id;
+			else
+				return "";
+
+		$sql = "SELECT task_project FROM tasks where task_id = ".$tid;
+
+		return db_loadResult($sql);
+	}
+
+	function getWBSIndexFromParent($tid = null, $pid=null) {
+		if (is_null($tid))
+			if (!is_null($this->task_id))
+				$tid = $this->task_id;
+			else
+				return "";
+
 		if ($tid == "^") {
 			$sql = "SELECT MAX(task_wbs_index) FROM tasks WHERE task_parent = task_id && $pid = task_project";
 			$r = db_loadResult($sql);
@@ -1019,9 +1054,13 @@ class CTask extends CDpObject {
 		return $r+1;
 	}
 
-	static function getWBS($tid, $isRootChildren = false) {
+	function getWBS($tid = null, $isRootChildren = false) {
 		if (is_null($tid))
-			return "";
+			if (!is_null($this->task_id))
+				$tid = $this->task_id;
+			else
+				return "";
+
 		$sql = "SELECT task_parent, task_wbs_index FROM tasks WHERE $tid = task_id";
 		$r = db_loadList($sql);
 
@@ -1043,9 +1082,12 @@ class CTask extends CDpObject {
 		return strrev($wbs);
 	}
 
-	static function getTaskLevel($tid) {
+	function getTaskLevel($tid = null) {
 
 	 if (is_null($tid))
+		if (!is_null($this->task_id))
+			$tid = $this->task_id;
+		else
 			return "";
 
 	 $t_level = strlen(str_replace(".","",CTask::getWBS($tid)));
@@ -1173,7 +1215,7 @@ class CTask extends CDpObject {
 		$q->addTable('tasks');
 		$q->addWhere("task_project = $pid");
 		$ar = $q->loadHashList();
-		//print_r($ar);
+
 		$child = array();
 		foreach ($ar as $t => $tparent) {
 			if ($tparent == $tid && $tid != $t) {
@@ -1182,50 +1224,56 @@ class CTask extends CDpObject {
 				$child[] = $t;
 			}
 		}
-		return (implode($child,','));
+		return (!empty($child) ? implode($child,',') : null);
 	}
 
-	function getStartDateFromTask($tid = null, $setTid) {
-		if (($setTid == null) || ($setTid == ''))
-			return "-";
+	function getStartDateFromTask($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
         	return "-";
+        if (($setTid != null) && ($setTid != ''))
+			$where = "IN ($setTid)";
+		else
+			$where = "= $tid";
 		$q = new DBQuery;
 		$q->addQuery('task_start_date, task_id');
 		$q->addTable('tasks');
-		$q->addWhere("task_id IN ($setTid) AND !isnull( task_start_date ) AND task_start_date !=  '0000-00-00 00:00:00'");
+		$q->addWhere("task_id $where AND !isnull( task_start_date ) AND task_start_date !=  '0000-00-00 00:00:00'");
 		$q->addOrder('task_start_date ASC');
         $ar = $q->loadList();
         return $ar[0];
 	}
 
-	function getFinishDateFromTask($tid = null, $setTid) {
-		if (($setTid == null) || ($setTid == ''))
-			return "-";
+	function getFinishDateFromTask($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
         	return "-";
+        if (($setTid != null) && ($setTid != ''))
+			$where = "IN ($setTid)";
+		else
+			$where = "= $tid";
 		$q = new DBQuery;
 		$q->addQuery('task_finish_date, task_id');
 		$q->addTable('tasks');
-		$q->addWhere("task_id IN ($setTid) AND !isnull( task_finish_date ) AND task_finish_date !=  '0000-00-00 00:00:00'");
+		$q->addWhere("task_id $where AND !isnull( task_finish_date ) AND task_finish_date !=  '0000-00-00 00:00:00'");
 		$q->addOrder('task_finish_date DESC');
         $ar = $q->loadList();
         return $ar[0];
 	}
 
 	function getEffortFromTask($tid = null, $setTid) {
-		if (($setTid == null) || ($setTid == ''))
-			return 0;
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
         	return 0;
+        if (($setTid != null) && ($setTid != ''))
+			$where = "IN ($setTid)";
+		else
+			$where = "= $tid";
 		$q = new DBQuery;
 		$q->addQuery('SUM(ut.effort)');
 		$q->addTable('tasks','t');
 		$q->addJoin('user_tasks','ut','ut.task_id = t.task_id');
-		$q->addWhere("t.task_id IN ($setTid) && (SELECT COUNT(*) FROM tasks AS tt WHERE t.task_id <> tt.task_id && tt.task_parent = t.task_id) < 1");
+		$q->addWhere("t.task_id $where && (SELECT COUNT(*) FROM tasks AS tt WHERE t.task_id <> tt.task_id && tt.task_parent = t.task_id) < 1");
 		$r = $q->loadResult();
 		if ($r < 0 || is_null($r))
 			$r = 0;
@@ -1233,24 +1281,26 @@ class CTask extends CDpObject {
 	}
 
 	function getBudgetFromTask($tid = null, $setTid) {
-		if (($setTid == null) || ($setTid == ''))
-			return 0;
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
         	return 0;
+        if (($setTid != null) && ($setTid != ''))
+			$where = "IN ($setTid)";
+		else
+			$where = "= $tid";
 		$q = new DBQuery;
 		$q->addQuery('SUM(ut.effort * pr.proles_hour_cost)');
 		$q->addTable('tasks','t');
 		$q->addJoin('user_tasks','ut','ut.task_id = t.task_id');
 		$q->addJoin('project_roles','pr','pr.proles_id = ut.proles_id');
-		$q->addWhere("t.task_id IN ($setTid) && (SELECT COUNT(*) FROM tasks AS tt WHERE t.task_id <> tt.task_id && tt.task_parent = t.task_id) < 1");
+		$q->addWhere("t.task_id $where && (SELECT COUNT(*) FROM tasks AS tt WHERE t.task_id <> tt.task_id && tt.task_parent = t.task_id) < 1");
 		$r = $q->loadResult();
 		if ($r < 0 || is_null($r))
 			$r = 0;
         return round($r,2);
 	}
 
-	function getActualStartDate($tid = null, $setTid) {
+	function getActualStartDate($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
         	return "-";
@@ -1268,7 +1318,7 @@ class CTask extends CDpObject {
 		return "in progress";
 	}
 
-	function getActualFinishDate($tid = null, $setTid) {
+	function getActualFinishDate($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
         	return "-";
@@ -1285,7 +1335,7 @@ class CTask extends CDpObject {
         return $ar[0];
 	}
 
-	function getActualEffort($tid = null, $setTid) {
+	function getActualEffort($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
         	return 0;
@@ -1303,7 +1353,7 @@ class CTask extends CDpObject {
         return round($r,2);
 	}
 
-	function getActualCost($tid = null, $setTid) {
+	function getActualCost($tid = null, $setTid = null) {
 		$tid = !empty($tid) ? $tid : $this->task_id;
 		if ($tid == 0)
         	return 0;
