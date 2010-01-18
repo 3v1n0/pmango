@@ -38,9 +38,9 @@ class TaskBox {
 	private $pMaxWidth;
 	private $pMaxLineHeight;
 
-	const ALERT_NONE = -1;
-	const ALERT_WARNING = 0;
-	const ALERT_ERROR = 1;
+	const ALERT_NONE = 0;
+	const ALERT_WARNING = 1;
+	const ALERT_ERROR = 2;
 
 	public function TaskBox($id) {
 		$this->pID = $id;
@@ -244,6 +244,7 @@ class TaskBox {
 
 		/* Resources */
 		if ($this->pResources != null) {
+			//TODO parse the resources array.
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
 			$hbox->setSpace(2);
@@ -368,7 +369,7 @@ class TaskBox {
 	public function getId() {
 		return $this->pID;
 	}
-	
+
 	public function getWidth() {
 		$this->buildTaskBox();
 		return $this->pImgBlock->getWidth();
