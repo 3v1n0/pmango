@@ -38,20 +38,22 @@ class TaskBox {
 	private $pMaxWidth;
 	private $pMaxLineHeight;
 
+	const ALERT_NONE = -1;
 	const ALERT_WARNING = 0;
 	const ALERT_ERROR = 1;
 
 	public function TaskBox($id) {
 		$this->pID = $id;
-		$this->pName = $name;
-		$this->pPlannedData = $p_data;
-		$this->pActualData = $a_data;
-		$this->pPlannedTimeframe = $p_timeframe;
-		$this->pActualTimeframe = $a_timeframe;
-		$this->pResources = $resources;
-		$this->pShowAlerts = $alert;
-		$this->pProgress = $progress;
-		$this->pShowExpand = $expand;
+		$this->pName = null;
+		$this->pPlannedData = null;
+		$this->pActualData = null;
+		$this->pPlannedTimeframe = null;
+		$this->pActualTimeframe = null;
+		$this->pResources = null;
+		$this->pShowAlerts = TaskBox::ALERT_NONE;
+		$this->pProgress = null;
+		$this->pShowExpand = false;
+
 		$this->pImgBlock = null;
 		$this->pGDImage = null;
 		$this->pChanged = true;
