@@ -69,7 +69,7 @@ class TaskNetwork {
 	private $SpM,$EpM; //gli array associativi delle start e end project milestone
 	private $mapBlank; //mappa de punti vuoti della TN
 
-	private $connections=array(), $i=0; // array associativo delle dipendenze
+	private $connections=array(); // array associativo delle dipendenze
 
 	function TaskNetwork(){
 		$this->index = array();
@@ -106,15 +106,15 @@ class TaskNetwork {
 		return $final;
 	}
 
-	public function addDefaultDependancies(TaskNetwork $TN){
-			$index = $TN->getIndex();
+	public function addDefaultDependancies(){
+			$index = $this->getIndex();
 
 			//start to tbx dependancies
 			for($a=0;$a<sizeof($index);$a++){
 					for($b=0;$b<sizeof($index[$a]);$b++){
 						$ID2["riga"] = $a; $ID2["colonna"] = $b;
 										 //TN  			 cr.path dash  under upper dist color
-						$TN = $TN->connect($TN,null,$ID2, false, true,false,false,0,"gray");
+						TaskNetwork::connect($this,null,$ID2, false, true,false,false,0,"gray");
 					}
 			}
 	
@@ -122,7 +122,7 @@ class TaskNetwork {
 					for($b=0;$b<sizeof($index[$a]);$b++){
 						$ID1["riga"] = $a; $ID1["colonna"] = $b;
 										 //TN  			 cr.path dash  under upper dist
-						$TN = $TN->connect($TN,$ID1,null, false, false,false,false,10,"gray");
+						TaskNetwork::connect($this,$ID1,null, false, false,false,false,8,"gray");
 					}
 
 			}
@@ -134,20 +134,22 @@ class TaskNetwork {
 		ImageDestroy($this->img);
 	}
 
-	public function addDependence($ID1, $ID2){
-		$this->connections[$this->i]["FROM"] = $ID1;
-		$this->connections[$this->i]["TO"] = $ID2;
-		$this->i++;
+	public function addDependence($tbxID1, $tbxID2){
+		$ID1 = TaskNetwork::getTbxIndex($tbxID1);
+		$ID2 = TaskNetwork::getTbxIndex($tbxID2);
+		
+		$i = sizeof($this->connections);
+		$this->connections[$i]["FROM"] = $ID1;
+		$this->connections[$i]["TO"] = $ID2;
 	}
 	//da perfezionare che ricerchi se i figli della tbx hanno dipendenze
-	public function drawConnections($TN){
-		$index = $TN->getIndex();
-		
-		for($i=0;$i<sizeof($TN->connections);$i++){
+	public function drawConnections(){//TODO creare le varie dipendenze upper under tra tbx collassati
+		$index = $this->getIndex();
+		for($i=0;$i<sizeof($this->connections);$i++){
 			$upper =false; $under=false;
 
-			$ID1 = $TN->connections[$i]["FROM"];
-			$ID2 = $TN->connections[$i]["TO"];
+			$ID1 = $this->connections[$i]["FROM"];
+			$ID2 = $this->connections[$i]["TO"];
 
 			$tbx1 = $index[$ID1["riga"]][$ID1["colonna"]];
 			$tbx2 = $index[$ID2["riga"]][$ID2["colonna"]];
@@ -160,13 +162,17 @@ class TaskNetwork {
 			if(false/*!CTask::isLeafSt($tbx2->getId())*/){
 				$upper =true;
 			}
-
-			$TN = $TN->connect($this,$ID1,$ID2,false,false,$under,$upper);
+			
+			if (!$tbx1 || !$tbx2) continue;
+			
+			$this->connect($this,$ID1,$ID2,false,false,$under,$upper);
+			//print_r($this);
+			//echo "connecting ",$tbx1->getID()," ",$tbx2->getID()."\n";
 
 		}
-		return $TN;
 	}
 	
+	//FIXME ABBESTIA!
 	public function drawCriticalPath(TaskNetwork $TaskNetwork){//TODO
 		$tbxarray ;// qua ci va la query che mi restituisce i task del critical path
 		
@@ -353,7 +359,7 @@ class TaskNetwork {
 			case "red":$colore = ImageColorAllocate($img,255,0,0);break;//rosso
 			case "green":$colore = ImageColorAllocate($img,0,255,0);break;//verde
 			case "blue":$colore = ImageColorAllocate($img,0,0,255);break;//blu
-			case "gray":$colore = ImageColorAllocate($img,130,130,130);break;//grigio
+			case "gray":$colore = ImageColorAllocate($img,150,150,150);break;//grigio
 			default:$colore = ImageColorAllocate($img,0,0,0);break;//nero
 		}
 
@@ -419,7 +425,9 @@ class TaskNetwork {
 					}
 					
 				if(!$upper){
-					$points[4]["x"]= $tbx2lx	;$points[4]["y"]=$tbx2ly+($tbx2shift/2); //arrivato
+					$points[4]["x"]= $tbx2BlankLeft		;$points[4]["y"]=$tbx1ry+($tbx1shift/2);
+					$points[5]["x"]= $tbx2BlankLeft		;$points[5]["y"]=$tbx2ly+($tbx2shift/2); 
+					$points[6]["x"]= $tbx2lx			;$points[6]["y"]=$tbx2ly+($tbx2shift/2);//arrivato
 				}else{
 					$points[4]["x"]= $tbx1BlankRight					;$points[4]["y"]=$tbx2BlankUp; 
 					$points[5]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[5]["y"]=$tbx2BlankUp;
@@ -791,14 +799,12 @@ class TaskNetwork {
 	}
 	
 	public function getTbxIndex($tid){
-		$tid = CTask::getWBS($tid);
 		$index= $this->index;
 		for($i=0;$i<sizeof($index);$i++){
 			for($j=0;$j<sizeof($index[$i]);$j++){
 				if($tid==$index[$i][$j]->getId()){
 					$coord["riga"]=$i;
 					$coord["colonna"]=$j;
-					
 					return $coord;
 				}
 			}
@@ -814,9 +820,16 @@ class TaskNetwork {
 
 
 $project_id = 5;
+$id = "SELECT task_id FROM tasks t WHERE task_parent=task_id and task_project=".$project_id;
+
+for($int=0;$int<3;$int++){
+	$id = "SELECT task_id FROM tasks t WHERE task_parent in (".$id.") and task_id != task_parent and task_project=".$project_id." ORDER BY task_id";
+}
+$query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t WHERE task_id in(".$id.") and task_project=".$project_id." ORDER BY task_id";
+/*
 $query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t ".
          "WHERE t.task_project = ".$project_id." ORDER BY task_id";
-
+*/
 $result = db_exec($query);
 $error = db_error();
 if ($error) {
@@ -841,9 +854,9 @@ for($j=0;$j<sizeof($res);$j++){
 		$wbslv = CTask::getWBS($res[$j][$k]['task_id']);
 		
 		
-				$tbx = new TNNode($wbslv);
+				$tbx = new TNNode($res[$j][$k]['task_id']);
 				$tbx->setFontPath("../../fonts/Droid");
-				$tbx->setName($res[$j][$k]['task_name']);
+				$tbx->setName($wbslv." ".$res[$j][$k]['task_name']);
 				$tbx->setPlannedData("14 d", "40 ph", "1350 €");
 				$tbx->setActualData("4 d", "6 ph", "230 €");
 				$tbx->setPlannedTimeframe(substr($res[$j][$k]['task_start_date'], 0, 10), substr($res[$j][$k]['task_finish_date'], 0, 10));
@@ -874,14 +887,14 @@ if ($error) {
 	exit;
 }
 $results = array();
-for ($i = 0; $i < db_num_rows($result); $i++) {
+$num = db_num_rows($result);
+for ($i = 0; $i < $num; $i++) {
 	$results[] = db_fetch_assoc($result);
 }
 
 
-
 foreach($results as $conn){
- 	$TN->addDependence($TN->getTbxIndex($conn[2]),$TN->getTbxIndex($conn[0]));
+	$TN->addDependence($conn["dependencies_req_task_id"],$conn["dependencies_task_id"]);
 }
 
 /*
@@ -906,7 +919,7 @@ for($i=0;$i<5;$i++){
 	//$TN->addDependence($ID1,$ID2);
 
 
-$TN = $TN->drawConnections($TN);
+$TN->drawConnections();
 
 
 
