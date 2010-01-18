@@ -96,26 +96,31 @@ class taskBoxDB {
 	}
 
 	public function getPlannedResources() {
-			$q = new DBQuery();
-			$q->clear();
-			$q->addTable('user_tasks','ut');
-			$q->addQuery('CONCAT_WS(" ", u.user_last_name, u.user_first_name) as name, '.
-			             'pr.proles_name as role, ut.effort as effort');
-			$q->addJoin('users','u','u.user_id=ut.user_id');
-			$q->addJoin('project_roles','pr','pr.proles_id = ut.proles_id');
-			$q->addWhere('ut.proles_id > 0 && ut.task_id = '.$this->pTaskID);
-			$resources = $q->loadList();
-
-			return !empty($resources) ? $resources : null;
+		return $this->getPeopleEffort(false);
 	}
 
 	public function getActualResources() {
-
+		return $this->getPeopleEffort(true);
 	}
 
 	public function isAlerted() {}
 
 	//--
+
+	private function getPeopleEffort($get_actual = true) {
+		$q = new DBQuery();
+		$q->clear();
+		$q->addTable('user_tasks','ut');
+		$q->addQuery('CONCAT_WS(" ", u.user_last_name, u.user_first_name) as name, '.
+		             'pr.proles_name as role, ut.effort as planned_effort'.
+		             ($get_actual ? ', round(ut.perc_effort*ut.effort/100) as actual_effort' : ''));
+		$q->addJoin('users','u','u.user_id=ut.user_id');
+		$q->addJoin('project_roles','pr','pr.proles_id = ut.proles_id');
+		$q->addWhere('ut.proles_id > 0 && ut.task_id = '.$this->pTaskID);
+		$resources = $q->loadList();
+
+		return !empty($resources) ? $resources : null;
+	}
 
 	private function getTimediff($start, $end) {
 		$start = strtotime($start);
@@ -144,26 +149,6 @@ class taskBoxDB {
 		return $diff." ".$unit;
 	}
 
-	private function getActualPersonEffort($tid = null, $setTid, $pID) {
-		$tid = !empty($tid) ? $tid : $this->task_id;
-		if ($tid == 0)
-        	return 0;
-		$q = new DBQuery;
-		$q->addQuery('SUM(tl.task_log_hours)');
-		$q->addTable('tasks','t');
-		$q->addJoin('task_log','tl','tl.task_log_task = t.task_id');
-		if (($setTid == null) || ($setTid == ''))
-			$q->addWhere("t.task_id = $tid");
-		else
-			$q->addWhere("t.task_id IN ($setTid) && (SELECT COUNT(*) FROM tasks AS tt WHERE t.task_id <> tt.task_id && tt.task_parent = t.task_id) < 1");
-
-		$q->addWhere("tl.task_creator = $pID");
-		$r = $q->loadResult();
-		if ($r < 0 || is_null($r))
-			$r = 0;
-        return round($r,2);
-	}
-
 	private function dateFormat($date) {
 		if (!empty($date) && $date != null) {
 			return date("Y.m.d", strtotime($date));
@@ -183,5 +168,6 @@ print_r($tdb->getActualData());
 print_r($tdb->getPlannedTimeframe());
 print_r($tdb->getActualTimeframe());
 print_r($tdb->getPlannedResources());
+print_r($tdb->getActualResources());
 echo $tdb ->getProgress()."\n";
 ?>
