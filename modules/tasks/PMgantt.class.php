@@ -914,7 +914,7 @@ class PMGantt /*implements PMGraph TODO */ {
 				}
 			}
 
-			if ($draw_deps) {
+			if ($this->pShowDeps) {
 				$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE dependencies_req_task_id=" . $a["task_id"];
 				$query = db_exec($sql);
 
@@ -922,7 +922,7 @@ class PMGantt /*implements PMGraph TODO */ {
 					// find row num of dependencies
 					for($d = 0; $d < count($this->pTasks); $d++ ) {
 						if($this->pTasks[$d]["task_id"] == $dep["dependencies_task_id"] && $d != $bar->GetLineNbr()) {
-							$bar->SetConstrain($d, CONSTRAIN_ENDSTART, $this->pUseColors ? 'brown' : 'gray4');
+							$bar->SetConstrain($d, CONSTRAIN_STARTEND, $this->pUseColors ? 'brown' : 'gray4');
 						}
 					}
 				}
