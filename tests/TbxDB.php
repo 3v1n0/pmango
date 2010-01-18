@@ -67,6 +67,8 @@ class taskBoxDB {
 	}
 
 	public function getPlannedData() {
+		global $dPconfig;
+
 		if (!$this->pPlannedData || !$this->pUseCache)
 			$this->computePlannedData();
 
