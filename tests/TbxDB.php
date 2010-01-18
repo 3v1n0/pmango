@@ -76,10 +76,11 @@ class taskBoxDB {
 	}
 
 	private function computePlannedData() {
-		$start = $this->pCTask->getStartDateFromTask(null, $this->pChild);
-		$end = $this->pCTask->getFinishDateFromTask(null, $this->pChild);
+		if (!$this->pPlannedTimeframe || !$this->pUseCache)
+			$this->computePlannedTimeframe();
 
-		$duration = $this->getTimediff($start['task_start_date'], $end['task_finish_date']);
+		$tf = $this->pPlannedTimeframe;
+		$duration = $this->getTimediff($tf['start'], $tf['end']);
 		$effort = $this->pCTask->getEffort();
 		$cost = $this->pCTask->getBudget();
 
@@ -90,7 +91,7 @@ class taskBoxDB {
 
 	public function getActualData() {
 		if (!$this->pActualData || !$this->pUseCache)
-			$this->computePlannedData();
+			$this->computeActualData();
 
 		$duration = $this->pActualData['duration'];
 		$effort = $this->pActualData['effort'];
@@ -103,10 +104,11 @@ class taskBoxDB {
 	}
 
 	private function computeActualData() {
-		$start = $this->pCTask->getActualStartDate(null, $this->pChild);
-		$end = $this->pCTask->getActualFinishDate(null, $this->pChild);
+		if (!$this->pActualTimeframe || !$this->pUseCache)
+			$this->computeActualTimeframe();
 
-		$duration = $this->getTimediff($start['task_log_start_date'], $end['task_log_finish_date']);
+		$tf = $this->pActualTimeFrame;
+		$duration = $this->getTimediff($tf['start'], $tf['end']);
 		$effort = $this->pCTask->getActualEffort(null, $this->pChild);
 		$cost = $this->pCTask->getActualCost(null, $this->pChild);
 
@@ -119,8 +121,10 @@ class taskBoxDB {
 		if (!$this->pPlannedTimeframe || !$this->pUseCache)
 			$this->computePlannedTimeframe();
 
-		return array("start" => $this->dateFormat($this->pPlannedTimeframe['start']),
-		             "end"   => $this->dateFormat($this->pPlannedTimeframe['end']));
+		$tf = $this->pPlannedTimeframe;
+
+		return array("start" => $this->dateFormat($tf['start']),
+		             "end"   => $this->dateFormat($tf['end']));
 	}
 
 	private function computePlannedTimeframe() {
@@ -135,8 +139,10 @@ class taskBoxDB {
 		if (!$this->pActualTimeFrame || !$this->pUseCache)
 			$this->computeActualTimeframe();
 
-		return array("start" => $this->dateFormat($this->pActualTimeFrame['start']),
-		             "end"   => $this->dateFormat($this->pActualTimeFrame['end']));
+		$tf = $this->pActualTimeFrame;
+
+		return array("start" => $this->dateFormat($tf['start']),
+		             "end"   => $this->dateFormat($tf['end']));
 	}
 
 	private function computeActualTimeframe() {
@@ -146,8 +152,8 @@ class taskBoxDB {
 		if ($this->getProgress() < 100)
 			$end = null;
 
-		$this->pActualTimeFrame['start'] = $start['task_start_date'];
-		$this->pActualTimeFrame['end'] = $end['task_finish_date'];
+		$this->pActualTimeFrame['start'] = $start['task_log_start_date'];
+		$this->pActualTimeFrame['end'] = $end['task_log_finish_date'];
 	}
 
 	public function getPlannedResources() {
@@ -199,8 +205,15 @@ class taskBoxDB {
 	}
 
 	private function getTimediff($start, $end) {
-		$start = strtotime($start);
-		$end = strtotime($end);
+		if (is_null($start))
+			$start = time();
+		else
+			$start = strtotime($start);
+
+		if (is_null($end))
+			$end = time();
+		else
+			$end = strtotime($end);
 
 		$diff = $end - $start;
 
@@ -245,5 +258,6 @@ print_r($tdb->getPlannedTimeframe());
 print_r($tdb->getActualTimeframe());
 print_r($tdb->getPlannedResources());
 print_r($tdb->getActualResources());
-echo $tdb ->getProgress()."\n";
+echo $tdb->getProgress()."\n";
+echo $tdb->isAlerted();
 ?>
