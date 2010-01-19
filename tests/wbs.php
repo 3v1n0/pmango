@@ -61,7 +61,7 @@ $objTree = new GDRenderer(30, 10, 30, 50, 20);
 
 $id = 2;
 $translate = array();
-foreach ($results as $project) {
+foreach ($results as &$project) {
 	$translate[$project['task_id']] = $id;
 	$items[$id]['oldid'] = $project['task_id'];
 	$items[$id]['id'] = $id;
@@ -83,10 +83,14 @@ foreach ($results as $project) {
 	$tbx->setAlerts($tbdb->isAlerted()); //FIXME change the position in wbs.
 
 	$items[$id]['tbx'] = $tbx;
+	unset($tbdb);
 
 	$id++;
 }
+unset($results);
+unset($translate);
 //print_r($items);
+
 $tbx = new TaskBox(null);
 $tbx->setName("G3-sw4us");
 $objTree->add(1, 0, "", $tbx->getWidth(), $tbx->getHeight(), $tbx->getImage());
@@ -126,6 +130,8 @@ function makeWBSPdf($im){
 if (isset($_REQUEST['pdf'])) {
 	makeWBSPdf($objTree->image());
 } else {
+//	echo "PEAK ".memory_get_peak_usage(). " ".memory_get_peak_usage(true)."<br>";
+//	echo "MEM ".memory_get_usage(). " ".memory_get_usage(true);
 	$objTree->stream();
 }
 
