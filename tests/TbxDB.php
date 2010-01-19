@@ -23,7 +23,7 @@ include "TaskBoxDB.class.php";
 
 //////////////////// Test classe ////////////////////
 
-$tdb = new TaskBoxDB(86);
+$tdb = new TaskBoxDB(135);
 echo $tdb->getWBS()."\n";
 echo $tdb->getTaskName()."\n";
 print_r($tdb->getPlannedData());

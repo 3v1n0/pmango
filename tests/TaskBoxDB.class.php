@@ -196,6 +196,10 @@ class taskBoxDB {
 		}
 
 		$pa = $this->getActualResources();
+
+		if ($pa == null)
+			return $alert;
+
 		foreach($pa as $r) {
 			if ($r['planned_effort'] != $r['actual_effort']) {
 				$alert = TaskBoxDB::ALERT_WARNING;
@@ -213,15 +217,29 @@ class taskBoxDB {
 	//--
 
 	private function getPeopleEffort($get_actual = true) {
+
+		$query = 'concat_ws(" ", u.user_last_name, u.user_first_name) as name, '.
+		         'pr.proles_name as role, '.($this->pChild ? 'sum(ut.effort)' : 'ut.effort').' as planned_effort'.
+		         ($get_actual ? ', sum(task_log_hours) as actual_effort' : '');
+
+		$in = $this->pChild ? $this->pChild : $this->pTaskID;
+		$where = 'ut.task_id in ('.$in.')';
+
 		$q = new DBQuery();
 		$q->clear();
 		$q->addTable('user_tasks','ut');
-		$q->addQuery('CONCAT_WS(" ", u.user_last_name, u.user_first_name) as name, '.
-		             'pr.proles_name as role, ut.effort as planned_effort'.
-		             ($get_actual ? ', round(ut.perc_effort*ut.effort/100) as actual_effort' : ''));
-		$q->addJoin('users','u','u.user_id=ut.user_id');
-		$q->addJoin('project_roles','pr','pr.proles_id = ut.proles_id');
-		$q->addWhere('ut.proles_id > 0 && ut.task_id = '.$this->pTaskID);
+		$q->addQuery($query);
+		$q->addJoin('users', 'u', 'u.user_id = ut.user_id');
+		$q->addJoin('project_roles', 'pr', 'pr.proles_id = ut.proles_id');
+		$q->addWhere($where);
+		$q->addGroup("ut.user_id, ut.proles_id");
+
+		if ($get_actual) {
+			$q->addJoin('task_log', 'tl', 'tl.task_log_task = ut.task_id and '.
+			                              'tl.task_log_proles_id = ut.proles_id and '.
+			                              'tl.task_log_creator = ut.user_id');
+		}
+
 		$resources = $q->loadList();
 
 		$max_p = -1;
@@ -235,7 +253,7 @@ class taskBoxDB {
 		foreach ($resources as &$res) {
 			$res['planned_effort'] = str_pad($res['planned_effort'], $max_p, "0", STR_PAD_LEFT);
 
-			if (isset($res['actual_effort']))
+			if ($get_actual)
 				$res['actual_effort'] = str_pad($res['actual_effort'], $max_a, "0", STR_PAD_LEFT);
 		}
 
