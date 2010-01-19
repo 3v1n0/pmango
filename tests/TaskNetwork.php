@@ -1,7 +1,7 @@
 <?php
-include ("../TaskBox.class.php");
+include ("TaskBox.class.php");
 
-$baseDir = "../..";
+$baseDir = "..";
 
 include "$baseDir/includes/config.php";
 include "$baseDir/includes/db_adodb.php";
@@ -900,7 +900,7 @@ for($j=0;$j<sizeof($res);$j++){
 		
 		
 				$tbx = new TNNode($res[$j][$k]['task_id']);
-				$tbx->setFontPath("../../fonts/Droid");
+				$tbx->setFontPath("../fonts/Droid");
 				//$tbx->setName($wbslv." ".$res[$j][$k]['task_name']);
 				//$tbx->setPlannedData("14 d", "40 ph", "1350 €");
 				//$tbx->setActualData("4 d", "6 ph", "230 €");
