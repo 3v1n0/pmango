@@ -5,11 +5,6 @@ include "$baseDir/includes/db_adodb.php";
 include "$baseDir/includes/db_connect.php";
 include "$baseDir/includes/main_functions.php";
 
-include "$baseDir/lib/phptreegraph/GDRenderer.php";
-include "TaskBox.class.php";
-
-include "$baseDir/lib/fpdf/fpdf.php";
-
 include "$baseDir/classes/ui.class.php";
 if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
     if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
@@ -23,6 +18,28 @@ if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
 }
 $AppUI =& $_SESSION['AppUI'];
 include "$baseDir/modules/tasks/tasks.class.php";
+
+include "TaskBox.class.php";
+include "TaskBoxDB.class.php";
+
+include "$baseDir/lib/phptreegraph/GDRenderer.php";
+
+/*
+include "$baseDir/classes/ui.class.php";
+if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
+    if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
+    {
+        $AppUI =& $_SESSION['AppUI'];
+		$user_id = $AppUI->user_id;
+        addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+    }
+
+	$_SESSION['AppUI'] = new CAppUI;
+}
+$AppUI =& $_SESSION['AppUI'];
+include "$baseDir/modules/tasks/tasks.class.php"; */
+
+ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
 
 $project_id = 5;
 $query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t ".
@@ -53,18 +70,17 @@ foreach ($results as $project) {
 	if ($items[$id]['parent'] == $id)
 		$items[$id]['parent'] = 1;
 
-	$child = CTask::getChild($project['task_id'], $project_id);
-	$tstart = CTask::getActualStartDate($project['task_id'], $child);
+	$tbdb = new taskBoxDB($project['task_id']);
 
-	$tbx = new TaskBox(CTask::getWBS($project['task_id']).".");
-	$tbx->setName($project['task_name']);
-	$tbx->setProgress(CTask::getPr($project['task_id']));
-	$tbx->setPlannedData("14 d", "40 ph", "1350 €");
-	$tbx->setActualData("4 d", "6 ph", "230 €");
-	$tbx->setPlannedTimeframe(substr($project['task_start_date'], 0, 10), substr($project['task_finish_date'], 0, 10));
-	$tbx->setActualTimeframe(substr($tstart['task_log_start_date'], 0, 10),
-	                         "");
-	$tbx->setAlerts(rand(0,2)); //FIXME
+	$tbx = new TaskBox($tbdb->getWBS());
+	$tbx->setName($tbdb->getTaskName());
+	$tbx->setProgress($tbdb->getProgress());
+	$tbx->setPlannedDataArray($tbdb->getPlannedData());
+	$tbx->setActualDataArray($tbdb->getActualData());
+	$tbx->setPlannedTimeframeArray($tbdb->getPlannedTimeframe());
+	$tbx->setActualTimeframeArray($tbdb->getActualTimeframe());
+	$tbx->setResourcesArray($tbdb->getPlannedResources());
+	$tbx->setAlerts($tbdb->isAlerted()); //FIXME change the position in wbs.
 
 	$items[$id]['tbx'] = $tbx;
 
@@ -80,6 +96,8 @@ foreach ($items as $item) {
 
 $objTree->setBGColor(array(255, 255, 255));
 $objTree->setLinkColor(array(0, 0, 0));
+
+include "$baseDir/lib/fpdf/fpdf.php";
 
 function makeWBSPdf($im){
 	$mode = 'L';
@@ -110,5 +128,7 @@ if (isset($_REQUEST['pdf'])) {
 } else {
 	$objTree->stream();
 }
+
+ini_restore('memory_limit');
 
 ?>
