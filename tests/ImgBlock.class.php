@@ -600,7 +600,7 @@ class TextBlock extends ImgBlock {
 			$lsize = $this->getTextSize($stripped_line);
 
 			if ($this->getMaxWidth() > 0 && $lsize['w'] > $this->getMaxWidth()) {
-				$line = $this->getFixedText($line);
+				$line = $this->getSimpleWrappedText($line);
 				$stripped_line = strip_tags($line);
 				$lsize = $this->getTextSize($stripped_line);
 			}
@@ -697,7 +697,7 @@ class TextBlock extends ImgBlock {
 
 //	public function setWrappingFunc() {}
 
-	private function getFixedText($text /*$trim_func*/) {
+	private function getSimpleWrappedText($text) {
 		// XXX better tag handling... (short text completely underlined causes problems)
 
 		$tsize = $this->getTextSize(strip_tags($text));
@@ -711,14 +711,12 @@ class TextBlock extends ImgBlock {
 			$tagHack = true;
 		}
 
+		$cut = strlen($text) * $this->getMaxWidth() / $tsize['w'] + 1;
+
 		while ($tsize['w'] >= $this->getMaxWidth() && strlen($text) > 1) {
-			$cut = -1;
-
-			if ($tsize['w'] > $this->getMaxWidth()*2 + 2)
-				$cut = strlen($text)/2;
-
-			$text = substr($text, 0, $cut);
+			$text = trim(substr($text, 0, $cut));
 			$tsize = $this->getTextSize(strip_tags($text)."...");
+			$cut = -1;
 		}
 
 		if ($tagHack == true)
