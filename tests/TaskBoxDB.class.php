@@ -217,13 +217,17 @@ class taskBoxDB {
 	//--
 
 	private function getPeopleEffort($get_actual = true) {
+		//FIXME actual effort!
 
 		$query = 'concat_ws(" ", u.user_last_name, u.user_first_name) as name, '.
 		         'pr.proles_name as role, '.($this->pChild ? 'sum(ut.effort)' : 'ut.effort').' as planned_effort'.
 		         ($get_actual ? ', sum(task_log_hours) as actual_effort' : '');
 
-		$in = $this->pChild ? $this->pChild : $this->pTaskID;
-		$where = 'ut.task_id in ('.$in.')';
+		if ($this->pChild) {
+			$where = 'ut.task_id in ('.$this->pChild.') && (SELECT COUNT(*) FROM tasks AS tt WHERE ut.task_id != tt.task_id && tt.task_parent = ut.task_id) < 1';
+		} else {
+			$where = 'ut.task_id = '.$this->pTaskID;
+		}
 
 		$q = new DBQuery();
 		$q->clear();
