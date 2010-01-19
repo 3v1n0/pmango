@@ -27,9 +27,9 @@ $tbx->setPlannedTimeframe("2009.10.15", "2009.10.29");
 $tbx->setActualTimeframe("2009.10.16", "NA");
 
 /* With Resources */
-$tbx->setResources("22 ph, Dilbert, Requirement Engineering\n".
-                   "14 ph, Wally, Sales Manager\n".
-                   "04 ph, The Boss, Manager");
+$tbx->addResources("Dilbert", "Requirement Engineering", 22);
+$tbx->addResources("Wally", "Sales Manager", 14);
+$tbx->addResources("The Boss", "Manager", "04");
 
 /* With Progress */
 $tbx->setProgress(50);

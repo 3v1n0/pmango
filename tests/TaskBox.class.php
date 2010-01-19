@@ -1,16 +1,5 @@
 <?php
 
-//	 - Show task name
-// - Show planned data: duration, efforts, costs
-// - Show actual data
-// - Show planned timeframe: start/end dates
-// - Show actual timeframe
-// - Show planned/actual resources: effort, person, role
-// - Show alerts
-// - Show progress
-
-// TODO add the alert box! Δ!
-
 include "ImgBlock.class.php";
 
 class TaskBox {
@@ -57,6 +46,7 @@ class TaskBox {
 		$this->pImgBlock = null;
 		$this->pGDImage = null;
 		$this->pChanged = true;
+		$this->pAlertSize = 0;
 	}
 
 	public function setName($n) {
@@ -73,6 +63,15 @@ class TaskBox {
 		$this->pChanged = true;
 	}
 
+	public function setPlannedDataArray($pdata) {
+		if (isset($pdata['duration']) && isset($pdata['effort']) && isset($pdata['cost'])) {
+			$this->pPlannedData = $pdata;
+		} else {
+			$this->pPlannedData = null;
+		}
+		$this->pChanged = true;
+	}
+
 	public function setActualData($duration, $effort, $cost) {
 		$this->pActualData['duration'] = $duration;
 		$this->pActualData['effort'] = $effort;
@@ -80,31 +79,90 @@ class TaskBox {
 		$this->pChanged = true;
 	}
 
+	public function setActualDataArray($adata) {
+		if (isset($adata['duration']) && isset($adata['effort']) && isset($adata['cost'])) {
+			$this->pActualData = $adata;
+		} else {
+			$this->pActualData = null;
+		}
+		$this->pChanged = true;
+	}
+
 	public function setPlannedTimeframe($start, $end) {
-		$this->pPlannedTimeframe['start'] = $start;
-		$this->pPlannedTimeframe['end'] = $end;
+		if ($start === null & $end === null) {
+			$this->pPlannedTimeframe = null;
+		} else {
+			$this->pPlannedTimeframe['start'] = ($start == null || empty($start)) ? "NA" : $start;
+			$this->pPlannedTimeframe['end'] = ($end == null || empty($end)) ? "NA" : $end;
+		}
+		$this->pChanged = true;
+	}
+
+	public function setPlannedTimeframeArray($ptime) {
+		if (isset($ptime['start']) && isset($ptime['end'])) {
+			$this->pPlannedTimeframe = $ptime;
+		} else {
+			$this->pPlannedTimeframe = null;
+		}
 		$this->pChanged = true;
 	}
 
 	public function setActualTimeframe($start, $end) {
-		$this->pActualTimeframe['start'] = ($start == null || empty($start)) ? "NA" : $start;
-		$this->pActualTimeframe['end'] = ($end == null || empty($end)) ? "NA" : $end;
+		if ($start === null & $end === null) {
+			$this->pActualTimeframe = null;
+		} else {
+			$this->pActualTimeframe['start'] = ($start == null || empty($start)) ? "NA" : $start;
+			$this->pActualTimeframe['end'] = ($end == null || empty($end)) ? "NA" : $end;
+		}
 		$this->pChanged = true;
 	}
 
-	public function setResources($res) {
-		$this->pResources = $res;
+	public function setActualTimeframeArray($atime) {
+		if (isset($atime['start']) && isset($atime['end'])) {
+			$this->pActualTimeframe = $atime;
+		} else {
+			$this->pActualTimeframe = null;
+		}
+		$this->pChanged = true;
+	}
+
+	public function addResources($name, $role, $p_effort, $a_effort = null) {
+		if ($name != null && $role != null && $p_effort != null) {
+			$arr['name'] = $name;
+			$arr['role'] = $role;
+			$arr['planned_effort'] = $p_effort;
+			if ($a_effort != null) $arr['actual_effort'] = $a_effort;
+			$this->pResources[] = $arr;
+		} else {
+			$this->pResources = null;
+		}
+		$this->pChanged = true;
+	}
+
+	public function setResourcesArray($res) {
+		if (isset($res[0]['name']) && isset($res[0]['role']) && isset($res[0]['planned_effort'])) {
+			$this->pResources = $res;
+		} else if (isset($res['name']) && isset($res['role']) && isset($res['planned_effort'])) {
+			$this->pResources[] = $res;
+		} else {
+			$this->pResources = null;
+		}
 		$this->pChanged = true;
 	}
 
 	public function setProgress($p) {
-		$this->pProgress = intval($p);
 
-		if ($this->pProgress > 100)
-			$this->pProgress = 100;
+		if ($p === null) {
+			$this->pProgress = $p;
+		} else {
+			$this->pProgress = intval($p);
 
-		if ($this->pProgress < 1)
-			$this->pProgress = 0;
+			if ($this->pProgress > 100)
+				$this->pProgress = 100;
+
+			if ($this->pProgress < 1)
+				$this->pProgress = 0;
+		}
 
 		$this->pChanged = true;
 	}
@@ -244,13 +302,22 @@ class TaskBox {
 
 		/* Resources */
 		if ($this->pResources != null) {
-			//TODO parse the resources array.
+			for ($i = 0, $txt = ''; $i < count($this->pResources); $i++) {
+				$res = $this->pResources[$i];
+
+				if (isset($res['actual_effort']))
+					$txt .= $res['actual_effort']."/";
+
+				$txt .= $res['planned_effort']." ph, ".$res['name'].", ".$res['role'];
+				if ($i < count($this->pResources)-1) $txt .= "\n";
+			}
+
 			$hbox = new HorizontalBoxBlock($this->pBorderSize);
 			$hbox->setMerge(true);
 			$hbox->setSpace(2);
 			$hbox->setHomogeneous(true);
 
-			$hbox->addBlock(new TextBlock($this->pResources, $this->pFont, $this->pFontSize, "left"));
+			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize, "left"));
 
 			$hbox->setMinHeight($this->pMinHeight);
 			$hbox->setWidth($this->pMaxWidth);
@@ -348,7 +415,6 @@ class TaskBox {
 //		}
 
 		/* Alerts */
-
 		if ($this->pShowAlerts === TaskBox::ALERT_WARNING || $this->pShowAlerts === TaskBox::ALERT_ERROR) {
 			$txt = 'Δ'.($this->pShowAlerts == TaskBox::ALERT_ERROR ? '!' : '');
 			$alert = new CircleBlock(new TextBlock($txt, $this->pFont, $this->pFontSize*3/2));
