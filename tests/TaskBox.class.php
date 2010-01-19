@@ -1,6 +1,8 @@
 <?php
 
 include "ImgBlock.class.php";
+include "TaskBoxDB.class.php";
+
 
 class TaskBox {
 	private $pID;
@@ -32,15 +34,17 @@ class TaskBox {
 	const ALERT_ERROR = 2;
 
 	public function TaskBox($id) {
+		$tdb = new TaskBoxDB($id);
+		
 		$this->pID = $id;
-		$this->pName = null;
-		$this->pPlannedData = null;
-		$this->pActualData = null;
-		$this->pPlannedTimeframe = null;
-		$this->pActualTimeframe = null;
-		$this->pResources = null;
-		$this->pShowAlerts = TaskBox::ALERT_NONE;
-		$this->pProgress = null;
+		$this->setName($tdb->getWBS()." ".$tdb->getTaskName());
+		$this->pPlannedData = $tdb->getPlannedData();
+		$this->pActualData = $tdb->getActualData();
+		$this->pPlannedTimeframe = $tdb->getPlannedTimeframe();
+		$this->pActualTimeframe = $tdb->getActualTimeframe();
+		$this->pResources = $tdb->getActualResources();
+		$this->pShowAlerts = $tdb->isAlerted();
+		$this->pProgress = $tdb->getProgress();
 		$this->pShowExpand = false;
 
 		$this->pImgBlock = null;
@@ -478,10 +482,17 @@ class TaskBox {
 		}
 	}
 
-	public function getProgress() {}
+	public function getProgress() {return $this->pProgress;}
 
-	public function getXxxx() {}
-
+	public function getPlannedTimeframe() {return $this->pPlannedTimeframe;}
+	
+	public function getActualTimeframe() {return $this->pActualTimeframe;}
+	
+	public function getPlannedData() {return $this->pPlannedData;}
+	
+	public function getActualData() {return $this->pActualData;}
+	
+	public function getResources() {return $this->pResources;}
 	//public function getSize() {/*return gd_size($pGDImage);*/}
 }
 
