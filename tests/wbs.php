@@ -79,7 +79,7 @@ foreach ($results as $project) {
 	$tbx->setActualDataArray($tbdb->getActualData());
 	$tbx->setPlannedTimeframeArray($tbdb->getPlannedTimeframe());
 	$tbx->setActualTimeframeArray($tbdb->getActualTimeframe());
-	$tbx->setResourcesArray($tbdb->getPlannedResources());
+	$tbx->setResourcesArray($tbdb->getActualResources());
 	$tbx->setAlerts($tbdb->isAlerted()); //FIXME change the position in wbs.
 
 	$items[$id]['tbx'] = $tbx;
