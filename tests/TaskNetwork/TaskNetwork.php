@@ -142,25 +142,27 @@ class TaskNetwork {
 	}
 	//da perfezionare che ricerchi se i figli della tbx hanno dipendenze
 	public function drawConnections($vertical=false){//TODO creare le varie dipendenze upper under tra tbx collassati
-		$index = $this->getIndex();
 		for($i=0;$i<sizeof($this->connections);$i++){
 			$upper =false; $under=false;
 
 			$ID1 = $this->connections[$i]["FROM"];
 			$ID2 = $this->connections[$i]["TO"];
 
-			$tbx1 = $index[$ID1["riga"]][$ID1["colonna"]];
-			$tbx2 = $index[$ID2["riga"]][$ID2["colonna"]];
+			$tbx1 = $this->index[$ID1["riga"]][$ID1["colonna"]];
+			$tbx2 = $this->index[$ID2["riga"]][$ID2["colonna"]];
 
+/*/FIXME errore che non capisco non chiam getid ma se lo stampo lo stampa giusto.. mah
+$tdb = new TaskBoxDB($tbx1->getId());
+		
+		if ($tdb->isLeaf()) {
 
+		} else {
+			$under = true;
+		}
 			//FIXME check internal dependences
-			if(false/*!CTask::isLeafSt($tbx1->getId())*/){
-				$under = true;
-			}
-			if(false/*!CTask::isLeafSt($tbx2->getId())*/){
-				$upper =true;
-			}
-			
+
+*/		
+		
 			if (!$tbx1 || !$tbx2) continue;
 			
 			$this->connect($this,$ID1,$ID2,false,false,$under,$upper,3*$i,$vertical);
@@ -171,18 +173,24 @@ class TaskNetwork {
 	}
 	
 	//FIXME ABBESTIA!
-	public function drawCriticalPath(TaskNetwork $TaskNetwork){//TODO
+	public function drawCriticalPath($vertical=false){//TODO
 		$tbxarray ;// qua ci va la query che mi restituisce i task del critical path
 		
+//algoritmo: si parte dall'inizio del progetto e per ogni task si calcola da durata del critical path come la somma tra:
+//  il tempo di inizio progetto e l'inizio del task
+//	la durata del task
+//  se esistono dipendenze da quel task, si fa un fork per ogni dipendenza
+//	altrimenti sommo la durata che va dalla fine del task alla fine del progetto
+// alla fine la durata maggiore vince, a parità di durata seguire le indicazioni del capitolato.
 		$tbxfrom = $tbxarray[0];
 		for($i=1;$i<sizeof($tbxarray);$i++){
 			$tbxto =  $tbxarray[$i];
-			$coordfrom = $TaskNetwork->getTbxIndex($tbxfrom);
-			$coordto = $TaskNetwork->getTbxIndex($tbxto);
+			$coordfrom = $this->getTbxIndex($tbxfrom);
+			$coordto = $this->getTbxIndex($tbxto);
 			$under;//controlli del caso
 			$upper;//controlli del caso
 			
-			$TaskNetwork = $TaskNetwork->connect($TaskNetwork,$coordfrom,$coordto,true,$under,$upper);
+			$this->connect($TaskNetwork,$coordfrom,$coordto,true,$under,$upper,0,$vertical);
 		}
 	}
 
@@ -377,7 +385,7 @@ class TaskNetwork {
 		$tbx2 = $index[$ID2["riga"]][$ID2["colonna"]];
 
 		//trovo il time gap tra i due tbx
-		if($text and (isset($tbx1) and isset($tbx2))){$value=TaskNetwork::getTimeDiff($tbx1,$tbx2);}
+		if($text and (isset($tbx1) and isset($tbx2))){$value=TaskNetwork::getTimeDiff($tbx1,$tbx2)."d";}
 		
 		//nel caso in cui siano Smp o Epm
 		if(!isset($tbx1)){
@@ -843,7 +851,7 @@ class TaskNetwork {
 		//TODO usare una funzione di php
 		$result= ($start["year"]-$end["year"])*365+($start["month"]-$end["month"])*31 + ($start["day"]-$end["day"]);
 		
-		return $result."d";		
+		return $result;		
 	}
 //------Funzioni di setting------------fine
 
