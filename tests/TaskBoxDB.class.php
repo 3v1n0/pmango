@@ -214,6 +214,12 @@ class taskBoxDB {
 		return $alert;
 	}
 
+	public function isLeaf(){
+		if(isset($this->pChild)){
+			return false;
+		}
+		else {return true;}
+	}
 	//--
 
 	private function getPeopleEffort($get_actual = true) {
