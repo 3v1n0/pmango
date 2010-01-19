@@ -306,7 +306,7 @@ class TaskBox {
 				$res = $this->pResources[$i];
 
 				if (isset($res['actual_effort']))
-					$txt .= $res['actual_effort']."/";
+					$txt .= '<u>'.$res['actual_effort'].'</u>/';
 
 				$txt .= $res['planned_effort']." ph, ".$res['name'].", ".$res['role'];
 				if ($i < count($this->pResources)-1) $txt .= "\n";
