@@ -1,5 +1,7 @@
 <?php
 include ("TaskBox.class.php");
+include "TaskBoxDB.class.php";
+
 
 $baseDir = "..";
 
@@ -105,22 +107,65 @@ class TaskNetwork {
 	}
 
 	public function addDefaultDependancies(){
-			$index = $this->getIndex();
+	$index = $this->getIndex();
+		
+	$query = "SELECT dependencies_task_id FROM task_dependencies t;";
+		$result = db_exec($query);
+	$error = db_error();
+	if ($error) {
+		echo $error;
+		exit;
+	}
+	$results = array();
+	for ($i = 0; $i < db_num_rows($result); $i++) {
+		$results[] = db_fetch_assoc($result);
+	}
 
 			//start to tbx dependancies
 			for($a=0;$a<sizeof($index);$a++){
 					for($b=0;$b<sizeof($index[$a]);$b++){
-						$ID2["riga"] = $a; $ID2["colonna"] = $b;
-										 //TN  			 cr.path dash  under upper dist color
-						TaskNetwork::connect($this,null,$ID2, false, true,false,false,0,false,"gray");
+					$bool =false;
+						foreach($results as $x){
+							if($x[0] ==	$index[$a][$b]->getId()){
+								$bool=true;
+							}
+							
+						}
+						if(!$bool){
+							$ID2["riga"] = $a; $ID2["colonna"] = $b;
+											 //TN  			 cr.path dash  under upper dist color
+							TaskNetwork::connect($this,null,$ID2, false, true,false,false,0,false,"gray");
+						}
 					}
 			}
 	
+	$query = "SELECT dependencies_req_task_id FROM task_dependencies t;";
+	$result = db_exec($query);
+	$error = db_error();
+	if ($error) {
+		echo $error;
+		exit;
+	}
+	$results = array();
+	for ($i = 0; $i < db_num_rows($result); $i++) {
+		$results[] = db_fetch_assoc($result);
+	}
+	
+			//tbx to end dependancies
 			for($a=0;$a<sizeof($index);$a++){
 					for($b=0;$b<sizeof($index[$a]);$b++){
-						$ID1["riga"] = $a; $ID1["colonna"] = $b;
-										 //TN  			 cr.path dash  under upper dist
-						TaskNetwork::connect($this,$ID1,null, false, false,false,false,8,false,"gray");
+						$bool =false;
+						foreach($results as $x){
+							if($x[0] ==	$index[$a][$b]->getId()){
+								$bool=true;
+							}
+							
+						}
+						if(!$bool){
+							$ID1["riga"] = $a; $ID1["colonna"] = $b;
+											 //TN  			 cr.path dash  under upper dist
+							TaskNetwork::connect($this,$ID1,null, false, false,false,false,8,false,"gray");
+						}
 					}
 
 			}
@@ -172,15 +217,127 @@ $tdb = new TaskBoxDB($tbx1->getId());
 		}
 	}
 	
+	private function doQuery($query){
+		$result = db_exec($query);
+		$error = db_error();
+		if ($error) {
+			echo $error;
+			exit;
+		}
+		$results = array();
+		for ($i = 0; $i < db_num_rows($result); $i++) {
+			$results[] = db_fetch_assoc($result);
+		}
+	
+		return $results;
+	}
+	
+	
+	//funzione ricorsiva per il calcolo delle dipendenze interne
+	private function computeDependence($tbxarray){	
+			for($i=0;$i<sizeof($tbxarray);$i++){
+				$query = "SELECT dependencies_task_id FROM task_dependencies td WHERE td.dependencies_req_task_id =".$tbxarray[$i]["id"];
+				$results = TaskNetwork::doQuery($query);// restituisce i task dipendenti da tbx
+				if(isset($results[0])){
+					foreach($results as $dep){
+						$liv = sizeof($arraydep);
+						$arraydep[$liv]["id"] = $dep["dependencies_task_id"];
+						
+						$tdb = new TaskBoxDB($dep["dependencies_task_id"]);
+						$pdata = $tdb->getPlannedData();
+						$arraydep[$liv]["duration"] = intval($pdata["duration"]);
+						$arraydep[$liv]["effort"] = intval($pdata["effort"]);
+						$arraydep[$liv]["cost"] = intval($pdata["cost"]);
+						
+						$tbxarray[$i]["dependencies"] = TaskNetwork::computeDependence($arraydep);
+						unset($arraydep);
+					}			
+				}
+			}
+			return $tbxarray;
+	}
+	
 	//FIXME ABBESTIA!
-	public function drawCriticalPath($vertical=false){//TODO
-		$tbxarray ;// qua ci va la query che mi restituisce i task del critical path
+	public function drawCriticalPath($vertical=false){
+	$index = $this->getIndex();
+	$SpD = "15.10.2009"; //Start Project date, TODO ottenerla tramite pmango
+
+	//pezzo per ottenere le tbx da quali partire
+	$query = "SELECT dependencies_task_id FROM task_dependencies t;";
+	$results = TaskNetwork::doQuery($query);
+	
+	
+	$tbxarray;
+	for($a=0;$a<sizeof($index);$a++){
+			for($b=0;$b<sizeof($index[$a]);$b++){
+				$bool =false;
+				foreach($results as $x){
+					if($x[0] ==	$index[$a][$b]->getId()){
+						$bool=true;
+					}
+					
+				}
+				if(!$bool){
+					$liv = sizeof($tbxarray);
+					$tbxarray[$liv]["id"] = $index[$a][$b]->getId();
+					$pdata = $index[$a][$b]->getPlannedData();
+					$tbxarray[$liv]["duration"] = intval($pdata["duration"]);
+					$tbxarray[$liv]["effort"] = intval($pdata["effort"]);
+					$tbxarray[$liv]["cost"] = intval($pdata["cost"]);
+				}
+			}
+
+	}//ho tutte le tbx su una sola riga
+	
+	
+	$out;$cont=0;//array che conterrà i cammini possibili di tbx
+	$stack; $ind=0;// pila per simulare la ricorsione
+	
+	print_r($tbxarray);
+	
+
+	$tbxarray = TaskNetwork::computeDependence($tbxarray);
+
+	print_r($tbxarray);
+
+
+/*
+		if($dep != ""){
+				$deparray = explode(",",$dep);
+				if(isset($deparray[0])){	
+					foreach($deparray as $h){
+						$stack[$ind] = $h;$ind++;
+					}
+				}
+		}
+		
+		$stack[0] = $id;$ind++;
+	/*	
+		while($ind>0){
+			$tbx = $stack[$ind];$ind--;
+			$result[$cont][sizeof($result[$cont])]= $tbx;
+			
+			$dep = $t->staticGetDependencies($tbx);// restituisce i task dipendenti da tbx separati da virgole
+			
+		}
+		$cont++;
+		
+	}//ora ottengo per ogni riga di result una raccolta di cammini partendo da ciascun tbx 
+	
+	print_r($result);
+		
+	foreach($result as $tbxstart){
+		
+	}
+	
+			$day=TaskNetwork::getTimeDiff($SpD,$tbx);
+		$tdur=$tbx->getPlannedData();
+		$day += intval($tdur["duration"]);
 		
 //algoritmo: si parte dall'inizio del progetto e per ogni task si calcola da durata del critical path come la somma tra:
 //  il tempo di inizio progetto e l'inizio del task
 //	la durata del task
 //  se esistono dipendenze da quel task, si fa un fork per ogni dipendenza
-//	altrimenti sommo la durata che va dalla fine del task alla fine del progetto
 // alla fine la durata maggiore vince, a parità di durata seguire le indicazioni del capitolato.
 		$tbxfrom = $tbxarray[0];
 		for($i=1;$i<sizeof($tbxarray);$i++){
@@ -191,7 +348,7 @@ $tdb = new TaskBoxDB($tbx1->getId());
 			$upper;//controlli del caso
 			
 			$this->connect($TaskNetwork,$coordfrom,$coordto,true,$under,$upper,0,$vertical);
-		}
+		*/
 	}
 
 	
@@ -651,14 +808,19 @@ $tdb = new TaskBoxDB($tbx1->getId());
 			$outx = max($imgTNx,$imgTN2x);
 			$outy = ($imgTNy+$imgTN2y);
 
-
+			
 			$out = ImageCreate($outx , $outy);
 			$bianco = ImageColorAllocate($out,255,255,255);
 
+
+			$tbxl= $TN2->index[0][0]->getWidth();
+			$tbxlv =intval(substr($TN2->index[0][0]->getName(),0,1))-1;
+			$gap=$tbxl + 100;
+			
 			//copio la prima immagine nell'output centrata
 			imagecopy($out,$imgTN,(!$vertical)?(($outx/2)-($imgTNx/2)):0,0,0,0,$imgTNx,$imgTNy);
 			//e poi la seconda centrata
-			imagecopy($out,$imgTN2,(!$vertical)?(($outx/2)-($imgTN2x/2)):0,$outy-$imgTN2y,0,0,$imgTN2x,$imgTN2y);
+			imagecopy($out,$imgTN2,(!$vertical)?(($outx/2)-($imgTN2x/2)):($tbxlv*$gap),$outy-$imgTN2y,0,0,$imgTN2x,$imgTN2y);
 
 
 			imagedestroy($imgTN);
@@ -684,8 +846,8 @@ $tdb = new TaskBoxDB($tbx1->getId());
 			}else{
 				for($cont=0;$cont<sizeof($indexTN2);$cont++){
 						$t = $indexTN2[$cont];
-						$t->setLeft($t->getLeftX(),$t->getLeftY()+$outy-$imgTN2y);
-						$t->setRight($t->getRightX(),$t->getRightY()+$outy-$imgTN2y);
+						$t->setLeft($t->getLeftX()+($tbxlv*$gap),$t->getLeftY()+$outy-$imgTN2y);
+						$t->setRight($t->getRightX()+($tbxlv*$gap),$t->getRightY()+$outy-$imgTN2y);
 				}
 			}
 
@@ -840,18 +1002,17 @@ $tdb = new TaskBoxDB($tbx1->getId());
 	}
 	
 	private function getTimeDiff($tbx1,$tbx2){
-		$end1= $tbx1->getPlannedTimeframe();
-		$end["year"] = substr($end1["end"],0,4);
-		$end["month"] = substr($end1["end"],5,2);
-		$end["day"] = substr($end1["end"],8,2);
+		if(is_string($tbx1)){
+			$end = strtotime(str_replace(".","-",$tbx1));
+		}else{
+			$end1= $tbx1->getPlannedTimeframe();
+			$end = strtotime(str_replace(".","-",$end1["end"]));
+		}
 		$start2= $tbx2->getPlannedTimeframe();
-		$start["year"] = substr($start2["start"],0,4);
-		$start["month"] = substr($start2["start"],5,2);
-		$start["day"] = substr($start2["start"],8,2);
-		//TODO usare una funzione di php
-		$result= ($start["year"]-$end["year"])*365+($start["month"]-$end["month"])*31 + ($start["day"]-$end["day"]);
+		$start = strtotime(str_replace(".","-",$start2["start"]));
 		
-		return $result;		
+		$result= $start-$end;
+		return $result/24/60/60;//in giorni		
 	}
 //------Funzioni di setting------------fine
 
@@ -868,11 +1029,12 @@ $id = "SELECT task_id FROM tasks t WHERE task_parent=task_id and task_project=".
 for($int=0;$int<1;$int++){
 	$id = "SELECT task_id FROM tasks t WHERE task_parent in (".$id.") and task_id != task_parent and task_project=".$project_id." ORDER BY task_id";
 }
-$query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t WHERE task_id in(".$id.") and task_project=".$project_id." ORDER BY task_id";
+$query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t WHERE task_id in(".$id.") and task_project=".$project_id." ORDER BY task_wbs_index";
 /*
 $query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t ".
          "WHERE t.task_project = ".$project_id." ORDER BY task_id";
 */
+
 $result = db_exec($query);
 $error = db_error();
 if ($error) {
@@ -898,19 +1060,17 @@ for($j=0;$j<sizeof($res);$j++){
 	for($k=0;$k<sizeof($res[$j]);$k++){	
 		$wbslv = CTask::getWBS($res[$j][$k]['task_id']);
 		
-		
+				$DB = new taskBoxDB($res[$j][$k]['task_id']);
 				$tbx = new TNNode($res[$j][$k]['task_id']);
 				$tbx->setFontPath("../fonts/Droid");
-				//$tbx->setName($wbslv." ".$res[$j][$k]['task_name']);
-				//$tbx->setPlannedData("14 d", "40 ph", "1350 €");
-				//$tbx->setActualData("4 d", "6 ph", "230 €");
-				//$tbx->setPlannedTimeframe(substr($res[$j][$k]['task_start_date'], 0, 10), substr($res[$j][$k]['task_finish_date'], 0, 10));
-				//$tbx->setActualTimeframe(substr($tstart['task_log_start_date'], 0, 10),"");
-				//$tbx->setResources("22 ph, Dilbert, Requirement Engineering\n".
-				   //                "14 ph, Wally, Sales Manager\n".
-				  //                 "04 ph, The Boss, Manager");
-				//$tbx->setProgress(CTask::getPr($res[$j][$k]['task_id']));
-				//$tbx->setAlerts(rand(0,2));
+				$tbx->setName($wbslv." ".$DB->getTaskName());
+				$tbx->setPlannedDataArray($DB->getPlannedData());
+				$tbx->setActualDataArray($DB->getActualData());
+				$tbx->setPlannedTimeframeArray($DB->getPlannedTimeframe());
+				$tbx->setActualTimeframeArray($DB->getActualTimeframe());
+				$tbx->setResourcesArray($DB->getActualResources());
+				$tbx->setProgress($DB->getProgress());
+				$tbx->setAlerts($DB->isAlerted());
 	
 				if($vertical){$TN->addTbx($tbx,$k,$j);}else{$TN->addTbx($tbx,$j,$k);}
 				
@@ -965,7 +1125,7 @@ for($i=0;$i<5;$i++){
 
 $TN->drawConnections($vertical);
 
-
+$TN->drawCriticalPath();
 
 $TN->printTN();
 ?>
