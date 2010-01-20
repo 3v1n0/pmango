@@ -543,7 +543,7 @@ class TextBlock extends ImgBlock {
 			} else if ($this->pAlign == "right") {
 				$padding = $this->pTextWidth - $lsize['w'] - $hspace/2 + 1;
 			} else /*($this->pAlign == "left") */ {
-				$padding = $hspace/2 - 1;
+				$padding = $hspace/2;
 			}
 
 			$fg = $this->getFgColor();
