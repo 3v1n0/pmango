@@ -435,6 +435,10 @@ class TaskBox {
 	public function getId() {
 		return $this->pID;
 	}
+	
+	public function getName(){
+		return $this->pName;
+	}
 
 	public function getWidth() {
 		$this->buildTaskBox();
