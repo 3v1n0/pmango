@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+	<title>jQuery Resizable Iviewer</title>
+	<link type="text/css" href="jquery.ui.resizable.css" rel="stylesheet" />
+	<link type="text/css" href="jquery.ui.theme.css" rel="stylesheet" />
+	<link type="text/css" href="jquery.iviewer.css" rel="stylesheet" />
+	<script type="text/javascript" src="jquery.min.js"></script>
+	<script type="text/javascript" src="jquery.ui.core.min.js"></script>
+	<script type="text/javascript" src="jquery.ui.resizable.min.js"></script>
+	<script type="text/javascript" src="jquery.mousewheel.min.js" ></script>
+	<script type="text/javascript" src="jquery.iviewer.js" ></script>
+	<style type="text/css">
+		.viewer {
+             width: 600px;
+             height: 400px;
+             border: 1px solid black;
+             position: relative;
+         }
+	</style>
+	<script type="text/javascript">
+        var iviewer;
+
+        $(function(){
+        	$("#viewer").iviewer({
+                   src: "img/loader.gif",
+                   zoom: 200,
+                   update_on_resize: true,
+                   ui_disabled: true,
+                   initCallback: function() {
+                       iviewer = this;
+                   },
+              });
+        });
+
+        $(function () {
+			var img = new Image();
+
+			$(img).load(function () {
+				$(img).hide();
+				iviewer.settings.ui_disabled = false;
+				iviewer.settings.zoom = "fit";
+				iviewer.img_object.display_width = 0;
+				iviewer.img_object.display_height = 0;
+				iviewer.img_object.orig_width = img.width;
+				iviewer.img_object.orig_height = img.height;
+				iviewer.createui();
+				iviewer.loadImage(img.src);
+				$(img).fadeIn();
+			})
+
+	 	    .error(function () {
+		 	    iviewer.loadImage('img/error.png');
+	 	    })
+
+	 	    .attr('src', 'http://localhost/pmango/tests/wbs.php');
+	 	});
+
+        $(function() {
+			$("#viewer").resizable({
+					minHeight: 300,
+					minWidth: 400,
+
+					stop: function(event, ui) {
+						iviewer.update_container_info();
+						if (iviewer.settings.zoom == "fit")
+							iviewer.fit();
+						else
+							iviewer.set_zoom(iviewer.current_zoom);
+					}
+			});
+		});
+	</script>
+</head>
+	<body>
+		<div>
+			<div id="viewer" class="viewer"></div>
+		</div>
+	</body>
+</html>
