@@ -1,17 +1,19 @@
 .iviewer_common {
-    position:absolute;
-    bottom:10px;
+    position: absolute;
+    top: 10px;
     border: 1px  solid #000;
     height: 28px;
     z-index: 5000;
 }
 
 .iviewer_cursor {
-    cursor: -moz-grab;
+    cursor: pointer;
+    /*cursor: url(img/openhand_8_8.cur);*/
 }
 
 .iviewer_drag_cursor {
-    cursor: -moz-grabbing;
+    cursor: move;
+    /*cursor: url(img/closedhand_8_8.cur);*/
 }
 
 .iviewer_button {
@@ -45,6 +47,7 @@
     left: 160px;
     font: 1em/28px Sans;
     color: #000;
+    font-weight: bold;
     background-color: #fff;
     text-align: center;
     width: 60px;
