@@ -417,7 +417,8 @@ class TaskBox {
 		/* Alerts */
 		if ($this->pShowAlerts === TaskBox::ALERT_WARNING || $this->pShowAlerts === TaskBox::ALERT_ERROR) {
 			$txt = 'Δ'.($this->pShowAlerts == TaskBox::ALERT_ERROR ? '!' : '');
-			$alert = new CircleBlock(new TextBlock($txt, $this->pFont, $this->pFontSize*3/2));
+			$alert_size = $this->isMinimal() ? $this->pFontSize*1.1 : $this->pFontSize*1.5;
+			$alert = new CircleBlock(new TextBlock($txt, $this->pFont, $alert_size));
 			$alert->setPadding(1);
 			$alert->setBorder($this->pBorderSize*2);
 			$this->pAlertSize = $alert->getHeight();
