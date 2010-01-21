@@ -12,7 +12,8 @@ function outTest($tbx, $id) {
 	$tmp = tempnam("../../../TMP", "test");
 	imagepng($tbx->getImage(), $tmp);
 	echo "<h1>Prova $id</h1>\n".
-     "<img src='/TMP/".basename($tmp)."' /><br />\n";
+     "<img src='/TMP/".basename($tmp)."' /><br />".
+	 $tbx->getWidth()." x ".$tbx->getHeight()."<br />\n";
 }
 
 /* BASE */
@@ -40,8 +41,8 @@ $tbx->addResources("Marco Trevisa","Test enginee", "60");
 $tbx->addResources("Matteo Pratesi","Test enginee", "20");
 outTest($tbx, "1.1.1.5");
 
-$tbx->setResourcesArray(null);
-$tbx->setPlannedTimeframe(null,null);
+$tbx = new TaskBox("1.3.");
+$tbx->setFontPath($font_path);
 $tbx->setAlerts(TaskBox::ALERT_ERROR);
 $tbx->setActualTimeframe("10/08/2009","11/11/2009");
 $tbx->setProgress(50);
@@ -68,6 +69,11 @@ outTest($tbx, "1.1.1.7.1");
 $tbx->setAlerts(null);
 $tbx->setAlerts(TaskBox::ALERT_WARNING);
 outTest($tbx, "1.1.1.7.2");
+
+$tbx = new TaskBox("1.1.");
+$tbx->setFontPath($font_path);
+$tbx->showExpand(true);
+outTest($tbx, "1.1.1.8");
 ?>
 
 </body>
