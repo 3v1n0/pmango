@@ -5,6 +5,9 @@ class taskBoxDB {
 	private $pCTask;
 	private $pChild;
 
+	private $pName;
+	private $pWBS;
+	private $pProgress;
 	private $pPlannedData;
 	private $pActualData;
 	private $pPlannedTimeframe;
@@ -18,7 +21,7 @@ class taskBoxDB {
 	const ALERT_WARNING = 1;
 	const ALERT_ERROR = 2;
 
-	public function TaskBoxDB($id) {
+	public function TaskBoxDB($id) {$id = 95;
 		$this->pTaskID = $id;
 		$this->pCTask = new CTask($id);
 
@@ -26,7 +29,7 @@ class taskBoxDB {
 			$this->pChild = $this->pCTask->getChild(null, $this->pCTask->getProjectID());
 		} else {
 			$this->pChild = null;
-		}
+		}echo $this->pChild;exit;
 
 		$this->pUseCache = true;
 	}
@@ -36,15 +39,24 @@ class taskBoxDB {
 	}
 
 	public function getWBS() {
-		return $this->pCTask->getWBS();
+		if (!$this->pWBS || !$this->pUseCache)
+			$this->pWBS = $this->pCTask->getWBS();
+
+		return $this->pWBS;
 	}
 
 	public function getTaskName() {
-		return $this->pCTask->getName();
+		if (!$this->pName || !$this->pUseCache)
+			$this->pName = $this->pCTask->getName();
+
+		return $this->pName;
 	}
 
 	public function getProgress() {
-		return intval($this->pCTask->getProgress());
+		if (!$this->pProgress || !$this->pUseCache)
+			$this->pProgress = intval($this->pCTask->getProgress());
+
+		return $this->pProgress;
 	}
 
 	public function getPlannedData() {
@@ -215,18 +227,15 @@ class taskBoxDB {
 	}
 
 	public function isLeaf(){
-		if(isset($this->pChild)){
-			return false;
-		}
-		else {return true;}
+		return $this->pChild ? false : true;
 	}
+
 	//--
 
 	private function getPeopleEffort($get_actual = true) {
-		//FIXME actual effort!
 
 		$query = 'concat_ws(" ", u.user_last_name, u.user_first_name) as name, '.
-		         'pr.proles_name as role, '.($this->pChild ? 'sum(ut.effort)' : 'ut.effort').' as planned_effort'.
+		         'pr.proles_name as role, '.($this->pChild ? 'sum(distinct ut.effort)' : 'ut.effort').' as planned_effort'.
 		         ($get_actual ? ', sum(task_log_hours) as actual_effort' : '');
 
 		if ($this->pChild) {
@@ -252,8 +261,8 @@ class taskBoxDB {
 
 		$resources = $q->loadList();
 
-		$max_p = -1;
-		$max_a = -1;
+		$max_p = 1;
+		$max_a = 1;
 
 		foreach ($resources as $res) {
 			$max_p = max(strlen($res['planned_effort']), $max_p);
@@ -267,7 +276,7 @@ class taskBoxDB {
 				$res['actual_effort'] = str_pad($res['actual_effort'], $max_a, "0", STR_PAD_LEFT);
 		}
 
-		return !empty($resources) ? $resources : null;
+		return empty($resources) ? null : $resources;
 	}
 
 	private function getTimediff($start, $end) {
