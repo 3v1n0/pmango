@@ -21,7 +21,7 @@ class taskBoxDB {
 	const ALERT_WARNING = 1;
 	const ALERT_ERROR = 2;
 
-	public function TaskBoxDB($id) {$id = 95;
+	public function TaskBoxDB($id) {
 		$this->pTaskID = $id;
 		$this->pCTask = new CTask($id);
 
@@ -29,7 +29,7 @@ class taskBoxDB {
 			$this->pChild = $this->pCTask->getChild(null, $this->pCTask->getProjectID());
 		} else {
 			$this->pChild = null;
-		}echo $this->pChild;exit;
+		}
 
 		$this->pUseCache = true;
 	}
