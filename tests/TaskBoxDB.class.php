@@ -160,9 +160,6 @@ class taskBoxDB {
 
 	private function computePlannedResources() {
 
-		//Planned people:
-		// select ut.user_id as uid, ut.proles_id as rid, ut.effort FROM `user_tasks` as ut WHERE ut.proles_id > 0 and ut.task_id = 135
-
 		$q = new DBQuery();
 		$q->clear();
 		$q->addQuery('ut.user_id as uid, ut.proles_id as rid, '.
@@ -262,8 +259,6 @@ class taskBoxDB {
 			if ($found == false)
 				$pres['actual_effort'] = 0;
 		}
-
-		//CHeck me (in Oraganizzazione)
 
 		if ($max_digits > 1)
 			foreach ($resources as &$res)
