@@ -153,16 +153,123 @@ class taskBoxDB {
 
 	public function getPlannedResources() {
 		if (!$this->pPlannedResources || !$this->pUseCache)
-			$this->pPlannedResources = $this->getPeopleEffort(false);
+			$this->computePlannedResources();
 
 		return $this->pPlannedResources;
 	}
 
+	private function computePlannedResources() {
+
+		//Planned people:
+		// select ut.user_id as uid, ut.proles_id as rid, ut.effort FROM `user_tasks` as ut WHERE ut.proles_id > 0 and ut.task_id = 135
+
+		$q = new DBQuery();
+		$q->clear();
+		$q->addQuery('ut.user_id as uid, ut.proles_id as rid, '.
+		             'CONCAT_WS(" ", u.user_last_name, u.user_first_name) as name, '.
+		             'pr.proles_name as role, ut.effort as planned_effort');
+		$q->addTable('user_tasks','ut');
+		$q->addJoin('users', 'u', 'u.user_id = ut.user_id');
+		$q->addJoin('project_roles', 'pr', 'pr.proles_id = ut.proles_id');
+		$q->addWhere('ut.proles_id > 0 and ut.task_id = '.$this->pTaskID);
+
+		$resources = $q->loadList();
+
+		$max_digits = 1;
+		foreach ($resources as &$res) {
+			$max_digits = max(strlen($res['planned_effort']), $max_digits);
+		}
+
+		if ($max_digits > 1)
+			foreach ($resources as &$res)
+				$res['planned_effort'] = str_pad($res['planned_effort'], $max_digits, "0", STR_PAD_LEFT);
+
+		$this->pPlannedResources = $resources;
+	}
+
 	public function getActualResources() {
 		if (!$this->pActualResources || !$this->pUseCache)
-			$this->pActualResources = $this->getPeopleEffort(true);
+			$this->computeActualResources();
 
 		return $this->pActualResources;
+	}
+
+	private function computeActualResources() {
+
+		$q = new DBQuery();
+
+		if (!$this->pChild) {
+			if (!$this->pPlannedResources || !$this->pUseCache)
+				$this->computePlannedResources();
+
+			$resources = $this->pPlannedResources;
+		} else {
+			$q->clear();
+			$q->addQuery('ut.user_id as uid, ut.proles_id as rid, '.
+			             'CONCAT_WS(" ", u.user_last_name, u.user_first_name) as name, '.
+		                 'pr.proles_name as role, sum(ut.effort) as planned_effort');
+			$q->addTable('user_tasks','ut');
+			$q->addJoin('users', 'u', 'u.user_id = ut.user_id');
+			$q->addJoin('project_roles', 'pr', 'pr.proles_id = ut.proles_id');
+			$q->addWhere('ut.proles_id > 0 and '.
+			             '(SELECT COUNT(*) FROM tasks AS tt WHERE ut.task_id != tt.task_id '.
+			                                      '&& tt.task_parent = ut.task_id) < 1 and '.
+			             'ut.task_id in ('.$this->pChild.')');
+			$q->addGroup('ut.user_id, ut.proles_id');
+
+			$resources = $q->loadList();
+
+			$max_digits = 1;
+			foreach ($resources as &$res) {
+				$max_digits = max(strlen($res['planned_effort']), $max_digits);
+				$this->pTaskPeople[$res['rid']]['role'] = $res['role'];
+				$this->pTaskPeople[$res['rid']][$res['uid']] = $res['name'];
+			}
+
+			if ($max_digits > 1)
+				foreach ($resources as &$res)
+					$res['planned_effort'] = str_pad($res['planned_effort'], $max_digits, "0", STR_PAD_LEFT);
+
+		}
+
+		$q->clear();
+		$q->addQuery('task_log_creator as uid, task_log_proles_id as rid, '.
+		             'sum(task_log_hours) as actual_effort');
+		$q->addTable('task_log','tl');
+		$q->addWhere('task_log_proles_id > 0 and '.
+		             ($this->pChild ? '(SELECT COUNT(*) FROM tasks AS tt WHERE '.
+		                                     'tl.task_log_creator != tt.task_id'.
+			                    '&& tt.task_parent = tl.task_log_task) < 1 and ' : '').
+			         'task_log_task '.($this->pChild ? 'in ('.$this->pChild.')' : '= '.$this->pTaskID));
+		$q->addGroup('task_log_creator, task_log_proles_id');
+
+		$a_resources = $q->loadList();
+
+		$max_digits = 1;
+		foreach ($resources as &$pres) {
+			$found = false;
+
+			foreach($a_resources as $ares) {
+				if ($ares['uid'] == $pres['uid'] && $ares['rid'] == $pres['rid']) {
+					$pres['actual_effort'] = $ares['actual_effort'];
+					$found = true;
+					break;
+				}
+			}
+
+			$max_digits = max(strlen($pres['actual_effort']), $max_digits);
+
+			if ($found == false)
+				$pres['actual_effort'] = 0;
+		}
+
+		//CHeck me (in Oraganizzazione)
+
+		if ($max_digits > 1)
+			foreach ($resources as &$res)
+				$res['actual_effort'] = str_pad($res['actual_effort'], $max_digits, "0", STR_PAD_LEFT);
+
+		$this->pActualResources = $resources;
 	}
 
 	public function isAlerted() {
