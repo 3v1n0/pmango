@@ -24,13 +24,13 @@
   *
  */
 
- 
- 
+
+
 class Node
 {
 	public $id = 0;
-	public $h = 0; 
-	public $w = 0; 
+	public $h = 0;
+	public $w = 0;
 	public $x = 0;
 	public $y = 0;
 	public $leftNeighbor = 0;
@@ -38,11 +38,11 @@ class Node
 	public $childs = array();
 	public $prelim = 0;
 	public $modifier = 0;
-	public $nodeParent = 0; 
+	public $nodeParent = 0;
 	public $message;
 	public $links = array();
 	public $image;
-	
+
 	public function __construct($id, $pid, $w, $h, $message = '', $image = null)
 	{
 		$this->id = $id;
@@ -52,12 +52,12 @@ class Node
 		$this->message = $message;
 		$this->image = $image;
 	}
-	
+
 	public function numChilds()
 	{
 		return count($this->childs);
 	}
-	
+
 	public function getLeftSibling()
 	{
 		if($this->leftNeighbor && $this->leftNeighbor->nodeParent === $this->nodeParent)
@@ -66,10 +66,10 @@ class Node
 		}
 		else
 		{
-			return false;	
+			return false;
 		}
 	}
-	
+
 	public function getRightSibling()
 	{
 		if($this->rightNeighbor && $this->rightNeighbor->nodeParent === $this->nodeParent)
@@ -81,7 +81,7 @@ class Node
 			return false;
 		}
 	}
-	
+
 	public function getChildAt($i)
 	{
 		if(isset($this->childs[$i]))
@@ -93,20 +93,20 @@ class Node
 			return false;
 		}
 	}
-	
+
 	public function getChildrenCenter()
 	{
 		$node = $this->getChildAt(0);
 		$node1 = $this->getChildAt(count($this->childs)-1);
-		return $node->prelim + (($node1->prelim - $node->prelim) + $node1->w) / 2;	
+		return $node->prelim + (($node1->prelim - $node->prelim) + $node1->w) / 2;
 	}
-	
+
 	public function getLinks()
 	{
 		$xa = 0; $ya = 0; $xb = 0; $yb = 0; $xc = 0; $yc = 0; $xd = 0; $yd = 0;
 		$xa = $this->x + ($this->w / 2);
 		$ya = $this->y + $this->h;
-	
+
 		foreach($this->childs as $child)
 		{
 			$xd = $xc = $child->x + ($child->w / 2);
@@ -123,12 +123,12 @@ class Node
 			$this->links[$child->id]['yd'] = $yd;
 		}
 	}
-	
+
 	public function __toString()
 	{
 		return (string)$this->id;
 	}
-	
+
 }
 
 ?>
