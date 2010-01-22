@@ -334,53 +334,6 @@ class taskBoxDB {
 
 	//--
 
-	private function getPeopleEffort($get_actual = true) {
-
-		$query = 'concat_ws(" ", u.user_last_name, u.user_first_name) as name, '.
-		         'pr.proles_name as role, '.($this->pChild ? 'sum(distinct ut.effort)' : 'ut.effort').' as planned_effort'.
-		         ($get_actual ? ', sum(task_log_hours) as actual_effort' : '');
-
-		if ($this->pChild) {
-			$where = 'ut.task_id in ('.$this->pChild.') && (SELECT COUNT(*) FROM tasks AS tt WHERE ut.task_id != tt.task_id && tt.task_parent = ut.task_id) < 1';
-		} else {
-			$where = 'ut.task_id = '.$this->pTaskID;
-		}
-
-		$q = new DBQuery();
-		$q->clear();
-		$q->addTable('user_tasks','ut');
-		$q->addQuery($query);
-		$q->addJoin('users', 'u', 'u.user_id = ut.user_id');
-		$q->addJoin('project_roles', 'pr', 'pr.proles_id = ut.proles_id');
-		$q->addWhere($where);
-		$q->addGroup("ut.user_id, ut.proles_id");
-
-		if ($get_actual) {
-			$q->addJoin('task_log', 'tl', 'tl.task_log_task = ut.task_id and '.
-			                              'tl.task_log_proles_id = ut.proles_id and '.
-			                              'tl.task_log_creator = ut.user_id');
-		}
-
-		$resources = $q->loadList();
-
-		$max_p = 1;
-		$max_a = 1;
-
-		foreach ($resources as $res) {
-			$max_p = max(strlen($res['planned_effort']), $max_p);
-			$max_a = max(strlen($res['actual_effort']), $max_a);
-		}
-
-		foreach ($resources as &$res) {
-			$res['planned_effort'] = str_pad($res['planned_effort'], $max_p, "0", STR_PAD_LEFT);
-
-			if ($get_actual)
-				$res['actual_effort'] = str_pad($res['actual_effort'], $max_a, "0", STR_PAD_LEFT);
-		}
-
-		return empty($resources) ? null : $resources;
-	}
-
 	private function getTimediff($start, $end) {
 		if (is_null($start))
 			$start = time();
