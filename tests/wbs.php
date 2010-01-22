@@ -42,8 +42,8 @@ include "$baseDir/modules/tasks/tasks.class.php"; */
 ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
 
 $project_id = 5;
-$query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t ".
-         "WHERE t.task_project = ".$project_id." ORDER BY task_id";
+$query = "SELECT task_id, task_parent FROM tasks t ".
+         "WHERE t.task_project = ".$project_id." ORDER BY task_id, task_parent, task_wbs_index";
 
 $result = db_exec($query);
 $error = db_error();
@@ -59,6 +59,8 @@ for ($i = 0; $i < db_num_rows($result); $i++) {
 $objTree = new GDRenderer(30, 10, 30, 50, 20);
 //$objTree->add(1,0,'/', 10);
 
+//print_r($results);exit;
+
 $id = 2;
 $translate = array();
 foreach ($results as &$project) {
@@ -66,20 +68,20 @@ foreach ($results as &$project) {
 	$items[$id]['oldid'] = $project['task_id'];
 	$items[$id]['id'] = $id;
 	$items[$id]['name'] = $project['task_name'];
-	$items[$id]['parent'] = isset($translate[$project['task_parent']]) ? $translate[$project['task_parent']] : 1;
+	$items[$id]['parent'] = $translate[$project['task_parent']] ? $translate[$project['task_parent']] : 1;
 	if ($items[$id]['parent'] == $id)
 		$items[$id]['parent'] = 1;
 
 	$tbdb = new taskBoxDB($project['task_id']);
 
 	$tbx = new TaskBox($tbdb->getWBS());
-	$tbx->setName($tbdb->getTaskName());
-	$tbx->setProgress($tbdb->getProgress());
-	$tbx->setPlannedDataArray($tbdb->getPlannedData());
-	$tbx->setActualDataArray($tbdb->getActualData());
-	$tbx->setPlannedTimeframeArray($tbdb->getPlannedTimeframe());
-	$tbx->setActualTimeframeArray($tbdb->getActualTimeframe());
-	$tbx->setResourcesArray($tbdb->getActualResources());
+//	$tbx->setName($tbdb->getTaskName());
+//	$tbx->setProgress($tbdb->getProgress());
+//	$tbx->setPlannedDataArray($tbdb->getPlannedData());
+//	$tbx->setActualDataArray($tbdb->getActualData());
+//	$tbx->setPlannedTimeframeArray($tbdb->getPlannedTimeframe());
+//	$tbx->setActualTimeframeArray($tbdb->getActualTimeframe());
+//	$tbx->setResourcesArray($tbdb->getActualResources());
 	$tbx->setAlerts($tbdb->isAlerted()); //FIXME change the position in wbs.
 
 	$items[$id]['tbx'] = $tbx;
@@ -95,7 +97,8 @@ $tbx = new TaskBox(null);
 $tbx->setName("G3-sw4us");
 $objTree->add(1, 0, "", $tbx->getWidth(), $tbx->getHeight(), $tbx->getImage());
 foreach ($items as $item) {
-	$objTree->add($item['id'], $item['parent'], '', $item['tbx']->getWidth(), $item['tbx']->getHeight(), $item['tbx']->getImage());
+	$objTree->add($item['id'], $item['parent'], '', $item['tbx']->getWidth(), $item['tbx']->getHeight(),
+	              $item['tbx']->getImage(), 1-intval($item['tbx']->getAlertSize()/2), intval($item['tbx']->getAlertSize()/2));
 }
 
 $objTree->setBGColor(array(255, 255, 255));
