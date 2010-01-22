@@ -150,14 +150,16 @@ class GDRenderer extends Tree
 			throw new Exception('GD not loaded!');
 		}
 		parent::render();
-		$this->img = imagecreate($this->getWidth(), $this->getHeight());
-		imagecolorallocate($this->img, $this->bgColor[0], $this->bgColor[1], $this->bgColor[2]);
-		$nodeBG = imagecolorallocate($this->img, $this->nodeColor[0], $this->nodeColor[1], $this->nodeColor[2]);
-		$linkCol = imagecolorallocate($this->img, $this->linkColor[0], $this->linkColor[1], $this->linkColor[2]);
-		$textColor = imagecolorallocate($this->img, $this->textColor[0], $this->textColor[1], $this->textColor[2]);
+		$this->img = imagecreatetruecolor($this->getWidth(), $this->getHeight());
+		imagefill($this->img, 0, 0, imagecolorallocatealpha($this->img, $this->bgColor[0], $this->bgColor[1], $this->bgColor[2], $this->bgColor[3]));
+		imagesavealpha($this->img, true);
+
+		$nodeBG = imagecolorallocatealpha($this->img, $this->nodeColor[0], $this->nodeColor[1], $this->nodeColor[2], $this->nodeColor[3]);
+		$linkCol = imagecolorallocatealpha($this->img, $this->linkColor[0], $this->linkColor[1], $this->linkColor[2], $this->linkColor[3]);
+		$textColor = imagecolorallocatealpha($this->img, $this->textColor[0], $this->textColor[1], $this->textColor[2], $this->textColor[2]);
 		if($this->borderWidth > 0)
 		{
-			$borderCol = imagecolorallocate($this->img, $this->borderColor[0], $this->borderColor[1], $this->borderColor[2]);
+			$borderCol = imagecolorallocate($this->img, $this->borderColor[0], $this->borderColor[1], $this->borderColor[2], $this->borderColor[3]);
 		}
 
 		while($this->hasNext())
@@ -296,7 +298,7 @@ class GDRenderer extends Tree
 		}
 		imagepng($this->img, $file);
 	}
-	
+
 	/**
 	 * output the gd image object
 	 */
