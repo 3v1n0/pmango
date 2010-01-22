@@ -40,7 +40,7 @@ class taskBoxDB {
 
 	public function getWBS() {
 		if (!$this->pWBS || !$this->pUseCache)
-			$this->pWBS = $this->pCTask->getWBS();
+			$this->pWBS = $this->pCTask->getWBS().".";
 
 		return $this->pWBS;
 	}
