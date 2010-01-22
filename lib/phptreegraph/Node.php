@@ -33,6 +33,8 @@ class Node
 	public $w = 0;
 	public $x = 0;
 	public $y = 0;
+	public $wpadding = 0;
+	public $hpadding = 0;
 	public $leftNeighbor = 0;
 	public $rightNeighbor = 0;
 	public $childs = array();
@@ -43,12 +45,14 @@ class Node
 	public $links = array();
 	public $image;
 
-	public function __construct($id, $pid, $w, $h, $message = '', $image = null)
+	public function __construct($id, $pid, $w, $h, $message = '', $image = null, $wpadding = 0, $hpadding = 0)
 	{
 		$this->id = $id;
 		$this->pid = $pid;
 		$this->w = $w;
 		$this->h = $h;
+		$this->wpadding = $wpadding;
+		$this->hpadding = $hpadding;
 		$this->message = $message;
 		$this->image = $image;
 	}
@@ -109,8 +113,10 @@ class Node
 
 		foreach($this->childs as $child)
 		{
-			$xd = $xc = $child->x + ($child->w / 2);
-			$yd = $child->y;
+			//$child->x -= $child->wpadding;
+			$child->y -= $child->hpadding;
+			$xd = $xc = $child->x + $child->wpadding + ($child->w / 2);
+			$yd = $child->y + $child->hpadding;
 			$xb = $xa;
 			$yb = $yc = $ya + ($yd - $ya) / 2;
 			$this->links[$child->id]['xa'] = $xa;

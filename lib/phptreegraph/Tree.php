@@ -23,7 +23,7 @@
   *                                                                          *
   *
  */
- 
+
 if (version_compare(phpversion(), '5.0.0', '<'))
 {
 	die('You need at least PHP version 5.0.0!');
@@ -46,15 +46,15 @@ class Tree
 	private $position = 0;
 	private $h = 0;
 	private $w = 0;
-	
-	
+
+
 	/**
 	 * Constructor
-	 * @param int $LevelSeparation optional 
-	 * @param int $SiblingSeparation optional 
-	 * @param int $SubtreeSeparation optional 
-	 * @param int $defaultWidth optional 
-	 * @param int $defaultHeight optional 
+	 * @param int $LevelSeparation optional
+	 * @param int $SiblingSeparation optional
+	 * @param int $SubtreeSeparation optional
+	 * @param int $defaultWidth optional
+	 * @param int $defaultHeight optional
 	 */
 	public function __construct($LevelSeparation=40, $SiblingSeparation=40, $SubtreeSeparation=80, $defaultWidth=40, $defaultHeight=20)
 	{
@@ -69,18 +69,18 @@ class Tree
 
 	/**
 	 * function to add a node to the tree
-	 * @param int id 
-	 * @param int $pid id of the parent node, 0 is there is no parent 
+	 * @param int id
+	 * @param int $pid id of the parent node, 0 is there is no parent
 	 * @param string $message optional
-	 * @param int $w optional 
-	 * @param int $h optional 
-	 * @param string $image path to image optional 
+	 * @param int $w optional
+	 * @param int $h optional
+	 * @param string $image path to image optional
 	 */
-	public function add($id, $pid, $message='', $w=0, $h=0, $image = null )
+	public function add($id, $pid, $message='', $w=0, $h=0, $image = null, $wpadding=0, $hpadding=0)
 	{
 		$w = ($w == 0) ? $this->defaultWidth : $w;
 		$h = ($h == 0) ? $this->defaultHeight : $h;
-		$node = new Node($id, $pid, $w, $h, $message, $image);
+		$node = new Node($id, $pid, $w, $h, $message, $image, $wpadding, $hpadding);
 		if(isset($this->nodes[$pid]))
 		{
 			$pnode = $this->nodes[$pid];
@@ -91,11 +91,11 @@ class Tree
 		{
 			$pnode = $this->root;
 			$node->nodeParent = $pnode;
-			$this->root->childs[] = $node;		
+			$this->root->childs[] = $node;
 		}
 		$this->nodes[$id] = $node;
 	}
-	
+
 	private function firstwalk($node, $level)
 	{
 		$this->setLevelHeight($node, $level);
@@ -112,7 +112,7 @@ class Tree
 			{
                 $node->prelim = 0;
 			}
-        } 
+        }
         else
         {
 			$n = $node->numChilds();
@@ -129,14 +129,14 @@ class Tree
 				$node->prelim = $leftSibling->prelim + $leftSibling->w + $this->SiblingSeparation;
                 $node->modifier = $node->prelim - $midPoint;
                 $this->apportion($node, $level);
-            } 
+            }
             else
-            {            	
+            {
                 $node->prelim = $midPoint;
             }
-        }			
+        }
 	}
-	
+
 	private function secondWalk($node, $level, $x=0, $y=0)
 	{
 		$xTmp = $node->prelim + $x;
@@ -158,7 +158,7 @@ class Tree
             $this->secondWalk($rightSibling, $level, $x, $y);
 		}
 	}
-	
+
 	private function apportion($node, $level)
 	{
 		$firstChild = $node->getChildAt(0);
@@ -216,10 +216,10 @@ class Tree
 			}
         }
 }
-	
-	private function setLevelHeight($node, $level) 
-	{	
-		if (!isset($this->maxLevelHeight[$level])) 
+
+	private function setLevelHeight($node, $level)
+	{
+		if (!isset($this->maxLevelHeight[$level]))
 		{
 			$this->maxLevelHeight[$level] = 0;
 		}
@@ -228,29 +228,29 @@ class Tree
 			$this->maxLevelHeight[$level] = $node->h;
 		}
 	}
-	
-	private function setLevelWidth($node, $level) 
+
+	private function setLevelWidth($node, $level)
 	{
-		if (!isset($this->maxLevelWidth[$level])) 
+		if (!isset($this->maxLevelWidth[$level]))
 		{
 			$this->maxLevelWidth[$level] = 0;
 		}
 		if($this->maxLevelWidth[$level] < $node->w)
         {
-			$this->maxLevelWidth[$level] = $node->w;		
+			$this->maxLevelWidth[$level] = $node->w;
 		}
 	}
-	
-	private function setNeighbors($node, $level) 
+
+	private function setNeighbors($node, $level)
 	{
 		$node->leftNeighbor = (isset($this->previousLevelNode[$level])) ? $this->previousLevelNode[$level] : 0 ;
 		if($node->leftNeighbor)
 		{
 			$node->leftNeighbor->rightNeighbor = $node;
 		}
-		$this->previousLevelNode[$level] = $node;	
+		$this->previousLevelNode[$level] = $node;
 	}
-	
+
 	private function getLeftmost($node, $level, $maxlevel)
 	{
 		if($level >= $maxlevel)
@@ -270,9 +270,9 @@ class Tree
 				return $leftmostDescendant;
 			}
 		}
-		return 0;	
+		return 0;
 	}
-	
+
 	protected function render()
 	{
 		$this->firstwalk($this->root, 0);
@@ -283,7 +283,7 @@ class Tree
 		}
 		$this->isRendered = true;
 	}
-	
+
 	public function getWidth()
 	{
 		if(!$this->isRendered)
@@ -292,7 +292,7 @@ class Tree
 		}
 		return $this->w;
 	}
-	
+
 	public function getHeight()
 	{
 		if(!$this->isRendered)
@@ -301,16 +301,16 @@ class Tree
 		}
 		return  $this->h + $this->defaultHeight;
 	}
-	
+
 	public function count()
     {
         return count($this->nodes);
     }
-	
-	
+
+
 	/**
 	 * iterator function to get the nodes
-	 * @return mixed 
+	 * @return mixed
 	 */
 	public function next()
 	{
@@ -329,9 +329,9 @@ class Tree
 		}
 	}
 
-	
+
 	/**
-	 * @return boolean 
+	 * @return boolean
 	 */
 	public function hasNext()
 	{
@@ -341,7 +341,7 @@ class Tree
 		}
 		return true;
 	}
-  
+
 	public function getNodeAt($i)
 	{
 		if(!isset($this->nodes[$i]))
