@@ -71,13 +71,14 @@ class TaskNetwork {
 	private $SpM,$EpM; //gli array associativi delle start e end project milestone
 	private $mapBlank; //mappa de punti vuoti della TN
 
-	private $connections=array(); // array associativo delle dipendenze
+	private $project; //numero pregetto
 
-	function TaskNetwork(){
+	function TaskNetwork($project=null){
 		$this->index = array();
 		$this->img = ImageCreate(1,1); //immagine vuota iniziale della TN
 		$this->x = 1; 					//larghezza della TN
 		$this->y = 1;					//altezza della TN
+		$this->project = $project;
 	}
 
 	
@@ -90,36 +91,132 @@ class TaskNetwork {
 		$this->index[$row][$col] = $tbx;
 	}
 
-	public function createTN($vertical=false){
+	private function arrayConcat($arr1,$arr2){
+		foreach($arr2 as $x){
+			$arr1[sizeof($arr1)] = $x;
+		}
+		return $arr1;
+	}
+	
+	private function orderWbsId($array){
+		$task = new CTask();
+		for($i=0; $i< sizeof($array); $i++) {
+	 
+		    //imposto il min a i (quelli prima di i sono stati gia' ordinati)
+		    $min=$i;
+	 
+		    //parto da i+1 e, se trovo un elemento piu' piccolo, cambio min
+		    for($j=$i+1; $j<sizeof($array); $j++){
+				$minwbs = $task->getWBS($array[$min]);
+				$jwbs = $task->getWBS($array[$j]);
+				
+				if($jwbs<$minwbs){
+		 			$min=$j;
+		 		}
+		    }
+		 
+			    //se durante il for ho cambiato min, scambio arr[i] e arr[min].
+			    if ($min != $i){
+			    	$array = TaskNetwork::arraySwap($array, $i, $min);
+			    }
+		}
+		return $array;
+	}
+	
+	private function getTbxFromLevel($level){
+		$id = "SELECT task_id FROM tasks t WHERE task_parent=task_id and task_project=".$this->project." ORDER BY task_id";
+		$result = TaskNetwork::doQuery($id);
+		foreach($result as $res){
+			$results[sizeof($results)]= $res[0];
+		}	
+		unset($res);
+		
+		$int=0;$sons;
+		while($int<$level){
+			$size = sizeof($results);
+			for($i=0;$i<$size;$i++){
+				$DB = new taskBoxDB($results[$i]);
+				$q = "SELECT task_id FROM tasks t WHERE task_parent <> task_id and task_parent=".$DB->getId()." and task_project=".$this->project." ORDER BY task_wbs_index";
+				$children = TaskNetwork::doQuery($q);
+				if(isset($children[0])){
+					unset($results[$i]);
+					foreach($children as $child){
+						$sons[sizeof($sons)] = $child["task_id"];
+					}
+				}
+			}
+			$results = TaskNetwork::trimArray($results);
+			$results = TaskNetwork::arrayConcat($results,$sons);
+			
+			unset($sons);			
+			$int++;
+		}
+		unset($result);
+
+		
+		foreach($results as $task){
+			$wbslv = CTask::getWBS($task);
+			$wbs = intval(substr($wbslv,0,1));
+			$res[$wbs-1][sizeof($res[$wbs-1])]= $task;
+		}
+		
+		return $res;
+	}
+	
+	public function createTN($level=0,$vertical=false){
+		
+		$res=$this->getTbxFromLevel($level);
+		
+		for($j=0;$j<sizeof($res);$j++){
+			$res[$j] = TaskNetwork::orderWbsId($res[$j]);
+					
+			for($k=0;$k<sizeof($res[$j]);$k++){	
+				$wbslv = CTask::getWBS($res[$j][$k]);
+				 				
+						$DB = new taskBoxDB($res[$j][$k]);
+						$tbx = new TNNode($res[$j][$k]);
+						$tbx->setFontPath("../fonts/Droid");
+						$tbx->setName($wbslv." ".$DB->getTaskName());
+						$tbx->setPlannedDataArray($DB->getPlannedData());
+						$tbx->setActualDataArray($DB->getActualData());
+						$tbx->setPlannedTimeframeArray($DB->getPlannedTimeframe());
+						//$tbx->setActualTimeframeArray($DB->getActualTimeframe());
+						//$tbx->setResourcesArray($DB->getActualResources());
+						$tbx->setProgress($DB->getProgress());
+						$tbx->setAlerts($DB->isAlerted());
+			
+						if($vertical){$this->addTbx($tbx,$k,$j);}else{$this->addTbx($tbx,$j,$k);}
+						
+			}
+		}
+		
+		
+		//creazione immagine
 		$rows=array();
 		for($i=0;$i<sizeof($this->index);$i++){
 			$rows[$i] = $this->mergeArrayRight($this->index[$i]);
 		}
 
 		$final = $this->mergeArrayUnder($rows,$vertical);
-		$final = $this->mergeSpM($final);//aggiunta Spm
-		$final = $this->mergeEpM($final);// aggiunta Epm
+		
+		$this->index = $final->index; 
+		$this->img = $final->img;
+		$this->x = $final->x;
+		$this->y = $final->y;
+	
+		$this->mergeSpM();//aggiunta Spm
+		$this->mergeEpM();// aggiunta Epm
 
 		//mappo tutti i punti vuoti della TN
-		$final->mapBlank = $this->mapBlank($final);
-
-		return $final;
+		$this->mapBlank = $this->mapBlank();
+			
 	}
 
 	public function addDefaultDependancies(){
 	$index = $this->getIndex();
 		
 	$query = "SELECT dependencies_task_id FROM task_dependencies t;";
-		$result = db_exec($query);
-	$error = db_error();
-	if ($error) {
-		echo $error;
-		exit;
-	}
-	$results = array();
-	for ($i = 0; $i < db_num_rows($result); $i++) {
-		$results[] = db_fetch_assoc($result);
-	}
+	$results = TaskNetwork::doQuery($query);
 
 			//start to tbx dependancies
 			for($a=0;$a<sizeof($index);$a++){
@@ -133,24 +230,15 @@ class TaskNetwork {
 						}
 						if(!$bool){
 							$ID2["riga"] = $a; $ID2["colonna"] = $b;
-											 //TN  			 cr.path dash  under upper dist color
-							TaskNetwork::connect($this,null,$ID2, false, true,false,false,0,false,"gray");
+												 //TN  			 cr.path dash  under upper dist color
+							TaskNetwork::connect($this,null,$ID2, false, true,false,false,38,false,"gray");
 						}
 					}
 			}
 	
 	$query = "SELECT dependencies_req_task_id FROM task_dependencies t;";
-	$result = db_exec($query);
-	$error = db_error();
-	if ($error) {
-		echo $error;
-		exit;
-	}
-	$results = array();
-	for ($i = 0; $i < db_num_rows($result); $i++) {
-		$results[] = db_fetch_assoc($result);
-	}
-	
+	$results = TaskNetwork::doQuery($query);
+		
 			//tbx to end dependancies
 			for($a=0;$a<sizeof($index);$a++){
 					for($b=0;$b<sizeof($index[$a]);$b++){
@@ -163,8 +251,8 @@ class TaskNetwork {
 						}
 						if(!$bool){
 							$ID1["riga"] = $a; $ID1["colonna"] = $b;
-											 //TN  			 cr.path dash  under upper dist
-							TaskNetwork::connect($this,$ID1,null, false, false,false,false,8,false,"gray");
+												 //TN  			 cr.path dash  under upper dist
+							TaskNetwork::connect($this,$ID1,null, false, false,false,false,45,false,"gray");
 						}
 					}
 
@@ -177,43 +265,77 @@ class TaskNetwork {
 		ImageDestroy($this->img);
 	}
 
-	public function addDependence($tbxID1, $tbxID2){
-		$ID1 = TaskNetwork::getTbxIndex($tbxID1);
-		$ID2 = TaskNetwork::getTbxIndex($tbxID2);
+	
+	public function drawConnections($vertical=false){
+		$connex= array(); //array di connessioni gia effettuate
 		
-		$i = sizeof($this->connections);
-		$this->connections[$i]["FROM"] = $ID1;
-		$this->connections[$i]["TO"] = $ID2;
-	}
-	//da perfezionare che ricerchi se i figli della tbx hanno dipendenze
-	public function drawConnections($vertical=false){//TODO creare le varie dipendenze upper under tra tbx collassati
-		for($i=0;$i<sizeof($this->connections);$i++){
-			$upper =false; $under=false;
-
-			$ID1 = $this->connections[$i]["FROM"];
-			$ID2 = $this->connections[$i]["TO"];
-
-			$tbx1 = $this->index[$ID1["riga"]][$ID1["colonna"]];
-			$tbx2 = $this->index[$ID2["riga"]][$ID2["colonna"]];
-
-/*/FIXME errore che non capisco non chiam getid ma se lo stampo lo stampa giusto.. mah
-$tdb = new TaskBoxDB($tbx1->getId());
-		
-		if ($tdb->isLeaf()) {
-
-		} else {
-			$under = true;
-		}
-			//FIXME check internal dependences
-
-*/		
-		
-			if (!$tbx1 || !$tbx2) continue;
+		$query = "SELECT * FROM task_dependencies t where dependencies_req_task_id in".
+				" (SELECT task_id FROM tasks t WHERE task_project = $this->project) or ".
+				"dependencies_task_id in (SELECT task_id FROM tasks t WHERE "."
+				task_project = $this->project)";
+		$results = TaskNetwork::doQuery($query);
 			
-			$this->connect($this,$ID1,$ID2,false,false,$under,$upper,3*$i,$vertical);
-			//print_r($this);
-			//echo "connecting ",$tbx1->getID()," ",$tbx2->getID()."\n";
+		
+	/*	foreach($results as $conn){
+			$this->addDependence($conn["dependencies_req_task_id"],$conn["dependencies_task_id"]);
+		}*/
+		
+		for($i=0;$i<sizeof($results);$i++){
+			$upper =false; $under=false;
+	
+	
+	/*			$tbx1 = $this->index[$ID1["riga"]][$ID1["colonna"]];
+				$tbx2 = $this->index[$ID2["riga"]][$ID2["colonna"]];
+	*/
+			$tbxfrom = $results[$i]["dependencies_req_task_id"];
+			$coordfrom = $this->getTbxIndex($tbxfrom);
+			$control = true;
+			if(!isset($coordfrom)){
+				while ($control){
+					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
+					$result = TaskNetwork::doQuery($q);
+					$coordfrom = $this->getTbxIndex($result[0][0]);
+					if(isset($coordfrom)){
+						$under = true;	
+						$control = false;
+					} 
+					else{
+						$tbxfrom = $result[0][0];
+					}
+					unset($result);
+					
+				}
+			}
+			$tbxto = $results[$i]["dependencies_task_id"];		
+			$coordto = $this->getTbxIndex($tbxto);
+			$control = true;
+				if(!isset($coordto)){
+					$control = true;
+					while ($control){
+						$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxto;
+						$result = TaskNetwork::doQuery($q);
+						$coordto = $this->getTbxIndex($result[0][0]);
+						if(isset($coordto)){
+							$upper = true;	
+							$control = false;
+						} 
+						else{
+							$tbxto = $result[0][0];
+						}
+						unset($result);
+						
+					}
+				}
+				
+			$couple = implode(".",$coordfrom).",".implode(".",$coordto);
 
+			if(!in_array($couple,$connex)){
+				$this->connect($this,$coordfrom,$coordto,false,false,$under,$upper,20+2*$i,$vertical);
+				$connex[sizeof($connex)] = implode(".",$coordfrom).",".implode(".",$coordto);
+			}
+				//print_r($this);
+				//echo "connecting ",$tbx1->getID()," ",$tbx2->getID()."\n";
+	
 		}
 	}
 	
@@ -257,98 +379,224 @@ $tdb = new TaskBoxDB($tbx1->getId());
 			return $tbxarray;
 	}
 	
-	//FIXME ABBESTIA!
-	public function drawCriticalPath($vertical=false){
-	$index = $this->getIndex();
-	$SpD = "15.10.2009"; //Start Project date, TODO ottenerla tramite pmango
-
-	//pezzo per ottenere le tbx da quali partire
-	$query = "SELECT dependencies_task_id FROM task_dependencies t;";
-	$results = TaskNetwork::doQuery($query);
-	
-	
-	$tbxarray;
-	for($a=0;$a<sizeof($index);$a++){
-			for($b=0;$b<sizeof($index[$a]);$b++){
-				$bool =false;
-				foreach($results as $x){
-					if($x[0] ==	$index[$a][$b]->getId()){
-						$bool=true;
-					}
-					
-				}
-				if(!$bool){
-					$liv = sizeof($tbxarray);
-					$tbxarray[$liv]["id"] = $index[$a][$b]->getId();
-					$pdata = $index[$a][$b]->getPlannedData();
-					$tbxarray[$liv]["duration"] = intval($pdata["duration"]);
-					$tbxarray[$liv]["effort"] = intval($pdata["effort"]);
-					$tbxarray[$liv]["cost"] = intval($pdata["cost"]);
-				}
-			}
-
-	}//ho tutte le tbx su una sola riga
-	
-	
-	$out;$cont=0;//array che conterrà i cammini possibili di tbx
-	$stack; $ind=0;// pila per simulare la ricorsione
-	
-	print_r($tbxarray);
-	
-
-	$tbxarray = TaskNetwork::computeDependence($tbxarray);
-
-	print_r($tbxarray);
-
-
-/*
-		if($dep != ""){
-				$deparray = explode(",",$dep);
-				if(isset($deparray[0])){	
-					foreach($deparray as $h){
-						$stack[$ind] = $h;$ind++;
-					}
-				}
-		}
-		
-		$stack[0] = $id;$ind++;
-	/*	
-		while($ind>0){
-			$tbx = $stack[$ind];$ind--;
-			$result[$cont][sizeof($result[$cont])]= $tbx;
-			
-			$dep = $t->staticGetDependencies($tbx);// restituisce i task dipendenti da tbx separati da virgole
-			
-		}
-		$cont++;
-		
-	}//ora ottengo per ogni riga di result una raccolta di cammini partendo da ciascun tbx 
-	
-	print_r($result);
-		
-	foreach($result as $tbxstart){
-		
+	private function arraySwap($array,$i,$j){
+		$side=$array[$i];
+		$array[$i] = $array[$j];
+		$array[$j]= $side; 
+		unset($side);
+		return $array;
 	}
 	
-			$day=TaskNetwork::getTimeDiff($SpD,$tbx);
-		$tdur=$tbx->getPlannedData();
-		$day += intval($tdur["duration"]);
+	private function orderArray($array){
+		$query = "SELECT project_finish_date FROM projects p WHERE p.project_id =".$this->project;
+		$res = TaskNetwork::doQuery($query);
+		$EpD = str_replace("-",".",substr($res[0][0],0,10));
+		$EpD = substr($EpD,8,2).".".substr($EpD,5,2).".".substr($EpD,0,4); //End Project Date
 		
-//algoritmo: si parte dall'inizio del progetto e per ogni task si calcola da durata del critical path come la somma tra:
-//  il tempo di inizio progetto e l'inizio del task
-//	la durata del task
-//  se esistono dipendenze da quel task, si fa un fork per ogni dipendenza
-// alla fine la durata maggiore vince, a parità di durata seguire le indicazioni del capitolato.
-		$tbxfrom = $tbxarray[0];
-		for($i=1;$i<sizeof($tbxarray);$i++){
-			$tbxto =  $tbxarray[$i];
-			$coordfrom = $this->getTbxIndex($tbxfrom);
-			$coordto = $this->getTbxIndex($tbxto);
-			$under;//controlli del caso
-			$upper;//controlli del caso
+		//per ogni elemento di arr,
+		for($i=0; $i< sizeof($array); $i++) {
+	 
+		    //imposto il min a i (quelli prima di i sono stati gia' ordinati)
+		    $min=$i;
+	 
+		    //parto da i+1 e, se trovo un elemento piu' piccolo, cambio min
+		    for($j=$i+1; $j<sizeof($array); $j++){
+		        
+				if ($array[$j]["duration"] < $array[$min]["duration"]){
+					$min=$j;
+				}
+				elseif($array[$j]["duration"] == $array[$min]["duration"]){
+					if ($array[$j]["effort"] < $array[$min]["effort"]){
+						$min=$j;
+					}
+					elseif($array[$j]["effort"] == $array[$min]["effort"]){
+						if ($array[$j]["cost"] < $array[$min]["cost"]){
+							$min=$j;
+						}
+						elseif($array[$j]["cost"] == $array[$min]["cost"]){
+							$jtask = new taskBoxDB(substr($array[$j]["id"],(strrchr($array[$j]["id"],',')+1),(strlen($array[$j]["id"])-strrchr($array[$j]["id"],',')+1)));
+							$mintask = new taskBoxDB(substr($array[$min]["id"],(strrchr($array[$min]["id"],',')+1),(strlen($array[$min]["id"])-strrchr($array[$min]["id"],',')+1)));
+							
+						}
+					}
+				}
+		    }
+		 
+			    //se durante il for ho cambiato min, scambio arr[i] e arr[min].
+			    if ($min != $i){
+			    	$array = TaskNetwork::arraySwap($array, $i, $min);
+			    }
+		}
+		return $array;
+	}
+	
+	public function drawCriticalPath($level, $vertical=false){
+		
+		$index = $this->getTbxFromLevel($level);
+
+		//pezzo per ottenere le tbx da quali partire
+		$query = "SELECT dependencies_task_id FROM task_dependencies t;";
+		$results = TaskNetwork::doQuery($query);
+		
+		
+		$tbxarray;
+		for($a=0;$a<sizeof($index);$a++){
+				for($b=0;$b<sizeof($index[$a]);$b++){
+					$bool =false;
+					foreach($results as $x){
+						if($x[0] ==	$index[$a][$b]){
+							$bool=true;
+						}
+						
+					}
+					if(!$bool){
+						$liv = sizeof($tbxarray);
+						$DB = new taskBoxDB($index[$a][$b]);
+						
+						$tbxarray[$liv]["id"] = $index[$a][$b];
+						$pdata = $DB->getPlannedData();
+						$tbxarray[$liv]["duration"] = intval($pdata["duration"]);
+						$tbxarray[$liv]["effort"] = intval($pdata["effort"]);
+						$tbxarray[$liv]["cost"] = intval($pdata["cost"]);
+					}
+				}
+	
+		}//ho tutte le tbx su una sola riga
+		
+		
+		$out;$cont=0;//array che conterrà i cammini possibili di tbx
+		$stack; $ind=0;// pila per simulare la ricorsione
+		
+	
+		$tbxarray = TaskNetwork::computeDependence($tbxarray);
+	
+	
+		$output;
+		foreach($tbxarray as $tbx){
+			$stack[sizeof($stack)] = $tbx;
 			
-			$this->connect($TaskNetwork,$coordfrom,$coordto,true,$under,$upper,0,$vertical);
-		*/
+			$taskout;
+			while(sizeof($stack)>0){
+				$task = $stack[sizeof($stack)-1];
+				$taskout["id"] = $taskout["id"].",".$task["id"];
+				$taskout["duration"] = $taskout["duration"]+$task["duration"];
+				$taskout["effort"] = $taskout["effort"]+$task["effort"];
+				$taskout["cost"] = $taskout["cost"]+$task["cost"];
+				unset($stack[sizeof($stack)-1]);
+				if(isset($task["dependencies"])){
+					foreach($task["dependencies"] as $depen){
+						$stack[sizeof($stack)]= $depen;
+					}
+				}else{
+					$output[sizeof($output)] = $taskout;
+					unset($stack);
+					unset($taskout);
+				}
+				
+			}
+			
+		}//ora ottengo per ogni riga di $output una raccolta di cammini partendo da ciascun tbx
+		
+		$output = $this->orderArray($output);
+	 
+		
+		$cPath = $output[sizeof($output)-1]; // prendo il critical path
+		$tbxidpath = explode(",",$cPath["id"]);
+		
+	//controlla se dipendenze sono nascoste	
+				
+		$tbxfrom = $tbxidpath[1];
+		$coordfrom = $this->getTbxIndex($tbxfrom);
+		$control = true;
+		if(!isset($coordfrom)){
+			while ($control){
+				$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
+				$result = TaskNetwork::doQuery($q);
+				$coordfrom = $this->getTbxIndex($result[0][0]);
+				if(isset($coordfrom)){
+					$upper = true;	
+					$control = false;
+				} 
+				else{
+					$tbxfrom = $result[0][0];
+				}
+				unset($result);
+				
+			}
+		}
+		
+		//$tbx = $this->index[$coordfrom["riga"]][$coordfrom["colonna"]];
+		$this->connect($this,null,$coordfrom,true,false,$under,$upper,25,$vertical);//connetto la start al primo task
+	
+		for($i=2;$i<sizeof($tbxidpath)-1;$i++){
+			$tbxto =  $tbxarray[$i];
+			
+			$coordfrom = $this->getTbxIndex($tbxfrom);
+			if(!isset($coordfrom)){
+				$control = true;
+				while ($control){
+					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
+					$result = TaskNetwork::doQuery($q);
+					$coordfrom = $this->getTbxIndex($result[0][0]);
+					if(isset($coordfrom)){
+						$under = true;	
+						$control = false;
+					} 
+					else{
+						$tbxfrom = $result[0][0];
+					}
+					unset($result);
+					
+				}
+			}
+			$coordto = $this->getTbxIndex($tbxto);
+			if(!isset($coordto)){
+				$control = true;
+				while ($control){
+					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxto;
+					$result = TaskNetwork::doQuery($q);
+					$coordto = $this->getTbxIndex($result[0][0]);
+					if(isset($coordto)){
+						$upper = true;	
+						$control = false;
+					} 
+					else{
+						$tbxto = $result[0][0];
+					}
+					unset($result);
+					
+				}
+			}
+		
+			
+			
+			$this->connect($this,$coordfrom,$coordto,true,false,$under,$upper,25,$vertical);
+			
+			$coordfrom = $coordto;
+		}
+		
+		$tbxfrom = $tbxidpath[sizeof($tbxidpath)-1];
+		$coordfrom = $this->getTbxIndex($tbxfrom);
+		if(!isset($coordfrom)){
+			$control = true;
+			while ($control){
+				$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
+				$result = TaskNetwork::doQuery($q);
+				$coordfrom = $this->getTbxIndex($result[0][0]);
+				if(isset($coordfrom)){
+					$under = true;	
+					$control = false;
+				} 
+				else{
+					$tbxfrom = $result[0][0];
+				}
+				unset($result);
+				
+			}
+		}
+		
+		$this->connect($this,$coordfrom,null,true,false,$under,$upper,25,$vertical);//connetto la start al primo task
+		
 	}
 
 	
@@ -556,9 +804,9 @@ $tdb = new TaskBoxDB($tbx1->getId());
 			$tbx1x = $TaskNetwork->SpM["x"];$tbx1y = $TaskNetwork->SpM["y"];
 		}else{
 			//interi					ordinate												ascisse
-			$tbx1rx = $tbx1->getRightX(); $tbx1BlankUp = $TaskNetwork->mapBlank["y"][$ID1["riga"]]+$dist; $tbx1BlankLeft = $TaskNetwork->mapBlank[$ID1["riga"]][$ID1["colonna"]]+$dist;
-			$tbx1ry = $tbx1->getRightY(); $tbx1BlankDown = $TaskNetwork->mapBlank["y"][$ID1["riga"]+1]-$dist; $tbx1BlankRight =($ID1["colonna"]<sizeof($TaskNetwork->mapBlank[$ID1["riga"]])-1) ? $TaskNetwork->mapBlank[$ID1["riga"]][$ID1["colonna"]+1]-$dist : $tbx1->getRightX()+50-$dist;
-			$tbx1BlankFirst = (!$vertical)?($TaskNetwork->mapBlank["inizio"]-$dist):$tbx1BlankLeft;$tbx1BlankLast = (!$vertical)?($TaskNetwork->mapBlank["fine"]+$dist):$tbx1BlankRight ;
+			$tbx1rx = $tbx1->getRightX(); $tbx1BlankUp = $TaskNetwork->mapBlank["y"][$ID1["riga"]]+50-$dist; $tbx1BlankLeft = $TaskNetwork->mapBlank[$ID1["riga"]][$ID1["colonna"]]+50;
+			$tbx1ry = $tbx1->getRightY(); $tbx1BlankDown = $TaskNetwork->mapBlank["y"][$ID1["riga"]+1]-50+$dist; $tbx1BlankRight =($ID1["colonna"]<sizeof($TaskNetwork->mapBlank[$ID1["riga"]])-1) ? $TaskNetwork->mapBlank[$ID1["riga"]][$ID1["colonna"]+1]-50 : $tbx1->getRightX()+50;
+			$tbx1BlankFirst = (!$vertical)?($TaskNetwork->mapBlank["inizio"]-$dist):$tbx1BlankLeft-$dist;$tbx1BlankLast = (!$vertical)?($TaskNetwork->mapBlank["fine"]+$dist):$tbx1BlankRight+$dist ;
 			$tbx1x = $tbx1->GetWidth(); $tbx1y = $tbx1->GetHeight();
 
 			$tbx1shift = $tbx1->getAlertSize()/2;
@@ -575,9 +823,9 @@ $tdb = new TaskBoxDB($tbx1->getId());
 			$tbx2x = $TaskNetwork->EpM["x"];$tbx2y = $TaskNetwork->EpM["y"];
 		}else{
 			//interi					ordinate												ascisse
-			$tbx2lx = $tbx2->getLeftX(); $tbx2BlankUp = $TaskNetwork->mapBlank["y"][$ID2["riga"]]+$dist; $tbx2BlankLeft = $TaskNetwork->mapBlank[$ID2["riga"]][$ID2["colonna"]]+$dist;
-			$tbx2ly = $tbx2->getLeftY(); $tbx2BlankDown = $TaskNetwork->mapBlank["y"][$ID2["riga"]+1]-$dist; $tbx2BlankRight =($ID2["colonna"]<sizeof($TaskNetwork->mapBlank[$ID2["riga"]])-1) ? $TaskNetwork->mapBlank[$ID2["riga"]][$ID2["colonna"]+1]-$dist : $tbx2->getRightX()+50-$dist;
-			$tbx2BlankFirst = (!$vertical)?($TaskNetwork->mapBlank["inizio"]-$dist):$tbx2BlankLeft;$tbx2BlankLast = (!$vertical)?($TaskNetwork->mapBlank["fine"]+$dist):$tbx2BlankRight;
+			$tbx2lx = $tbx2->getLeftX(); $tbx2BlankUp = $TaskNetwork->mapBlank["y"][$ID2["riga"]]+50-$dist; $tbx2BlankLeft = $TaskNetwork->mapBlank[$ID2["riga"]][$ID2["colonna"]]+50;
+			$tbx2ly = $tbx2->getLeftY(); $tbx2BlankDown = $TaskNetwork->mapBlank["y"][$ID2["riga"]+1]-50+$dist; $tbx2BlankRight =($ID2["colonna"]<sizeof($TaskNetwork->mapBlank[$ID2["riga"]])-1) ? $TaskNetwork->mapBlank[$ID2["riga"]][$ID2["colonna"]+1]-50 : $tbx2->getRightX()+50;
+			$tbx2BlankFirst = (!$vertical)?($TaskNetwork->mapBlank["inizio"]-$dist):$tbx2BlankLeft-$dist;$tbx2BlankLast = (!$vertical)?($TaskNetwork->mapBlank["fine"]+$dist):$tbx2BlankRight+$dist;
 			$tbx2x = $tbx2->GetWidth(); $tbx2y = $tbx2->GetHeight();
 
 			$tbx2shift = $tbx2->getAlertSize()/2;
@@ -650,7 +898,7 @@ $tdb = new TaskBoxDB($tbx1->getId());
 					$points[1]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[1]["y"]=$tbx1BlankDown;
 					}
 					
-				if($tbx1BlankDown!=$tbx2BlankUp){
+				if(abs($tbx1BlankDown-$tbx2BlankUp)>50){
 					if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
 						$points[3]["x"]= $tbx1BlankLast	;$points[3]["y"]=$tbx1BlankDown;
 						$points[4]["x"]= $tbx1BlankLast	;$points[4]["y"]=$tbx2BlankUp;
@@ -659,6 +907,10 @@ $tdb = new TaskBoxDB($tbx1->getId());
 						$points[3]["x"]= $tbx1BlankFirst ;$points[3]["y"]=$tbx1BlankDown;
 						$points[4]["x"]= $tbx1BlankFirst ;$points[4]["y"]=$tbx2BlankUp;
 					}
+				}
+				else{
+					$points[3]["x"]=$points[1]["x"];$points[3]["y"]=($tbx1BlankDown+$tbx2BlankUp)/2;
+					$points[4]["x"]=$points[1]["x"];$points[4]["y"]=$tbx2BlankUp;
 				}
 									
 				if(!$upper){
@@ -684,7 +936,7 @@ $tdb = new TaskBoxDB($tbx1->getId());
 				}
 				$points[3]["x"]= $tbx1BlankRight	;$points[3]["y"]=$tbx1BlankUp;
 					
-				if($tbx1BlankUp!=$tbx2BlankDown){
+				if(abs($tbx1BlankUp-$tbx2BlankDown)>50){
 					if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
 						$points[4]["x"]= $tbx1BlankLast	;$points[4]["y"]=$tbx1BlankUp;
 						$points[5]["x"]= $tbx1BlankLast	;$points[5]["y"]=$tbx2BlankDown;
@@ -693,6 +945,11 @@ $tdb = new TaskBoxDB($tbx1->getId());
 						$points[4]["x"]= $tbx1BlankFirst ;$points[4]["y"]=$tbx1BlankUp;
 						$points[5]["x"]= $tbx1BlankFirst ;$points[5]["y"]=$tbx2BlankDown;
 					}
+				}
+				else{
+				$points[4]["x"]= $tbx1BlankRight	;$points[4]["y"]=($tbx1BlankUp+$tbx2BlankDown)/2;
+				$points[5]["x"]= $tbx2BlankLeft		;$points[5]["y"]=($tbx1BlankUp+$tbx2BlankDown)/2;
+				
 				}
 				$points[6]["x"]= $tbx2BlankLeft	;$points[6]["y"]=$tbx2BlankDown;				
 				
@@ -733,15 +990,15 @@ $tdb = new TaskBoxDB($tbx1->getId());
 			$imgbx = $b->GetWidth();
 			$imgby = $b->GetHeight();
 
-			$outx = ($imgTNx+$imgbx+100);
+			$outx = ($imgTNx+$imgbx+200);
 			$outy = max($imgTNy, $imgby);
 						
 			$centerTN = $outy-$imgTNy;
 			$centerb = $outy-$imgby;
 			
 			//alloco i punti mediani dei lati della tbx dentro b
-			$b->setLeft($imgTNx+250, ($imgby/2)+25+$centerb/2);
-			$b->setRight( $imgTNx+250+$imgbx, ($imgby/2)+25+$centerb/2);
+			$b->setLeft($imgTNx+300, ($imgby/2)+50+$centerb/2);
+			$b->setRight( $imgTNx+300+$imgbx, ($imgby/2)+50+$centerb/2);
 			
 			if($centerTN!=0){
 				for($i=0;$i<$val;$i++){
@@ -756,7 +1013,7 @@ $tdb = new TaskBoxDB($tbx1->getId());
 			//copio la prima immagine nell'output
 			imagecopy($out,$imgTN,0,$centerTN/2,0,0,$imgTNx,$imgTNy);
 			//e poi la seconda
-			imagecopy($out,$imgb,$outx-($imgbx+50),$centerb/2,0,0,$imgbx,$imgby);
+			imagecopy($out,$imgb,$outx-($imgbx+100),$centerb/2,0,0,$imgbx,$imgby);
 
 			imagedestroy($imgTN);
 			imagedestroy($imgb);
@@ -773,13 +1030,13 @@ $tdb = new TaskBoxDB($tbx1->getId());
 
 
 			//ingrandisco il disegno di 25 px in alto e in basso
-			$out = ImageCreate($TN->x , $TN->y+50);
+			$out = ImageCreate($TN->x , $TN->y+100);
 			$bianco = ImageColorAllocate($out,255,255,255);
 
-			imagecopy($out,$TN->img,0,25,0,0,$TN->x,$TN->y);
+			imagecopy($out,$TN->img,0,50,0,0,$TN->x,$TN->y);
 			imagedestroy($TN->img);
 
-			$TN->img = $out; $TN->y += 50;
+			$TN->img = $out; $TN->y += 100;
 
 
 		return $TN;
@@ -815,7 +1072,7 @@ $tdb = new TaskBoxDB($tbx1->getId());
 
 			$tbxl= $TN2->index[0][0]->getWidth();
 			$tbxlv =intval(substr($TN2->index[0][0]->getName(),0,1))-1;
-			$gap=$tbxl + 100;
+			$gap=$tbxl + 200;
 			
 			//copio la prima immagine nell'output centrata
 			imagecopy($out,$imgTN,(!$vertical)?(($outx/2)-($imgTNx/2)):0,0,0,0,$imgTNx,$imgTNy);
@@ -863,24 +1120,24 @@ $tdb = new TaskBoxDB($tbx1->getId());
 		return $TN;
 	}
 
-	private function mergeSpM($TN){
-		$TN->SpM = $this->drawSpM();
+	private function mergeSpM(){
+		$this->SpM = $this->drawSpM();
 
-		$imgTN = $TN->img;
-		$imgTNx = $TN->x;
-		$imgTNy = $TN->y;
+		$imgTN = $this->img;
+		$imgTNx = $this->x;
+		$imgTNy = $this->y;
 
-		$imgspm = $TN->SpM["img"];
-		$imgspmx = $TN->SpM["x"];
-		$imgspmy = $TN->SpM["y"];
+		$imgspm = $this->SpM["img"];
+		$imgspmx = $this->SpM["x"];
+		$imgspmy = $this->SpM["y"];
 
 
 		$outx = ($imgTNx+$imgspmx+(200-$imgspmx)); //200 - $imgTNx
 		$outy = max($imgTNy, $imgspmy);
 
 		//alloco i punti mediani del lato destro della SpM
-		$TN->SpM["rightx"] = $imgspmx+1;
-		$TN->SpM["righty"] = ($outy/2)+1;
+		$this->SpM["rightx"] = $imgspmx+1;
+		$this->SpM["righty"] = ($outy/2)+1;
 
 		$out = ImageCreate($outx , $outy);
 		$bianco = ImageColorAllocate($out,255,255,255);
@@ -893,30 +1150,29 @@ $tdb = new TaskBoxDB($tbx1->getId());
 		imagedestroy($imgspm);
 		imagedestroy($imgTN);
 
-		$TN->img=$out; $TN->x = $outx; $TN->y = $outy;
-		return $TN;
+		$this->img=$out; $this->x = $outx; $this->y = $outy;
 
 	}
 
-	private function mergeEpM($TN){
+	private function mergeEpM(){
 
-		$TN->EpM = $this->drawEpM();
+		$this->EpM = $this->drawEpM();
 
-		$imgTN = $TN->img;
-		$imgTNx = $TN->x;
-		$imgTNy = $TN->y;
+		$imgTN = $this->img;
+		$imgTNx = $this->x;
+		$imgTNy = $this->y;
 
-		$imgepm = $TN->EpM["img"];
-		$imgepmx = $TN->EpM["x"];
-		$imgepmy = $TN->EpM["y"];
+		$imgepm = $this->EpM["img"];
+		$imgepmx = $this->EpM["x"];
+		$imgepmy = $this->EpM["y"];
 
 		$outx = ($imgTNx+$imgepmx+(200-$imgepmx));
 		$outy = max($imgTNy, $imgepmy);
 
 		//alloco i punti mediani del lato destro della SpM
 
-		$TN->EpM["leftx"] = ($outx-$imgepmx)+1;
-		$TN->EpM["lefty"] = ($outy/2)+1;
+		$this->EpM["leftx"] = ($outx-$imgepmx)+1;
+		$this->EpM["lefty"] = ($outy/2)+1;
 
 		$out = ImageCreate($outx , $outy);
 		$bianco = ImageColorAllocate($out,255,255,255);
@@ -930,8 +1186,7 @@ $tdb = new TaskBoxDB($tbx1->getId());
 		imagedestroy($imgTN);
 
 
-		$TN->img=$out; $TN->x = $outx; $TN->y = $outy;
-		return $TN;
+		$this->img=$out; $this->x = $outx; $this->y = $outy;
 
 	}
 
@@ -950,30 +1205,30 @@ $tdb = new TaskBoxDB($tbx1->getId());
 }
 
 	//mappa tutti i punti vuoti della TN
-	private function mapBlank(TaskNetwork $TN){
-		$index = $TN->index;
+	private function mapBlank(){
+		$index = $this->index;
 		$map; //mappa di output, matrice
 
 		//alloco il primo spazio in cima alla TN
 		$map["y"][0] = 1;
 		//alloco il primo e l'ultimo spazio in orizzontale della TN
 		$map["inizio"] = 200;
-		$map["fine"] = $TN->x - 200;
+		$map["fine"] = $this->x - 200;
 
 		//codifico nella prima riga della mappa tutte gli indici degli spazi tra righe della TN
 		for($j=1;$j<sizeof($index);$j++){
 			
 			$rawy=0;
 			for($a=0;$a<sizeof($index[$j]);$a++){if($index[$j][$a]->GetHeight()>$rawy) {$rawy=$index[$j][$a]->GetHeight();}}
-			$map["y"][$j] =  ($index[$j][0]->getLeftY()-($rawy/2))-25;
+			$map["y"][$j] =  ($index[$j][0]->getLeftY()-($rawy/2))-50;
 		}
 		//alloco l'ultimo spazio in fondo alla TN
-		$map["y"][(sizeof($index))] =  $TN->y - 1;
+		$map["y"][(sizeof($index))] =  $this->y - 1;
 
 		//codifico nelle restanti righe della matrice gli spazi tra tbx della stessa TN
 		for($h=0;$h<sizeof($index);$h++){
 			for($i=0;$i<sizeof($index[$h]);$i++){
-				$map[$h][$i] = $index[$h][$i]->getLeftX() - 50;
+				$map[$h][$i] = $index[$h][$i]->getLeftX() - 100;
 			}
 		}
 		return $map;
@@ -1012,120 +1267,35 @@ $tdb = new TaskBoxDB($tbx1->getId());
 		$start = strtotime(str_replace(".","-",$start2["start"]));
 		
 		$result= $start-$end;
-		return $result/24/60/60;//in giorni		
+		return round($result/24/60/60);//in giorni		
 	}
 //------Funzioni di setting------------fine
 
 }
 
+$project_id = defVal(@$_REQUEST['project_id'], 0);
+
+$task_level = $AppUI->getState('ExplodeTasks', 1);
+$tasks_closed = $AppUI->getState("tasks_closed");
+$tasks_opened = $AppUI->getState("tasks_opened");
+
+
 /// creazione TN vuota
-	$TN = new TaskNetwork();
+	$TN = new TaskNetwork($project_id);
 
 
+				// lv vertical
+$TN->createTN(0,false);
 
-$project_id = 5;
-$id = "SELECT task_id FROM tasks t WHERE task_parent=task_id and task_project=".$project_id." ORDER BY task_id";
-
-for($int=0;$int<1;$int++){
-	$id = "SELECT task_id FROM tasks t WHERE task_parent in (".$id.") and task_id != task_parent and task_project=".$project_id." ORDER BY task_id";
-}
-$query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t WHERE task_id in(".$id.") and task_project=".$project_id." ORDER BY task_wbs_index";
-/*
-$query = "SELECT task_id, task_name, task_parent, task_start_date, task_finish_date FROM tasks t ".
-         "WHERE t.task_project = ".$project_id." ORDER BY task_id";
-*/
-
-$result = db_exec($query);
-$error = db_error();
-if ($error) {
-	echo $error;
-	exit;
-}
-$results = array();
-for ($i = 0; $i < db_num_rows($result); $i++) {
-	$results[] = db_fetch_assoc($result);
-}
-
-$res;
-foreach($results as $task){
-	$wbslv = CTask::getWBS($task['task_id']);
-	
-	$wbs = intval(substr($wbslv,0,1));
-	$res[$wbs-1][sizeof($res[$wbs-1])]= $task;
-}
-
-$vertical = true;
-
-for($j=0;$j<sizeof($res);$j++){
-	for($k=0;$k<sizeof($res[$j]);$k++){	
-		$wbslv = CTask::getWBS($res[$j][$k]['task_id']);
-		
-				$DB = new taskBoxDB($res[$j][$k]['task_id']);
-				$tbx = new TNNode($res[$j][$k]['task_id']);
-				$tbx->setFontPath("../fonts/Droid");
-				$tbx->setName($wbslv." ".$DB->getTaskName());
-				$tbx->setPlannedDataArray($DB->getPlannedData());
-				$tbx->setActualDataArray($DB->getActualData());
-				$tbx->setPlannedTimeframeArray($DB->getPlannedTimeframe());
-				$tbx->setActualTimeframeArray($DB->getActualTimeframe());
-				$tbx->setResourcesArray($DB->getActualResources());
-				$tbx->setProgress($DB->getProgress());
-				$tbx->setAlerts($DB->isAlerted());
-	
-				if($vertical){$TN->addTbx($tbx,$k,$j);}else{$TN->addTbx($tbx,$j,$k);}
-				
-	}
-}
-	
-
-$TN = $TN->createTN($vertical);
-
+if (isset($_REQUEST['a']))
 $TN->addDefaultDependancies($TN);
 
-$query = "SELECT * FROM task_dependencies t";
-
-$result = db_exec($query);
-$error = db_error();
-if ($error) {
-	echo $error;
-	exit;
-}
-$results = array();
-$num = db_num_rows($result);
-for ($i = 0; $i < $num; $i++) {
-	$results[] = db_fetch_assoc($result);
-}
 
 
-foreach($results as $conn){
-	$TN->addDependence($conn["dependencies_req_task_id"],$conn["dependencies_task_id"]);
-}
 
-/*
-$index = $TN->getIndex();
-for($i=0;$i<5;$i++){
-	$r = rand(0,3);
-	$c = rand(0,sizeof($index[$r])-1);
+$TN->drawConnections(false);
 
-	$ID1["riga"] = $r; $ID1["colonna"] = $c;
-
-	$r = rand(0,3);
-	$c = rand(0,sizeof($index[$r])-1);
-
-	$ID2["riga"] = $r; $ID2["colonna"] = $c;
-
-
-	$TN->addDependence($ID1,$ID2);
-}*/
-
-	$ID1["riga"] = 2; $ID1["colonna"] = 12;
-	$ID2["riga"] = 1; $ID2["colonna"] = 7;
-	//$TN->addDependence($ID1,$ID2);
-
-
-$TN->drawConnections($vertical);
-
-$TN->drawCriticalPath();
+//$TN->drawCriticalPath(3,false);
 
 $TN->printTN();
 ?>
