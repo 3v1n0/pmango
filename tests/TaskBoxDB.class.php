@@ -38,6 +38,10 @@ class taskBoxDB {
 		$this->pUseCache = $use ? true : false;
 	}
 
+	public function getId(){
+		return $this->pTaskID;
+	}
+	
 	public function getWBS() {
 		if (!$this->pWBS || !$this->pUseCache)
 			$this->pWBS = $this->pCTask->getWBS().".";
