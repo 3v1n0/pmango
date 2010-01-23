@@ -58,13 +58,13 @@ echo "durata attuale:  ".$array['duration']."  effort attuale:  ".$array['effort
 echo "<br><h1>1.3.1.6</h1><br>";
 $array = $tdb->getPlannedResources();
 foreach ($array as $stamp ) {
-echo "nome:  ".$stamp['name']."  ruolo:  ".$stamp['role']."  effort pianificato:  ".$stamp['get_planned'].'<br>';
+echo "nome:  ".$stamp['name']."  ruolo:  ".$stamp['role']."  effort pianificato:  ".$stamp['planned_effort'].'<br>';
 }
 
 echo "<br><h1>1.3.1.7</h1><br>";
 $array = $tdb->getActualResources();
 foreach ($array as $stamp ) {
-echo "nome:  ".$stamp['name']."  ruolo:  ".$stamp['role']."  effort attuale:  ".$stamp['get_actual'].'<br>';
+echo "nome:  ".$stamp['name']."  ruolo:  ".$stamp['role']."  effort attuale:  ".$stamp['actual_effort'].'<br>';
 }
 
 echo "<br><h1>1.3.1.8</h1><br>";
