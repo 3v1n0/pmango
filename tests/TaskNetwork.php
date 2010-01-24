@@ -83,89 +83,9 @@ class TaskNetwork {
 
 	
 //------Funzioni di classe------------
-	public function getIndex(){
-		return $this->index;
-	}
-
-	public function addTbx($tbx,$row,$col){
-		$this->index[$row][$col] = $tbx;
-	}
-
-	private function arrayConcat($arr1,$arr2){
-		foreach($arr2 as $x){
-			$arr1[sizeof($arr1)] = $x;
-		}
-		return $arr1;
-	}
-	
-	private function orderWbsId($array){
-		$task = new CTask();
-		for($i=0; $i< sizeof($array); $i++) {
-	 
-		    //imposto il min a i (quelli prima di i sono stati gia' ordinati)
-		    $min=$i;
-	 
-		    //parto da i+1 e, se trovo un elemento piu' piccolo, cambio min
-		    for($j=$i+1; $j<sizeof($array); $j++){
-				$minwbs = $task->getWBS($array[$min]);
-				$jwbs = $task->getWBS($array[$j]);
-				
-				if($jwbs<$minwbs){
-		 			$min=$j;
-		 		}
-		    }
-		 
-			    //se durante il for ho cambiato min, scambio arr[i] e arr[min].
-			    if ($min != $i){
-			    	$array = TaskNetwork::arraySwap($array, $i, $min);
-			    }
-		}
-		return $array;
-	}
-	
-	private function getTbxFromLevel($level){
-		$id = "SELECT task_id FROM tasks t WHERE task_parent=task_id and task_project=".$this->project." ORDER BY task_id";
-		$result = TaskNetwork::doQuery($id);
-		foreach($result as $res){
-			$results[sizeof($results)]= $res[0];
-		}	
-		unset($res);
+	public function createTN($level=0,$vertical=false,$tasks=null,$tbxsettings=null){
 		
-		$int=0;$sons;
-		while($int<$level){
-			$size = sizeof($results);
-			for($i=0;$i<$size;$i++){
-				$DB = new taskBoxDB($results[$i]);
-				$q = "SELECT task_id FROM tasks t WHERE task_parent <> task_id and task_parent=".$DB->getId()." and task_project=".$this->project." ORDER BY task_wbs_index";
-				$children = TaskNetwork::doQuery($q);
-				if(isset($children[0])){
-					unset($results[$i]);
-					foreach($children as $child){
-						$sons[sizeof($sons)] = $child["task_id"];
-					}
-				}
-			}
-			$results = TaskNetwork::trimArray($results);
-			$results = TaskNetwork::arrayConcat($results,$sons);
-			
-			unset($sons);			
-			$int++;
-		}
-		unset($result);
-
-		
-		foreach($results as $task){
-			$wbslv = CTask::getWBS($task);
-			$wbs = intval(substr($wbslv,0,1));
-			$res[$wbs-1][sizeof($res[$wbs-1])]= $task;
-		}
-		
-		return $res;
-	}
-	
-	public function createTN($level=0,$vertical=false){
-		
-		$res=$this->getTbxFromLevel($level);
+		$res=$this->getTbxFromLevel($level,$tasks);
 		
 		for($j=0;$j<sizeof($res);$j++){
 			$res[$j] = TaskNetwork::orderWbsId($res[$j]);
@@ -176,16 +96,37 @@ class TaskNetwork {
 						$DB = new taskBoxDB($res[$j][$k]);
 						$tbx = new TNNode($res[$j][$k]);
 						$tbx->setFontPath("../fonts/Droid");
+					if($tbxsettings['task_name']){
 						$tbx->setName($wbslv." ".$DB->getTaskName());
+					}
+					if($tbxsettings['planned_data']){
 						$tbx->setPlannedDataArray($DB->getPlannedData());
+					}
+					if($tbxsettings['actual_data']){
 						$tbx->setActualDataArray($DB->getActualData());
+					}
+					if($tbxsettings['planned_timeframe']){
 						$tbx->setPlannedTimeframeArray($DB->getPlannedTimeframe());
-						//$tbx->setActualTimeframeArray($DB->getActualTimeframe());
-						//$tbx->setResourcesArray($DB->getActualResources());
+					}
+					if($tbxsettings['actual_timeframe']){
+						$tbx->setActualTimeframeArray($DB->getActualTimeframe());
+					}
+					if($tbxsettings['resources']){
+						if($tbxsettings['resources'] == "actual"){
+							$tbx->setResourcesArray($DB->getActualResources());
+						}
+						elseif($tbxsettings['resources']== "planned"){
+							$tbx->setResourcesArray($DB->getPlannedResources());
+						}
+					}
+					if($tbxsettings['task_progress']){
 						$tbx->setProgress($DB->getProgress());
+					}
+					if($tbxsettings['task_alerts']){
 						$tbx->setAlerts($DB->isAlerted());
+					}
 			
-						if($vertical){$this->addTbx($tbx,$k,$j);}else{$this->addTbx($tbx,$j,$k);}
+					if($vertical){$this->addTbx($tbx,$k,$j);}else{$this->addTbx($tbx,$j,$k);}
 						
 			}
 		}
@@ -212,7 +153,7 @@ class TaskNetwork {
 			
 	}
 
-	public function addDefaultDependancies(){
+	public function addDefaultDependancies($allArrow=false){
 	$index = $this->getIndex();
 		
 	$query = "SELECT dependencies_task_id FROM task_dependencies t;";
@@ -230,8 +171,8 @@ class TaskNetwork {
 						}
 						if(!$bool){
 							$ID2["riga"] = $a; $ID2["colonna"] = $b;
-												 //TN  			 cr.path dash  under upper dist color
-							TaskNetwork::connect($this,null,$ID2, false, true,false,false,38,false,"gray");
+												 //TN  			 cr.path dash  under upper dist vertical color timegap arrow
+							TaskNetwork::connect($this,null,$ID2, false, true,false,false,38,false,"gray",false,$allArrow);
 						}
 					}
 			}
@@ -252,7 +193,7 @@ class TaskNetwork {
 						if(!$bool){
 							$ID1["riga"] = $a; $ID1["colonna"] = $b;
 												 //TN  			 cr.path dash  under upper dist
-							TaskNetwork::connect($this,$ID1,null, false, false,false,false,45,false,"gray");
+							TaskNetwork::connect($this,$ID1,null, false, false,false,false,45,false,"gray",false,$allArrow);
 						}
 					}
 
@@ -265,8 +206,7 @@ class TaskNetwork {
 		ImageDestroy($this->img);
 	}
 
-	
-	public function drawConnections($vertical=false){
+	public function drawConnections($vertical=false,$allArrow=false,$timeGaps=false){
 		$connex= array(); //array di connessioni gia effettuate
 		
 		$query = "SELECT * FROM task_dependencies t where dependencies_req_task_id in".
@@ -274,33 +214,30 @@ class TaskNetwork {
 				"dependencies_task_id in (SELECT task_id FROM tasks t WHERE "."
 				task_project = $this->project)";
 		$results = TaskNetwork::doQuery($query);
-			
-		
-	/*	foreach($results as $conn){
-			$this->addDependence($conn["dependencies_req_task_id"],$conn["dependencies_task_id"]);
-		}*/
-		
+					
 		for($i=0;$i<sizeof($results);$i++){
 			$upper =false; $under=false;
 	
 	
-	/*			$tbx1 = $this->index[$ID1["riga"]][$ID1["colonna"]];
-				$tbx2 = $this->index[$ID2["riga"]][$ID2["colonna"]];
-	*/
 			$tbxfrom = $results[$i]["dependencies_req_task_id"];
 			$coordfrom = $this->getTbxIndex($tbxfrom);
-			$control = true;
 			if(!isset($coordfrom)){
+				$control = true;
 				while ($control){
-					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
+					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id <> task_parent and task_id = ".$tbxfrom;
 					$result = TaskNetwork::doQuery($q);
-					$coordfrom = $this->getTbxIndex($result[0][0]);
-					if(isset($coordfrom)){
-						$under = true;	
+					if($result[0][0]){
+						$coordfrom = $this->getTbxIndex($result[0][0]);
+						if(isset($coordfrom)){
+							$under = true;	
+							$control = false;
+						} 
+						else{
+							$tbxfrom = $result[0][0];
+						}
+					}else{
+						$coordfrom= null;
 						$control = false;
-					} 
-					else{
-						$tbxfrom = $result[0][0];
 					}
 					unset($result);
 					
@@ -308,12 +245,12 @@ class TaskNetwork {
 			}
 			$tbxto = $results[$i]["dependencies_task_id"];		
 			$coordto = $this->getTbxIndex($tbxto);
-			$control = true;
-				if(!isset($coordto)){
-					$control = true;
-					while ($control){
-						$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxto;
-						$result = TaskNetwork::doQuery($q);
+			if(!isset($coordto)){
+				$control = true;
+				while ($control){
+					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id <> task_parent and task_id = ".$tbxto;
+					$result = TaskNetwork::doQuery($q);
+					if($result[0][0]){
 						$coordto = $this->getTbxIndex($result[0][0]);
 						if(isset($coordto)){
 							$upper = true;	
@@ -322,115 +259,26 @@ class TaskNetwork {
 						else{
 							$tbxto = $result[0][0];
 						}
-						unset($result);
-						
+					}else{
+						$coordto= null;
+						$control = false;
 					}
-				}
-				
-			$couple = implode(".",$coordfrom).",".implode(".",$coordto);
-
-			if(!in_array($couple,$connex)){
-				$this->connect($this,$coordfrom,$coordto,false,false,$under,$upper,20+2*$i,$vertical);
-				$connex[sizeof($connex)] = implode(".",$coordfrom).",".implode(".",$coordto);
-			}
-				//print_r($this);
-				//echo "connecting ",$tbx1->getID()," ",$tbx2->getID()."\n";
-	
-		}
-	}
-	
-	private function doQuery($query){
-		$result = db_exec($query);
-		$error = db_error();
-		if ($error) {
-			echo $error;
-			exit;
-		}
-		$results = array();
-		for ($i = 0; $i < db_num_rows($result); $i++) {
-			$results[] = db_fetch_assoc($result);
-		}
-	
-		return $results;
-	}
-	
-	
-	//funzione ricorsiva per il calcolo delle dipendenze interne
-	private function computeDependence($tbxarray){	
-			for($i=0;$i<sizeof($tbxarray);$i++){
-				$query = "SELECT dependencies_task_id FROM task_dependencies td WHERE td.dependencies_req_task_id =".$tbxarray[$i]["id"];
-				$results = TaskNetwork::doQuery($query);// restituisce i task dipendenti da tbx
-				if(isset($results[0])){
-					foreach($results as $dep){
-						$liv = sizeof($arraydep);
-						$arraydep[$liv]["id"] = $dep["dependencies_task_id"];
-						
-						$tdb = new TaskBoxDB($dep["dependencies_task_id"]);
-						$pdata = $tdb->getPlannedData();
-						$arraydep[$liv]["duration"] = intval($pdata["duration"]);
-						$arraydep[$liv]["effort"] = intval($pdata["effort"]);
-						$arraydep[$liv]["cost"] = intval($pdata["cost"]);
-						
-						$tbxarray[$i]["dependencies"] = TaskNetwork::computeDependence($arraydep);
-						unset($arraydep);
-					}			
+					unset($result);
+					
 				}
 			}
-			return $tbxarray;
-	}
-	
-	private function arraySwap($array,$i,$j){
-		$side=$array[$i];
-		$array[$i] = $array[$j];
-		$array[$j]= $side; 
-		unset($side);
-		return $array;
-	}
-	
-	private function orderArray($array){
-		$query = "SELECT project_finish_date FROM projects p WHERE p.project_id =".$this->project;
-		$res = TaskNetwork::doQuery($query);
-		$EpD = str_replace("-",".",substr($res[0][0],0,10));
-		$EpD = substr($EpD,8,2).".".substr($EpD,5,2).".".substr($EpD,0,4); //End Project Date
-		
-		//per ogni elemento di arr,
-		for($i=0; $i< sizeof($array); $i++) {
-	 
-		    //imposto il min a i (quelli prima di i sono stati gia' ordinati)
-		    $min=$i;
-	 
-		    //parto da i+1 e, se trovo un elemento piu' piccolo, cambio min
-		    for($j=$i+1; $j<sizeof($array); $j++){
-		        
-				if ($array[$j]["duration"] < $array[$min]["duration"]){
-					$min=$j;
+			if($coordfrom and $coordto){
+				$couple = implode(".",$coordfrom).",".implode(".",$coordto);
+				if(!in_array($couple,$connex)){
+												//			cr.path dash				dist	mode	  color	 timeGap
+					$this->connect($this,$coordfrom,$coordto,false,false,$under,$upper,20+2*$i,$vertical,"black",($timeGaps)?(($upper or $under)?false:true):false,$allArrow);
+					$connex[sizeof($connex)] = implode(".",$coordfrom).",".implode(".",$coordto);
 				}
-				elseif($array[$j]["duration"] == $array[$min]["duration"]){
-					if ($array[$j]["effort"] < $array[$min]["effort"]){
-						$min=$j;
-					}
-					elseif($array[$j]["effort"] == $array[$min]["effort"]){
-						if ($array[$j]["cost"] < $array[$min]["cost"]){
-							$min=$j;
-						}
-						elseif($array[$j]["cost"] == $array[$min]["cost"]){
-							$jtask = new taskBoxDB(substr($array[$j]["id"],(strrchr($array[$j]["id"],',')+1),(strlen($array[$j]["id"])-strrchr($array[$j]["id"],',')+1)));
-							$mintask = new taskBoxDB(substr($array[$min]["id"],(strrchr($array[$min]["id"],',')+1),(strlen($array[$min]["id"])-strrchr($array[$min]["id"],',')+1)));
-							
-						}
-					}
-				}
-		    }
-		 
-			    //se durante il for ho cambiato min, scambio arr[i] e arr[min].
-			    if ($min != $i){
-			    	$array = TaskNetwork::arraySwap($array, $i, $min);
-			    }
+			}				
 		}
-		return $array;
 	}
 	
-	public function drawCriticalPath($level, $vertical=false){
+	public function drawCriticalPath($level, $vertical=false,$allArrow=false){
 		
 		$index = $this->getTbxFromLevel($level);
 
@@ -525,8 +373,7 @@ class TaskNetwork {
 			}
 		}
 		
-		//$tbx = $this->index[$coordfrom["riga"]][$coordfrom["colonna"]];
-		$this->connect($this,null,$coordfrom,true,false,$under,$upper,25,$vertical);//connetto la start al primo task
+		$this->connect($this,null,$coordfrom,true,false,$under,$upper,25,$vertical,"black",false,$allArrow);//connetto la start al primo task
 	
 		for($i=2;$i<sizeof($tbxidpath)-1;$i++){
 			$tbxto =  $tbxarray[$i];
@@ -570,7 +417,7 @@ class TaskNetwork {
 		
 			
 			
-			$this->connect($this,$coordfrom,$coordto,true,false,$under,$upper,25,$vertical);
+			$this->connect($this,$coordfrom,$coordto,true,false,$under,$upper,25,$vertical,"black",($timeGaps)?(($upper or $under)?false:true):false,$allArrow);
 			
 			$coordfrom = $coordto;
 		}
@@ -595,11 +442,10 @@ class TaskNetwork {
 			}
 		}
 		
-		$this->connect($this,$coordfrom,null,true,false,$under,$upper,25,$vertical);//connetto la start al primo task
+		$this->connect($this,$coordfrom,null,true,false,$under,$upper,25,$vertical,"black",false,$allArrow);
 		
 	}
 
-	
 //------Funzioni di classe------------fine
 
 //------Funzioni di disegno------------
@@ -639,7 +485,7 @@ class TaskNetwork {
 	  
 	}
 
-	//wrapper fiunzioni di base disegno
+	//wrapper funzioni di base disegno
 	private function imageline($im, $x1, $y1, $dx, $dy, $color){
 		 imageline($im, $x1, $y1, $dx, $dy, $color);
 	}
@@ -647,7 +493,6 @@ class TaskNetwork {
 	private function imagedashedline($im, $x1, $y1, $dx, $dy, $color){
 		 imagedashedline($im, $x1, $y1, $dx, $dy, $color);
 	}
-
 
 	private function arrow($im, $x1, $y1, $x2, $y2, $alength, $awidth, $color) {
 	    $distance = sqrt(pow($x1 - $x2, 2) + pow($y1 - $y2, 2));
@@ -712,9 +557,8 @@ class TaskNetwork {
 	    imagefilledpolygon($im, array($x2, $y2, $x3, $y3, $x4, $y4), 3, $color);
 	}
 
-
 	//traccia una freccia passante per tutti i punti dell'array dato
-	private function patharrow($im,$points/*array*/,$color,$type,$text=""){
+	private function patharrow($im,$points/*array*/,$color,$type,$allArrow=false,$text=""){
 		$line;$arrow;
 		switch($type){
 			case "criticalPath":$line="imageboldline";$arrow="boldarrow";break;
@@ -738,8 +582,8 @@ class TaskNetwork {
 				$tx=$points[$i]["x"];
 				$ty=$points[$i]["y"];
 				
-				TaskNetwork::$arrow($im, $fx,$fy, $tx,$ty,3,3, $color);
-				//TaskNetwork::$line($im, $fx,$fy, $tx,$ty, $color);
+				if($allArrow){TaskNetwork::$arrow($im, $fx,$fy, $tx,$ty,3,3, $color);}
+				else{ TaskNetwork::$line($im, $fx,$fy, $tx,$ty, $color);}
 				
 				$fx=$tx;
 				$fy=$ty;
@@ -758,7 +602,7 @@ class TaskNetwork {
 		}		
 	}
 	
-	private function connect(TaskNetwork $TaskNetwork, $ID1,$ID2,$criticalPath=false, $dash = false,$under= false,$upper=false, $dist=0,$vertical=false,$color="black"){
+	private function connect(TaskNetwork $TaskNetwork, $ID1,$ID2,$criticalPath=false, $dash = false,$under= false,$upper=false, $dist=0,$vertical=false,$color="black",$timeGap = false,$allArrow= false){
 		$type;$colore;$text=true;
 		if(!$criticalPath){
 			if($dash){
@@ -790,7 +634,9 @@ class TaskNetwork {
 		$tbx2 = $index[$ID2["riga"]][$ID2["colonna"]];
 
 		//trovo il time gap tra i due tbx
-		if($text and (isset($tbx1) and isset($tbx2))){$value=TaskNetwork::getTimeDiff($tbx1,$tbx2)."d";}
+		if($timeGap){
+			if($text and (isset($tbx1) and isset($tbx2))){$value=TaskNetwork::getTimeDiff($tbx1,$tbx2)."d";}
+		}
 		
 		//nel caso in cui siano Smp o Epm
 		if(!isset($tbx1)){
@@ -855,7 +701,7 @@ class TaskNetwork {
 					$points[5]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[5]["y"]=$tbx2BlankUp;
 					$points[6]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[6]["y"]=$tbx2ly-($tbx2y/2)+$tbx2shift;//arrivato
 				}
-				TaskNetwork::patharrow($img,$points,$colore,$type,$value);
+				TaskNetwork::patharrow($img,$points,$colore,$type,$allArrow,$value);
 					
 			}
 			else{// non adiacenti
@@ -879,7 +725,7 @@ class TaskNetwork {
 					$points[4]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[4]["y"]=min($tbx2BlankUp,$tbx1BlankUp);
 					$points[5]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[5]["y"]=$tbx2ly-($tbx2y/2)+$tbx2shift;//arrivato
 				}
-				TaskNetwork::patharrow($img,$points,$colore,$type,$value);
+				TaskNetwork::patharrow($img,$points,$colore,$type,$allArrow,$value);
 			}
 			
 			$TaskNetwork->img = $img;
@@ -922,7 +768,7 @@ class TaskNetwork {
 					$points[5]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[5]["y"]=$tbx2BlankUp;
 					$points[6]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[6]["y"]=$tbx2ly-($tbx2y/2)+$tbx2shift;//arrivato
 				}
-				TaskNetwork::patharrow($img,$points,$colore,$type,$value);
+				TaskNetwork::patharrow($img,$points,$colore,$type,$allArrow,$value);
 			}
 			elseif($tbx1ry>$tbx2ly){//tbx2 è piu in alto di tbx1
 				$points;
@@ -962,7 +808,7 @@ class TaskNetwork {
 					$points[8]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[8]["y"]=$tbx2BlankUp;
 					$points[9]["x"]= $tbx2lx+($tbx2x/2)-($tbx2shift/2)	;$points[9]["y"]=$tbx2ly-($tbx2y/2)+$tbx2shift;//arrivato
 				}
-				TaskNetwork::patharrow($img,$points,$colore,$type,$value);
+				TaskNetwork::patharrow($img,$points,$colore,$type,$allArrow,$value);
 			}
 		}
 		
@@ -1243,7 +1089,7 @@ class TaskNetwork {
 		return $result;
 	}
 	
-	public function getTbxIndex($tid){
+	private function getTbxIndex($tid){
 		$index= $this->index;
 		for($i=0;$i<sizeof($index);$i++){
 			for($j=0;$j<sizeof($index[$i]);$j++){
@@ -1269,33 +1115,227 @@ class TaskNetwork {
 		$result= $start-$end;
 		return round($result/24/60/60);//in giorni		
 	}
-//------Funzioni di setting------------fine
 
+	private function getIndex(){
+		return $this->index;
+	}
+
+	private function addTbx($tbx,$row,$col){
+		$this->index[$row][$col] = $tbx;
+	}
+
+	private function arrayConcat($arr1,$arr2){
+		foreach($arr2 as $x){
+			$arr1[sizeof($arr1)] = $x;
+		}
+		return $arr1;
+	}
+	
+	private function orderWbsId($array){
+		$task = new CTask();
+		for($i=0; $i< sizeof($array); $i++) {
+	 
+		    //imposto il min a i (quelli prima di i sono stati gia' ordinati)
+		    $min=$i;
+	 
+		    //parto da i+1 e, se trovo un elemento piu' piccolo, cambio min
+		    for($j=$i+1; $j<sizeof($array); $j++){
+				$minwbs = $task->getWBS($array[$min]);
+				$jwbs = $task->getWBS($array[$j]);
+				
+				if($jwbs<$minwbs){
+		 			$min=$j;
+		 		}
+		    }
+		 
+			    //se durante il for ho cambiato min, scambio arr[i] e arr[min].
+			    if ($min != $i){
+			    	$array = TaskNetwork::arraySwap($array, $i, $min);
+			    }
+		}
+		return $array;
+	}
+	
+	private function getTbxFromLevel($level,$tasks=null){
+		if(!$tasks){//se non mi è stato passato un array di task aperti me li creo io
+			$id = "SELECT task_id FROM tasks t WHERE task_parent=task_id and task_project=".$this->project." ORDER BY task_id";
+			$result = TaskNetwork::doQuery($id);
+			foreach($result as $res){
+				$results[sizeof($results)]= $res[0];
+			}	
+			unset($res);
+			
+			$int=0;$sons;
+			while($int<$level){
+				$size = sizeof($results);
+				for($i=0;$i<$size;$i++){
+					$DB = new taskBoxDB($results[$i]);
+					$q = "SELECT task_id FROM tasks t WHERE task_parent <> task_id and task_parent=".$DB->getId()." and task_project=".$this->project." ORDER BY task_wbs_index";
+					$children = TaskNetwork::doQuery($q);
+					if(isset($children[0])){
+						unset($results[$i]);
+						foreach($children as $child){
+							$sons[sizeof($sons)] = $child["task_id"];
+						}
+					}
+				}
+				$results = TaskNetwork::trimArray($results);
+				$results = TaskNetwork::arrayConcat($results,$sons);
+				
+				unset($sons);			
+				$int++;
+			}
+			unset($result);
+		}
+		else{// uso quello passatomi
+			$results = $tasks;
+		}
+		
+		foreach($results as $task){
+			$wbslv = CTask::getWBS($task);
+			$wbs = intval(substr($wbslv,0,1));
+			$res[$wbs-1][sizeof($res[$wbs-1])]= $task;
+		}
+		
+		return $res;
+	}
+	
+	private function doQuery($query){
+		$result = db_exec($query);
+		$error = db_error();
+		if ($error) {
+			echo $error;
+			exit;
+		}
+		$results = array();
+		for ($i = 0; $i < db_num_rows($result); $i++) {
+			$results[] = db_fetch_assoc($result);
+		}
+	
+		return $results;
+	}
+	
+	//funzione ricorsiva per il calcolo delle dipendenze interne
+	private function computeDependence($tbxarray){	
+			for($i=0;$i<sizeof($tbxarray);$i++){
+				$query = "SELECT dependencies_task_id FROM task_dependencies td WHERE td.dependencies_req_task_id =".$tbxarray[$i]["id"];
+				$results = TaskNetwork::doQuery($query);// restituisce i task dipendenti da tbx
+				if(isset($results[0])){
+					foreach($results as $dep){
+						$liv = sizeof($arraydep);
+						$arraydep[$liv]["id"] = $dep["dependencies_task_id"];
+						
+						$tdb = new TaskBoxDB($dep["dependencies_task_id"]);
+						$pdata = $tdb->getPlannedData();
+						$arraydep[$liv]["duration"] = intval($pdata["duration"]);
+						$arraydep[$liv]["effort"] = intval($pdata["effort"]);
+						$arraydep[$liv]["cost"] = intval($pdata["cost"]);
+						
+						$tbxarray[$i]["dependencies"] = TaskNetwork::computeDependence($arraydep);
+						unset($arraydep);
+					}			
+				}
+			}
+			return $tbxarray;
+	}
+	
+	private function arraySwap($array,$i,$j){
+		$side=$array[$i];
+		$array[$i] = $array[$j];
+		$array[$j]= $side; 
+		unset($side);
+		return $array;
+	}
+	
+	private function orderArray($array){
+		$query = "SELECT project_finish_date FROM projects p WHERE p.project_id =".$this->project;
+		$res = TaskNetwork::doQuery($query);
+		$EpD = str_replace("-",".",substr($res[0][0],0,10));
+		$EpD = substr($EpD,8,2).".".substr($EpD,5,2).".".substr($EpD,0,4); //End Project Date
+		
+		//per ogni elemento di arr,
+		for($i=0; $i< sizeof($array); $i++) {
+	 
+		    //imposto il min a i (quelli prima di i sono stati gia' ordinati)
+		    $min=$i;
+	 
+		    //parto da i+1 e, se trovo un elemento piu' piccolo, cambio min
+		    for($j=$i+1; $j<sizeof($array); $j++){
+		        
+				if ($array[$j]["duration"] < $array[$min]["duration"]){
+					$min=$j;
+				}
+				elseif($array[$j]["duration"] == $array[$min]["duration"]){
+					if ($array[$j]["effort"] < $array[$min]["effort"]){
+						$min=$j;
+					}
+					elseif($array[$j]["effort"] == $array[$min]["effort"]){
+						if ($array[$j]["cost"] < $array[$min]["cost"]){
+							$min=$j;
+						}
+						elseif($array[$j]["cost"] == $array[$min]["cost"]){
+							$jtask = new taskBoxDB(substr($array[$j]["id"],(strrchr($array[$j]["id"],',')+1),(strlen($array[$j]["id"])-strrchr($array[$j]["id"],',')+1)));
+							$mintask = new taskBoxDB(substr($array[$min]["id"],(strrchr($array[$min]["id"],',')+1),(strlen($array[$min]["id"])-strrchr($array[$min]["id"],',')+1)));
+							
+						}
+					}
+				}
+		    }
+		 
+			    //se durante il for ho cambiato min, scambio arr[i] e arr[min].
+			    if ($min != $i){
+			    	$array = TaskNetwork::arraySwap($array, $i, $min);
+			    }
+		}
+		return $array;
+	}
+		
+//------Funzioni di setting------------fine
+	
 }
 
 $project_id = defVal(@$_REQUEST['project_id'], 0);
 
-$task_level = $AppUI->getState('ExplodeTasks', 1);
-$tasks_closed = $AppUI->getState("tasks_closed");
-$tasks_opened = $AppUI->getState("tasks_opened");
+$tbxsettings['task_name'] = defVal(@$_REQUEST['task_name'], false);
+$tbxsettings['task_alerts'] = defVal(@$_REQUEST['task_alerts'], false);
+$tbxsettings['task_progress'] = defVal(@$_REQUEST['task_progress'], false);
+$tbxsettings['planned_data'] = defVal(@$_REQUEST['planned_data'], false);
+$tbxsettings['actual_data'] = defVal(@$_REQUEST['actual_data'], false);
+$tbxsettings['planned_timeframe'] = defVal(@$_REQUEST['planned_timeframe'], false);
+$tbxsettings['actual_timeframe'] = defVal(@$_REQUEST['actual_timeframe'], false);
+$tbxsettings['resources'] = defVal(@$_REQUEST['resources'], null);
 
+$explode_tasks = defVal(@$_REQUEST['explode_tasks'], 0);
+$max_wbs_lv =  defVal(@$_REQUEST['max_wbs_lv'], 3);
+$vertical_view = defVal(@$_REQUEST['vertical_view'], false);
+$task_to_view = $tasks_opened = $AppUI->getState("tasks_opened");
+$all_arrow =  defVal(@$_REQUEST['all_arrow'], false);
+$time_gaps =  defVal(@$_REQUEST['time_gaps'], false);
 
-/// creazione TN vuota
-	$TN = new TaskNetwork($project_id);
+$critical_path = defVal(@$_REQUEST['critical_path'], false);
+$dependencies = defVal(@$_REQUEST['dependencies'], false);
+$default_dep = defVal(@$_REQUEST['default_dep'], false);
 
+// creazione TN vuota
+$TN = new TaskNetwork($project_id);
 
-				// lv vertical
-$TN->createTN(0,false);
+//$tasks = array(86,92,124,274,545,93,97,98);
+		  // lv vertical
+$TN->createTN($explode_tasks,$vertical_view,$task_to_view,$tbxsettings);
 
-if (isset($_REQUEST['a']))
-$TN->addDefaultDependancies($TN);
+if ($default_dep){
+	$TN->addDefaultDependancies($all_arrow);
+}
 
+if($dependencies){
+	$TN->drawConnections($vertical_view,$all_arrow,$time_gaps);
+}
 
-
-
-$TN->drawConnections(false);
-
-//$TN->drawCriticalPath(3,false);
+if($critical_path){
+	$TN->drawCriticalPath($max_wbs_lv,$vertical_view,$all_arrow,$time_gaps);
+}
 
 $TN->printTN();
+//esempio query
+//http://localhost/pmango/tests/TaskNetwork.php?project_id=5&task_name=true&task_alerts=true&task_progress=true&resources=planned&explode_tasks=1&vertical_view=false&default_dep=true&all_arrow=true&dependencies=true&time_gaps=true&critical_path=true
 ?>
