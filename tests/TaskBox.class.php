@@ -218,7 +218,7 @@ class TaskBox {
 
 		$this->pBorderSize = 1;
 
-		$tmp = new TextBlock("+ 3.3.", $this->pFontBold, $this->pFontSize);
+		$tmp = new TextBlock("+ 3.3.3", $this->pFontBold, $this->pFontSize);
 		$tmp = new BorderedBlock($tmp, 0, $this->pFontSize);
 		$this->pMinWidth = $tmp->getWidth();
 		$this->pMaxWidth = $this->pMinWidth * 3;
@@ -436,7 +436,7 @@ class TaskBox {
 	public function getId() {
 		return $this->pID;
 	}
-	
+
 	public function getName(){
 		return $this->pName;
 	}
