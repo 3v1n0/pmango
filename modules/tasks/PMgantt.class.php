@@ -730,8 +730,6 @@ class PMGantt /*implements PMGraph TODO */ {
 			$progress = intval(CTask::getPr($a["task_id"]));
 			if ($progress > 100) $progress = 100;
 			else if ($progress < 0) $progress = 0;
-			//$ac = );
-			//$progress = 0;//$progress > 0 ? intval($progress) : 0;
 
 			$cap = "";
 			if(!$start || $start == "0000-00-00"){
@@ -924,7 +922,7 @@ class PMGantt /*implements PMGraph TODO */ {
 					// find row num of dependencies
 					for($d = 0; $d < count($this->pTasks); $d++ ) {
 						if($this->pTasks[$d]["task_id"] == $dep["dependencies_task_id"] && $d != $bar->GetLineNbr()) {
-							$bar->SetConstrain($d, CONSTRAIN_ENDSTART, $this->pUseColors ? 'brown' : 'gray4');
+							$bar->SetConstrain(2*$d, CONSTRAIN_ENDSTART, $this->pUseColors ? 'brown' : 'gray4');
 						}
 					}
 				}
