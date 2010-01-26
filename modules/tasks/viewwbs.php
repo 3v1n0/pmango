@@ -88,9 +88,72 @@ $graph_img_src = "?m=tasks&suppressHeaders=1&a=wbs&project_id=$project_id" .
       	         "&a_time=".($show_a_time ? "true" : "false");
 ?>
 
+<style type="text/css">
+		.graph {
+             width: 600px;
+             height: 400px;
+             border: 1px solid black;
+             position: relative;
+         }
+</style>
+
 <script type="text/javascript">
 
+var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth : document.body.offsetWidth) * 0.95;
 var expandChanged = false;
+var iviewer;
+
+$(function(){
+	$("#graph").iviewer({
+           src: "./style/default/images/loader.gif",
+           zoom: 200,
+           zoom_min: 5,
+           zoom_max: 1000,
+           update_on_resize: true,
+           ui_disabled: true,
+           initCallback: function() {
+               iviewer = this;
+           }
+      });
+});
+
+$(function () {
+	var img = new Image();
+
+	$(img).load(function () {
+		$(this).hide();
+		iviewer.settings.ui_disabled = false;
+		iviewer.settings.zoom = "fit";
+		iviewer.img_object.display_width = 0;
+		iviewer.img_object.display_height = 0;
+		iviewer.img_object.orig_width = img.width;
+		iviewer.img_object.orig_height = img.height;
+		iviewer.createui();
+		iviewer.loadImage(img.src);
+		$(this).fadeIn();
+	})
+
+	    .error(function () {
+ 	    	iviewer.loadImage('./style/default/images/graph_loading_error.png');
+	    })
+
+	    .attr('src', '<?php  echo $graph_img_src; ?>');
+	});
+
+$(function() {
+	$("#graph").resizable({
+			minHeight: 300,
+			minWidth: 400,
+
+			stop: function(event, ui) {
+				iviewer.update_container_info();
+				if (iviewer.settings.zoom == "fit")
+					iviewer.fit();
+				else
+					iviewer.set_zoom(iviewer.current_zoom);
+			}
+	});
+});
 
 function resourceSelectSwap(actual) {
 	if (actual) {
@@ -101,9 +164,8 @@ function resourceSelectSwap(actual) {
 }
 
 </script>
-
-<table id='tab_settings_content' style="display: none;" border='0' cellpadding='1' cellspacing='3' align="center">
-	<form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
+<form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
+	<table id='tab_settings_content' style="display: none;" border='0' cellpadding='1' cellspacing='3' align="center">
 		<tr>
 			<td align='left' valign="top" style="border-right: solid transparent 20px;">
 				<table border="0" cellspacing="0">
@@ -209,8 +271,8 @@ function resourceSelectSwap(actual) {
 				<input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='submit();'>
 			</td>
 		</tr>
-	</form>
-</table>
+	</table>
+</form>
 
 <br />
 <table cellspacing="0" cellpadding="0" border="1" align="center" style="border-top-style: hidden;">
@@ -219,9 +281,11 @@ function resourceSelectSwap(actual) {
 <?php
 if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )) {
 ?>
-<!--		<div id="graphloader"></div>-->
-<!--		<div id="graph"></div>-->
-		<img src="<?php echo $graph_img_src ?>" />
+		<div id="graph" class="graph"></div>
+		
+		<script type="text/javascript">
+			$('#graph').width(graphWidth);
+		</script>
 <?php
 } else {
 	echo $AppUI->_( "No tasks to display" );
