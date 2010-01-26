@@ -105,35 +105,28 @@ $df = $AppUI->getPref('SHDATEFORMAT');
 $project_start = new CDate($project_dates['project_start_date']);
 $project_end = new CDate($project_dates['project_finish_date']);
 
-switch($display_option) {
-	case 'custom':
-		$start_date = intval($sdate) ? new CDate($sdate) : new CDate();
-		$end_date = intval($edate) ? new CDate($edate) : new CDate();
-		break;
-	case 'from_start':
-		$start_date = $project_start;
-		$end_date = new CDate();
-		$end_date->addDays(1);
-		break;
-	case 'to_end':
-		$start_date = new CDate();
-		
-		if ($start_date->after($project_end))
-			$start_date = $project_start;
-		
-		$start_date->addDays(-1);
-		$end_date = $project_end;
-		break;
-	case 'month':
-		$start_date = new CDate();
-		$start_date->addMonths( -$scroll_date );
-		$end_date = new CDate();
-		$end_date->addMonths( $scroll_date );
-	default:
-		$start_date = $project_start;
-		$end_date = $project_end;
-		break;
-}
+$start_dates['all'] = $project_start;
+$end_dates['all'] = $project_end;
+
+$today = new CDate();
+$start_dates['custom'] = intval($sdate) ? new CDate($sdate) : clone $today;
+$end_dates['custom'] = intval($edate) ? new CDate($edate) : clone $today;
+
+$today = new CDate(); $today->addDays(1);
+$start_dates['from_start'] = clone $project_start;
+$end_dates['from_start'] = clone $today;
+
+$today = new CDate(); $today->addDays(-1);
+$start_dates['to_end'] = $today->after($project_end) ? clone $project_start : clone $today;
+$end_dates['to_end'] = clone $project_end;
+
+$today = new CDate(); $today->addMonths(-$scroll_date);
+$start_dates['this_month'] = $today;
+$today = new CDate(); $today->addMonths($scroll_date);
+$end_dates['this_month'] = clone $today;
+
+$start_date = $start_dates[$display_option];
+$end_date = $end_dates[$display_option];
 
 // setup the title block
 if (!@$min_view) {
@@ -147,14 +140,14 @@ $graph_img_src = "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id" .
 	  "&show_names=".($show_names ? "true" : "false")."&draw_deps=".($show_deps ? "true" : "false").
 	  "&colors=".($show_bw ? "false" : "true").
 	  ($display_option == 'all' ? '' :
-		'&start_date='.$start_date->format("%Y-%m-%d").'&finish_date='.$end_date->format( "%Y-%m-%d" ));
+		'&start_date='.$start_date->format("%Y-%m-%d").'&finish_date='.$end_date->format("%Y-%m-%d"));
 ?>
 
 <style type="text/css">
 	#graphloader {
 		width: 100px;
 		height: 100px;
-		background: url('images/loader.gif') no-repeat center center;
+		background: url('./style/default/images/loader.gif') no-repeat center center;
 		background-color: #fff;
 	}
 </style>
@@ -164,6 +157,7 @@ var projectID = <?php  echo $project_id ?>;
 var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth : document.body.offsetWidth) * 0.95;
 var expandChanged = false;
 var calendarField = '';
+var graph_load_error = './style/default/images/graph_loading_error.png';
 
 function popCalendar( field ){
 	calendarField = field;
@@ -223,22 +217,34 @@ function scrollNext() {
 
 function showFromStart() {
 	document.editFrm.display_option.value = "from_start";
-	document.editFrm.submit();
+	document.editFrm.sdate.value = '<?php echo $start_dates['from_start']->format("%Y%m%d"); ?>';
+	document.editFrm.edate.value = '<?php echo $end_dates['from_start']->format("%Y%m%d"); ?>';
+	doSubmit();
+//	document.editFrm.submit();
 }
 
 function showToEnd() {
 	document.editFrm.display_option.value = "to_end";
-	document.editFrm.submit();
+	document.editFrm.sdate.value = '<?php echo $start_dates['to_end']->format("%Y%m%d"); ?>';
+	document.editFrm.edate.value = '<?php echo $end_dates['to_end']->format("%Y%m%d"); ?>';
+	doSubmit();
+//	document.editFrm.submit();
 }
 
 function showThisMonth() {
 	document.editFrm.display_option.value = "this_month";
-	document.editFrm.submit();
+	document.editFrm.sdate.value = '<?php echo $start_dates['this_month']->format("%Y%m%d"); ?>';
+	document.editFrm.edate.value = '<?php echo $end_dates['this_month']->format("%Y%m%d"); ?>';
+	doSubmit();
+//	document.editFrm.submit();
 }
 
 function showFullProject() {
 	document.editFrm.display_option.value = "all";
-	document.editFrm.submit();
+	document.editFrm.sdate.value = '<?php echo $start_dates['all']->format("%Y%m%d"); ?>';
+	document.editFrm.edate.value = '<?php echo $end_dates['all']->format("%Y%m%d"); ?>';
+	doSubmit();
+//	document.editFrm.submit();
 }
 
 $(function(){
@@ -270,7 +276,7 @@ function loadGraph(src) {
 		      	$(this).fadeIn();
 			})
 
-			.attr('src', './style/default/images/graph_loading_error.png');
+			.attr('src', graph_load_error);
 	    })
 		
 	    .attr('src', src+'&width='+graphWidth);
@@ -296,7 +302,7 @@ function buildGraphUrl() {
 	}
 
 	if (document.editFrm.display_option.value != 'all') {
-		url += 'start_date='+start_date+'&finish_date='+end_date;
+		url += '&start_date='+start_date+'&finish_date='+end_date;
 	}
 
 	return url;
@@ -452,7 +458,6 @@ loadGraph('<?php echo $graph_img_src; ?>');
 		</table>
 	</td>
 
-	<input type="hidden" name="reset_level" value="1" />
 	<td valign="bottom" align="left">
 		<input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>" onclick='doSubmit();'>
 	</td>
@@ -495,7 +500,7 @@ loadGraph('<?php echo $graph_img_src; ?>');
 				if ($tview) $filename=PM_footerPdf($pdf, $name[0]['project_name'], 2);
 				else $filename=PM_footerPdf($pdf, $name[0]['project_name'], 1);
 				?>
-				<a href="<?echo $filename;?>"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a><?
+				<a href="<?echo $filename;?>"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="bottom"></a><?
 			}?>
 
 
