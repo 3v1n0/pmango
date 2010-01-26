@@ -127,7 +127,13 @@ $(function () {
 	
 	$(img).load(function () {
 
+		var zoom = "fit";
+
+		if (img.width < $("#graph").width())
+			zoom = 100;
+
 		$("#graph").iviewer({
+			   zoom: zoom,
 	           src: img.src,
 	           zoom_min: 5,
 	           zoom_max: 1000,
