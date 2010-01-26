@@ -493,16 +493,20 @@ class TaskBox {
 		return $this->pGDImage;
 	}
 
-	public function draw($format = "png") {
+	public function draw($format = "png", $file = null) {
 		switch ($format) {
 			case "png":
-				header("Content-type: image/png");
-				imagepng($this->getImage());
+				if (!$file) header("Content-type: image/png");
+				imagepng($this->getImage(), $file);
 				break;
 			case "jpg":
 			case "jpeg":
-				header("Content-type: image/jpeg");
-				imagejpeg($this->getImage());
+				if (!$file) header("Content-type: image/jpeg");
+				imagejpeg($this->getImage(), $file);
+				break;
+			case "gif":
+				if (!$file) header("Content-type: image/jpeg");
+				imagegif($this->getImage(), $file);
 				break;
 		}
 	}
