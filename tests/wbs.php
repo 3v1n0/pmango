@@ -18,30 +18,27 @@ if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
 }
 $AppUI =& $_SESSION['AppUI'];
 include "$baseDir/modules/tasks/tasks.class.php";
-
 include "TaskBox.class.php";
 include "TaskBoxDB.class.php";
 
 include "$baseDir/lib/phptreegraph/GDRenderer.php";
 
-/*
-include "$baseDir/classes/ui.class.php";
-if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
-    if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
-    {
-        $AppUI =& $_SESSION['AppUI'];
-		$user_id = $AppUI->user_id;
-        addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
-    }
-
-	$_SESSION['AppUI'] = new CAppUI;
-}
-$AppUI =& $_SESSION['AppUI'];
-include "$baseDir/modules/tasks/tasks.class.php"; */
-
 ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
 
 $project_id = 5;
+
+
+// Open: progettazione
+$tasks_opened = array(95);
+// Closed: analisi and Organizzazione
+$tasks_closed = array(79, 86, 212, 87, 92, 107, 124, 88, 274, 134, 316, 90, 135, 91, 97, 108, 139, 317, 115, 143, 177, 318, 116, 178, 258, 117, 179, 118);
+$tasks_level = 2;
+
+//$tasks_opened = array();
+//$tasks_closed = array();
+//$tasks_level = 4;
+
+
 $query = "SELECT task_id, task_parent FROM tasks t ".
          "WHERE t.task_project = ".$project_id." ORDER BY task_id, task_parent, task_wbs_index";
 
@@ -65,13 +62,30 @@ $id = 2;
 $translate = array();
 foreach ($results as $task) {
 	
-	$task_level = CTask::getTaskLevel($task['task_id']);
+	$add = false;
 	
-	if ($task_level < 4 || $task_level <= 0) {
+	//$level = CTask::getTaskLevel($task['task_id']);
+	    
+	if ($task["task_id"] == $task["task_parent"])
+			$add = true;
+
+	if (CTask::getTaskLevel($task["task_id"]) <= $tasks_level &&
+		!in_array($task["task_id"], $tasks_closed) ||
+	    in_array($task["task_id"], $tasks_closed) &&
+	    !in_array($task["task_parent"], $tasks_closed) &&
+	    !CTask::isLeafSt($task["task_id"])) {
+		   $add = true;
+	}
+
+	if (@in_array($task["task_id"], $tasks_opened) ||
+		@in_array($task["task_parent"], $tasks_opened))
+		$add = true;
+		
+	if ($add) {
 		$tbxdb = new taskBoxDB($task['task_id']);
 		$wbs = $tbxdb->getWBS();
-		
 		$translate[$task['task_id']] = $id;
+		
 		$items[$wbs]['task_id'] = $task['task_id'];
 		$items[$wbs]['task_parent'] = $task['task_parent'];
 		$items[$wbs]['tbxdb'] = $tbxdb;
@@ -83,8 +97,9 @@ foreach ($results as $task) {
 
 unset($project);
 unset($results);
-ksort($items);
 
+ksort($items);
+$tasks_opened = $AppUI->getState("tasks_opened");
 
 foreach ($items as $item) {
 	$parent = 1;
@@ -95,7 +110,7 @@ foreach ($items as $item) {
 	$tbdb = $item['tbxdb'];
 
 	$tbx = new TaskBox($tbdb->getWBS());
-	$tbx->setName($tbdb->getTaskName());
+//	$tbx->setName($tbdb->getTaskName());
 //	$tbx->setProgress($tbdb->getProgress());
 //	$tbx->setPlannedDataArray($tbdb->getPlannedData());
 //	$tbx->setActualDataArray($tbdb->getActualData());
