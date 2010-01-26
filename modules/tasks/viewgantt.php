@@ -226,6 +226,12 @@ function showFullProject() {
 	document.editFrm.submit();
 }
 
+$(function(){
+	$("#graphloader").width(graphWidth);
+	$("#graphloader").height(400);
+	$("#graphloader").css("background-color", "#fff");
+});
+
 function loadGraph(src) { 
 	$(function () {
 		var img = new Image();
