@@ -16,7 +16,10 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
- - 2009.11.11: first stub
+ - 2010.01.26
+   0.5 added controls
+ - 2009.11.11
+   0.1 first stub
 
 ---------------------------------------------------------------------------
 
@@ -49,96 +52,185 @@
 ---------------------------------------------------------------------------
 */
 
-GLOBAL $AppUI, $min_view, $m, $a;
+global $m, $a;
+
+$project_id = dPgetParam($_GET, 'project_id', 0);
 
 $tasks_closed = $AppUI->getState("tasks_closed");
 $tasks_opened = $AppUI->getState("tasks_opened");
 
-$project_id = defVal( @$_GET['project_id'], 0);
-
-// setup the title block
-if (!@$min_view) {
-	$titleBlock = new CTitleBlock( 'WBS', 'applet-48.png',$m, "$m.$a" );
-	//$titleBlock->addCrumb( "?m=tasks", "tasks list" );
-	$titleBlock->addCrumb( "?m=projects&a=view&project_id=$project_id", "View project" );
-	$titleBlock->show();
+if (!empty($_POST)) {
+	$task_level = dPgetParam($_POST, 'explode_tasks', '1');
+	$AppUI->setState('ExplodeTasks', $task_level);
+	$AppUI->setState('tasks_opened', array());
+	$AppUI->setState('tasks_closed', array());
 }
 
+$show_names    = dPgetBoolParam($_POST, 'show_names');
+$show_progress = dPgetBoolParam($_POST, 'show_progress');
+$show_alerts   = dPgetBoolParam($_POST, 'show_alerts');
+$show_p_data   = dPgetBoolParam($_POST, 'show_p_data');
+$show_a_data   = dPgetBoolParam($_POST, 'show_a_data');
+$show_p_res    = dPgetBoolParam($_POST, 'show_p_res');
+$show_a_res    = dPgetBoolParam($_POST, 'show_a_res');
+$show_p_time   = dPgetBoolParam($_POST, 'show_p_time');
+$show_a_time   = dPgetBoolParam($_POST, 'show_a_time');
+
+$graph_img_src = "?m=tasks&suppressHeaders=1&a=wbs&project_id=$project_id" .
+	             "&names=".($show_names ? "true" : "false").
+	             "&progress=".($show_progress ? "true" : "false").
+	             "&alerts=".($show_alerts ? "true" : "false").
+      	         "&p_data=".($show_p_data ? "true" : "false").
+      	         "&a_data=".($show_a_data ? "true" : "false").
+	             "&p_res=".($show_p_res ? "true" : "false").
+	             "&a_res=".($show_a_res ? "true" : "false").
+      	         "&p_time=".($show_p_time ? "true" : "false").
+      	         "&a_time=".($show_a_time ? "true" : "false");
 ?>
 
+<script type="text/javascript">
+
+var expandChanged = false;
+
+function resourceSelectSwap(actual) {
+	if (actual) {
+		document.editFrm.show_p_res.checked = false;
+	} else {
+		document.editFrm.show_a_res.checked = false;
+	}
+}
+
+</script>
+
 <table id='tab_settings_content' style="display: none;" border='0' cellpadding='1' cellspacing='3' align="center">
-<tr>
-	<td align='left' valign="top" style="border-right: solid transparent 20px;">
-		<table border="0" cellspacing="0">
-			<tr>
-				<td class="tab_setting_title"><?php echo $AppUI->_('Show');?>:</td>
-				<td align="left">
-					<input type='checkbox' id="show_incomplete" name='show_incomplete'/>
-					<label for="show_incomplete"><?php echo $AppUI->_('Task Names'); ?></label>
-				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">&nbsp;</td>
-				<td align="left">
-					<input type='checkbox' id="show_incomplete" name='show_incomplete' />
-					<label for="show_incomplete"><?php echo $AppUI->_('Alerts'); ?></label>
-				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">&nbsp;</td>
-				<td align="left">
-					<input type='checkbox' id="show_incomplete" name='show_incomplete' />
-					<label for="show_incomplete"><?php echo $AppUI->_('Task Time limits'); ?></label>
-				</td>
-			</tr>
-			<tr>
-		</table>
-	</td>
-	<td align='left' valign="top" style="border-right: solid transparent 20px;">
-		<table border="0" cellspacing="0">
-			<tr>
-				<td class="tab_setting_title">&nbsp;</td>
-				<td align="left">
-					<input type='checkbox' id="show_incomplete" name='show_incomplete' />
-					<label for="show_incomplete"><?php echo $AppUI->_('Task Partecipants'); ?></label>
-				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">&nbsp;</td>
-				<td align="left">
-					<input type='checkbox' id="show_incomplete" name='show_incomplete' />
-					<label for="show_incomplete"><?php echo $AppUI->_('Task Progress'); ?></label>
-				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">&nbsp;</td>
-				<td align="left">
-					<input type='checkbox' id="show_incomplete" name='show_incomplete' />
-					<label for="show_incomplete"><?php echo $AppUI->_('Efforts and Costs'); ?></label>
-				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">&nbsp;</td>
-				<td align="left">
-					<input type='checkbox' id="show_incomplete" name='show_incomplete' />
-					<label for="show_incomplete"><?php echo $AppUI->_('Task Progress'); ?></label>
-				</td>
-			</tr>
-		</table>
-	</td>
-	<td valign="bottom" align="left"> <!-- FIXME this form only submit works! -->
-		<input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='if(compareDate(document.task_list_options.show_sdate,document.task_list_options.show_edate)) submit();'>
-		<!-- FIXME adding (before submit) the needed document.task_list_options.display_opion.value="custom"; -->
-	</td>
+	<form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
+		<tr>
+			<td align='left' valign="top" style="border-right: solid transparent 20px;">
+				<table border="0" cellspacing="0">
+					<tr>
+						<td class="tab_setting_title"><?php echo $AppUI->_('Show');?>:</td>
+						<td align="left">
+							<input type='checkbox' id="show_names" name='show_names' <? echo $show_names ? 'checked="checked" ' : '' ?>/>
+							<label for="show_names"><?php echo $AppUI->_('Task Names'); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="show_alerts" name='show_alerts' <? echo $show_alerts ? 'checked="checked" ' : '' ?>/>
+							<label for="show_alerts"><?php echo $AppUI->_('Alerts'); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="show_progress" name='show_progress' <? echo $show_progress ? 'checked="checked" ' : '' ?>/>
+							<label for="show_progress"><?php echo $AppUI->_('Progress'); ?></label>
+						</td>
+					</tr>
+					<tr>
+				</table>
+			</td>
+			<td align='left' valign="top" style="border-right: solid transparent 20px;">
+				<table border="0" cellspacing="0">
+					<tr>
+						<td class="tab_setting_title"><?php echo $AppUI->_('Planned Info'); ?>:</td>
+						<td align="left">
+							<input type='checkbox' id="show_p_data" name='show_p_data' <? echo $show_p_data ? 'checked="checked" ' : '' ?>/>
+							<label for="show_p_data"><?php echo $AppUI->_('Data'); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="show_p_res" name='show_p_res' onclick="resourceSelectSwap(false);" <? echo $show_p_res ? 'checked="checked" ' : '' ?>/>
+							<label for="show_p_res"><?php echo $AppUI->_('Resources'); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="show_p_time" name='show_p_time' <? echo $show_p_time ? 'checked="checked" ' : '' ?>/>
+							<label for="show_p_time"><?php echo $AppUI->_('Timeframe'); ?></label>
+						</td>
+					</tr>
+				</table>
+			</td>
+			<td align='left' valign="top" style="border-right: solid transparent 20px;">
+				<table border="0" cellspacing="0">
+					<tr>
+						<td class="tab_setting_title"><?php echo $AppUI->_('Actual Info'); ?>:</td>
+						<td align="left">
+							<input type='checkbox' id="show_a_data" name='show_a_data' <? echo $show_a_data ? 'checked="checked" ' : '' ?>/>
+							<label for="show_a_data"><?php echo $AppUI->_('Data'); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="show_a_res" name='show_a_res' onclick="resourceSelectSwap(true);" <? echo $show_a_res ? 'checked="checked" ' : '' ?>/>
+							<label for="show_a_res"><?php echo $AppUI->_('Resources'); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="show_a_time" name='show_a_time' <? echo $show_a_time ? 'checked="checked" ' : '' ?>/>
+							<label for="show_a_time"><?php echo $AppUI->_('Timeframe'); ?></label>
+						</td>
+					</tr>
+				</table>
+			</td>
+			<td align='left' valign="top" style="border-right: solid transparent 20px;">
+				<table border="0" cellspacing="0">
+					<tr>
+						<td class="tab_setting_title"><?php echo $AppUI->_('Explode tasks'); ?>:</td>
+						<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
+<?php
+								$maxLevel=CTask::getLevel($project_id);
+								$explodeTasks = $AppUI->getState('ExplodeTasks', '1');
+			
+						 		for($i=1; $i <=$maxLevel;$i++){
+										$arr2[$i-1] = "Level ".$i;
+							    		$arr[$i-1] = $i;}
+			
+								for($i = 0; $i < count($arr); $i++){
+							    	$selected = ($arr[$i] == $explodeTasks) ? 'selected="selected"' : '';
+							     	echo "<option value=\"{$arr[$i]}\" {$selected}>{$arr2[$i]}</option>\n";
+							 	}
+?>
+							</select>
+						</td>
+					</tr>
+				</table>
+			</td>
+				
+			<td valign="bottom" align="left"> <!-- FIXME this form only submit works! -->
+				<input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='submit();'>
+			</td>
+		</tr>
+	</form>
 </table>
 
-<table align='center'>
+<br />
+<table cellspacing="0" cellpadding="0" border="1" align="center" style="border-top-style: hidden;">
 	<tr>
-		<td align="center">
-			<img border="0" src="./WBS1.png" />
+		<td>
+<?php
+if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )) {
+?>
+<!--		<div id="graphloader"></div>-->
+<!--		<div id="graph"></div>-->
+		<img src="<?php echo $graph_img_src ?>" />
+<?php
+} else {
+	echo $AppUI->_( "No tasks to display" );
+}
+?>
 		</td>
 	</tr>
 </table>
+<br />
 
 
 
