@@ -97,20 +97,27 @@ $display_option = dPgetParam( $_POST, 'display_option', 'all' );
 // format dates
 $df = $AppUI->getPref('SHDATEFORMAT');
 
+$project_start = new CDate($project_dates['project_start_date']);
+$project_end = new CDate($project_dates['project_finish_date']);
+
 switch($display_option) {
 	case 'custom':
-		$start_date = intval( $sdate ) ? new CDate( $sdate ) : new CDate();
-		$end_date = intval( $edate ) ? new CDate( $edate ) : new CDate();
+		$start_date = intval($sdate) ? new CDate($sdate) : new CDate();
+		$end_date = intval($edate) ? new CDate($edate) : new CDate();
 		break;
 	case 'from_start':
-		$start_date = new CDate($project_dates['project_start_date']);
+		$start_date = $project_start;
 		$end_date = new CDate();
 		$end_date->addDays(1);
 		break;
 	case 'to_end':
 		$start_date = new CDate();
+		
+		if ($start_date->after($project_end))
+			$start_date = $project_start;
+		
 		$start_date->addDays(-1);
-		$end_date = new CDate($project_dates['project_finish_date']);
+		$end_date = $project_end;
 		break;
 	case 'month':
 		$start_date = new CDate();
@@ -118,8 +125,8 @@ switch($display_option) {
 		$end_date = new CDate();
 		$end_date->addMonths( $scroll_date );
 	default:
-		$start_date = new CDate($project_dates['project_start_date']);
-		$end_date = new CDate($project_dates['project_finish_date']);
+		$start_date = $project_start;
+		$end_date = $project_end;
 		break;
 }
 
@@ -130,8 +137,17 @@ if (!@$min_view) {
 	$titleBlock->addCrumb( "?m=projects&a=view&project_id=$project_id", "View project" );
 	$titleBlock->show();
 }
+
+$graph_img_src = "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id" .
+	  "&show_names=".($show_names ? "true" : "false")."&draw_deps=".($show_deps ? "true" : "false").
+	  "&colors=".($show_bw ? "false" : "true").
+	  ($display_option == 'all' ? '' :
+		'&start_date='.$start_date->format("%Y-%m-%d").'&finish_date='.$end_date->format( "%Y-%m-%d" ));
 ?>
 <script language="javascript">
+var projectID = <?php  echo $project_id ?>;
+var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth :document.body.offsetWidth) * 0.95;
+var expandChanged = false;
 var calendarField = '';
 
 function popCalendar( field ){
@@ -210,15 +226,74 @@ function showFullProject() {
 	document.editFrm.submit();
 }
 
-function doSubmit() {
-//	document.editFrm.display_option.value = "custom";
-//
-	if (document.editFrm.edate.value < document.editFrm.sdate.value)
-		alert("Start date must before end date");
-	else
-		document.editFrm.submit();
+function loadGraph(src) { 
+	$(function () {
+		var img = new Image();
+	
+		$(img).load(function () {
+			$(this).hide();
+			$('#graphloader').hide();
+			$('#graph').append(this);
+			$('#graph').show();
+	      	$(this).fadeIn();
+		})
+		
+	    .error(function () {
+	    	var errimg = new Image();
+
+	    	$(errimg).load(function () {
+				$(this).hide();
+				$('#graphloader').hide();
+				$('#graph').append(this);
+				$('#graph').show();
+		      	$(this).fadeIn();
+			})
+
+			.attr('src', './style/default/images/graph_loading_error.png');
+	    })
+		
+	    .attr('src', src+'&width='+graphWidth);
+	});
 }
 
+function buildGraphUrl() {
+	var show_names = document.editFrm.show_names.value;
+	var show_deps = document.editFrm.show_dependencies.value;
+	var show_bw = document.editFrm.show_bw.value;
+	var start_date = document.editFrm.sdate.value;
+	var end_date = document.editFrm.edate.value;
+	var explode = document.editFrm.explode_tasks.value;
+
+	var url = '?m=tasks&a=gantt&suppressHeaders=1&project_id='+projectID+
+	          '&show_names='+(show_names ? 'true' : 'false')+
+	          '&draw_deps='+(show_deps ? 'true' : 'false')+
+			  '&colors='+(show_bw ? 'false' : 'true');
+
+	if (expandChanged) {
+		url += '&explode_tasks='+explode;
+		expandChanged = false;
+	}
+
+	if (document.editFrm.display_option.value != 'all') {
+		url += 'start_date='+start_date+'&finish_date='+end_date;
+	}
+
+	return url;
+}
+
+function doSubmit() {
+
+	if (document.editFrm.edate.value < document.editFrm.sdate.value)
+		alert("Start date must before end date");
+	else {
+		//document.editFrm.submit(); //TODO enable on old browsers 
+		$('#graph').empty();
+		$('#graphloader').fadeIn();
+		loadGraph(buildGraphUrl());
+	}
+}
+
+loadGraph('<?php echo $graph_img_src; ?>');
 </script>
 
 <table id='tab_settings_content' border="0" cellpadding="4" cellspacing="0" align="center" style="display: none">
@@ -336,7 +411,7 @@ function doSubmit() {
 			<tr>				<td class="tab_setting_title">
 					<?php echo $AppUI->_('Explode tasks').": ";?>
 				</td>
-				<td>&nbsp; <select name="explode_tasks" class="text">
+				<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
 <?php
 					$maxLevel=CTask::getLevel($project_id);
 					$explodeTasks = $AppUI->getState('ExplodeTasks', '1');
@@ -438,15 +513,10 @@ function doSubmit() {
 	<td <?php if ($display_option != "all") echo "colspan='2'" ?>>
 <?php
 if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )) {
-	$src =
-	  "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id" .
-	  "&show_names=".($show_names ? "true" : "false")."&draw_deps=".($show_deps ? "true" : "false").
-	  "&colors=".($show_bw ? "false" : "true").
-	  ( $display_option == 'all' ? '' :
-		'&start_date=' . $start_date->format( "%Y-%m-%d" ) . '&finish_date=' . $end_date->format( "%Y-%m-%d" ) ) .
-	  "&width=' + ((navigator.appName=='Netscape'?window.innerWidth:document.body.offsetWidth)*0.95)+'";
-
-	echo "<script>document.write('<img src=\"$src\">')</script>";
+?>
+	<div id="graphloader"></div>
+	<div id="graph"></div>
+<?php
 } else {
 	echo $AppUI->_( "No tasks to display" );
 }
