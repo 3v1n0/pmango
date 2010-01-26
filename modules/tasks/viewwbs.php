@@ -56,14 +56,16 @@ global $m, $a;
 
 $project_id = dPgetParam($_GET, 'project_id', 0);
 
-$tasks_closed = $AppUI->getState("tasks_closed");
-$tasks_opened = $AppUI->getState("tasks_opened");
-
 if (!empty($_POST)) {
-	$task_level = dPgetParam($_POST, 'explode_tasks', '1');
-	$AppUI->setState('ExplodeTasks', $task_level);
-	$AppUI->setState('tasks_opened', array());
-	$AppUI->setState('tasks_closed', array());
+	$task_level = $AppUI->getState('ExplodeTasks');
+	$new_task_level = dPgetParam($_POST, 'explode_tasks', '1');
+	
+	if ($task_level != $new_task_level) {
+		$task_level = $new_task_level;
+		$AppUI->setState('ExplodeTasks', $task_level);
+		$AppUI->setState('tasks_opened', array());
+		$AppUI->setState('tasks_closed', array());
+	}
 }
 
 $show_names    = dPgetBoolParam($_POST, 'show_names');
