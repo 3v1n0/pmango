@@ -61,22 +61,13 @@ if ($error) {
 	exit;
 }
 //$results = array();
-for ($i = 0; $i < db_num_rows($result); $i++) {
-	$results[] = db_fetch_assoc($result);
-}
-
-$objTree = new GDRenderer(30, 10, 30, 50, 20);
-$tbx = new TaskBox(null);
-$tbx->setName("G3-sw4us");
-$objTree->add(1, 0, "", $tbx->getWidth(), $tbx->getHeight(), $tbx->getImage());
-
 $id = 2;
 $translate = array();
-foreach ($results as $task) {
+
+for ($i = 0; $i < db_num_rows($result); $i++) {
+	$task = db_fetch_assoc($result);
 	
 	$add = false;
-	
-	//$level = CTask::getTaskLevel($task['task_id']);
 	    
 	if ($task["task_id"] == $task["task_parent"])
 			$add = true;
@@ -107,11 +98,12 @@ foreach ($results as $task) {
 	}
 }
 
-unset($project);
-unset($results);
-
 ksort($items);
-$tasks_opened = $AppUI->getState("tasks_opened");
+
+$objTree = new GDRenderer(35, 10, 30);
+$tbx = new TaskBox(null);
+$tbx->setName("G3-sw4us");
+$objTree->add(1, 0, "", $tbx->getWidth(), $tbx->getHeight(), $tbx->getImage());
 
 foreach ($items as $item) {
 	$parent = 1;
