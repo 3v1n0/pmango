@@ -34,6 +34,7 @@ class Tree
 {
 	private $maxLevelHeight = array();
 	private $maxLevelWidth = array();
+	private $largestLevel = array();
 	private $previousLevelNode = array();
 	private $nodes = array();
 	private $root;
@@ -98,9 +99,11 @@ class Tree
 
 	private function firstwalk($node, $level)
 	{
+		
 		$this->setLevelHeight($node, $level);
         $this->setLevelWidth($node, $level);
         $this->setNeighbors($node, $level);
+        
 		if($node->numChilds()==0)
         {
             $leftSibling = $node->getLeftSibling();
@@ -123,16 +126,18 @@ class Tree
 
             $midPoint = $node->getChildrenCenter();
             $midPoint -= $node->w / 2;
+            
             $leftSibling = $node->getLeftSibling();
             if($leftSibling)
             {
 				$node->prelim = $leftSibling->prelim + $leftSibling->w + $this->SiblingSeparation;
-                $node->modifier = $node->prelim - $midPoint;
+				$node->modifier = $midPoint > $node->prelim ? 0 : $node->prelim - $midPoint;
                 $this->apportion($node, $level);
             }
             else
             {
                 $node->prelim = $midPoint;
+                
             }
         }
 	}
@@ -144,9 +149,10 @@ class Tree
 		$maxsizeTmp = $this->maxLevelHeight[$level];
 		$nodesizeTmp = $node->h;
 		$node->x = $xTmp + 5;
+
         $node->y = $yTmp - $this->defaultHeight ;
 		$this->h = ($this->h > $node->y + $node->w) ? $this->h : $node->y + $node->w;
-		$this->w = ($this->w > $xTmp + $node->w) ? $this->w : $xTmp + $node->w + 10;
+		$this->w = ($this->w > $node->x + $node->w) ? $this->w : $node->x + $node->w + 10;
 
         if($node->numChilds())
 		{
@@ -221,7 +227,7 @@ class Tree
 	{
 		if (!isset($this->maxLevelHeight[$level]))
 		{
-			$this->maxLevelHeight[$level] = 0;
+			$this->maxLevelHeight[$level] = $node->h;
 		}
 		if($this->maxLevelHeight[$level] < $node->h)
 		{
@@ -233,11 +239,14 @@ class Tree
 	{
 		if (!isset($this->maxLevelWidth[$level]))
 		{
-			$this->maxLevelWidth[$level] = 0;
-		}
-		if($this->maxLevelWidth[$level] < $node->w)
-        {
 			$this->maxLevelWidth[$level] = $node->w;
+		}
+		
+		$this->maxLevelWidth[$level] += $node->w;
+		
+		if ($this->maxLevelWidth[$level] > $this->largestLevel['size']) {
+			$this->largestLevel['level'] = $level;
+			$this->largestLevel['size'] = $this->maxLevelWidth[$level];
 		}
 	}
 
@@ -275,10 +284,13 @@ class Tree
 
 	protected function render()
 	{
+		foreach($this->nodes as $node) {
+			$node->getLinks();
+		}
+
 		$this->firstwalk($this->root, 0);
 		$this->secondWalk($this->root, 0);
-		foreach($this->nodes as $node)
-		{
+		foreach($this->nodes as $node) {
 			$node->getLinks();
 		}
 		$this->isRendered = true;

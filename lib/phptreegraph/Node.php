@@ -108,7 +108,7 @@ class Node
 	public function getLinks()
 	{
 		$xa = 0; $ya = 0; $xb = 0; $yb = 0; $xc = 0; $yc = 0; $xd = 0; $yd = 0;
-		$xa = $this->x + ($this->w / 2);
+		$xa = $this->x + $this->wpadding + ($this->w / 2);
 		$ya = $this->y + $this->h;
 
 		foreach($this->childs as $child)
