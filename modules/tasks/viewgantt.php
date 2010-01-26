@@ -149,6 +149,16 @@ $graph_img_src = "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id" .
 	  ($display_option == 'all' ? '' :
 		'&start_date='.$start_date->format("%Y-%m-%d").'&finish_date='.$end_date->format( "%Y-%m-%d" ));
 ?>
+
+<style type="text/css">
+	#graphloader {
+		width: 100px;
+		height: 100px;
+		background: url('images/loader.gif') no-repeat center center;
+		background-color: #fff;
+	}
+</style>
+
 <script language="javascript">
 var projectID = <?php  echo $project_id ?>;
 var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth : document.body.offsetWidth) * 0.95;

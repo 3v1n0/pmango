@@ -534,9 +534,3 @@ table.tbl td.event td {
 .tab_setting_title {
 	font-weight: bold;
 }
-
-div#graphloader {
-	width: 100px;
-	height: 100px;
-	background: url('images/loader.gif') no-repeat center center;
-}
