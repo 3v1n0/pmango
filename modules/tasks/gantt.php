@@ -84,13 +84,9 @@ $width      = dPgetParam($_GET, 'width', 600);
 $start_date = dPgetParam($_GET, 'start_date', null);
 $end_date   = dPgetParam($_GET, 'finish_date', null);
 
-$show_names = dPgetParam($_GET, 'show_names', true);
-$draw_deps  = dPgetParam($_GET, 'draw_deps', true);
-$colors     = dPgetParam($_GET, 'colors', true);
-
-$show_names = ($show_names == "true") ? true : false;
-$draw_deps = ($draw_deps == "true") ? true : false;
-$colors = ($colors == "true") ? true : false;
+$show_names = dPgetBoolParam($_GET, 'show_names');
+$draw_deps  = dPgetBoolParam($_GET, 'draw_deps');
+$colors     = dPgetBoolParam($_GET, 'colors');
 
 // re-set the memory limit for gantt chart drawing acc. to the config value of reset_memory_limit
 ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
