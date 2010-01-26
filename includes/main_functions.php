@@ -90,8 +90,8 @@ function arraySelect( &$arr, $select_name, $select_attribs, $selected, $translat
 			// be translated correctly. There are probably others.
 			// As such a more general approach probably based upon an
 			// array lookup for replacements would be a better approach. AJD.
-			$v=str_replace('&#369;','û',$v);
-			$v=str_replace('&#337;','õ',$v);
+			$v=str_replace('&#369;','ï¿½',$v);
+			$v=str_replace('&#337;','ï¿½',$v);
 		}
 		$s .= "\n\t<option value=\"".$k."\"".($k == $selected ? " selected=\"selected\"" : '').">" .  $v  . "</option>";
 	}
@@ -296,6 +296,17 @@ function defVal($var, $def) {
 */
 function dPgetParam( &$arr, $name, $def=null ) {
 	return isset( $arr[$name] ) ? $arr[$name] : $def;
+}
+
+/**
+* Utility function to return a bool value from a named array or a specified default
+*/
+function dPgetBoolParam(&$arr, $name) {
+	if (isset($arr[$name]) && ($arr[$name] == "true" || $arr[$name] == 1)) {
+		return true;
+	}
+	
+	return false;
 }
 
 #
