@@ -362,7 +362,7 @@ class FixedBlock extends ImgBlock {
 		if (!is_subclass_of($content, "ImgBlock"))
 			return;
 
-		$this->pContent[] = array('blk' => $content, 'x' => $x, 'y' => $y);
+		$this->pContent[] = array('blk' => $content, 'x' => intval($x), 'y' => intval($y));
 	}
 
 	public function getWidth() {
