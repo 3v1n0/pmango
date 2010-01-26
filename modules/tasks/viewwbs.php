@@ -112,8 +112,8 @@ $(function(){
 	$("#graph").iviewer({
            src: "./style/default/images/loader.gif",
            zoom: 100,
-           zoom_min: 5,
-           zoom_max: 1000,
+           zoom_min: 100,
+           zoom_max: 100,
            update_on_resize: true,
            ui_disabled: true,
            initCallback: function() {
@@ -126,7 +126,7 @@ $(function () {
 	var img = new Image();
 	
 	$(img).load(function () {
-		iviewer.img_object.object.remove();
+
 		$("#graph").iviewer({
 	           src: img.src,
 	           zoom_min: 5,
@@ -134,6 +134,7 @@ $(function () {
 	           update_on_resize: true,
 	           ui_disabled: false,
 	           initCallback: function() {
+	               iviewer.img_object.object.remove();
 	               iviewer = this;
 	           }
 	      });
