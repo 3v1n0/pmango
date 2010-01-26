@@ -78,7 +78,7 @@ $show_a_res    = dPgetBoolParam($_POST, 'show_a_res');
 $show_p_time   = dPgetBoolParam($_POST, 'show_p_time');
 $show_a_time   = dPgetBoolParam($_POST, 'show_a_time');
 
-$graph_img_src = "?m=tasks&suppressHeaders=1&a=wbs&project_id=$project_id" .
+$graph_img_src = "?m=tasks&suppressHeaders=1&a=wbs&project_id=$project_id".
 	             "&names=".($show_names ? "true" : "false").
 	             "&progress=".($show_progress ? "true" : "false").
 	             "&alerts=".($show_alerts ? "true" : "false").
@@ -102,7 +102,11 @@ $graph_img_src = "?m=tasks&suppressHeaders=1&a=wbs&project_id=$project_id" .
 
 <script type="text/javascript">
 
+var projectID = <?php  echo $project_id ?>;
 var expandChanged = false;
+var loader = './style/default/images/loader.gif';
+var graph_error = './style/default/images/graph_loading_error.png';
+
 var iviewer;
 
 $(function(){
@@ -110,50 +114,62 @@ $(function(){
 	$("#graph").width(graphWidth);
 });
 
-$(function(){
-	$("#graph").iviewer({
-           src: "./style/default/images/loader.gif",
-           zoom: 100,
-           zoom_min: 100,
-           zoom_max: 100,
-           update_on_resize: true,
-           ui_disabled: true,
-           initCallback: function() {
-               iviewer = this;
-           }
-      });
-});
-
-$(function () {
-	var img = new Image();
-	
-	$(img).load(function () {
-
-		var zoom = "fit";
-
-		if (img.width < $("#graph").width())
-			zoom = 100;
-
+function loadPlaceHolder(img_src) {
+	$(function(){
 		$("#graph").iviewer({
-			   zoom: zoom,
-	           src: img.src,
-	           zoom_min: 5,
-	           zoom_max: 1000,
+	           src: img_src,
+	           zoom: 100,
+	           zoom_min: 100,
+	           zoom_max: 100,
 	           update_on_resize: true,
-	           ui_disabled: false,
+	           ui_disabled: true,
 	           initCallback: function() {
-	               iviewer.img_object.object.remove();
-	               iviewer = this;
-	           }
-	      });
-	})
-	
-    .error(function () {
-     iviewer.loadImage('./style/default/images/graph_loading_error.png');
-    })
+	           	   if (iviewer)
+	           	       iviewer.img_object.object.remove();
 
-    .attr('src', '<?php  echo $graph_img_src; ?>');
-});
+	               iviewer = this;
+	           },
+		       onStartDrag: function(object, coords) {
+			       return false;
+			   }
+	      });
+	});
+}
+
+function loadGraph(graph_src) {
+	$(function () {
+		var img = new Image();
+		
+		$(img).load(function () {
+	
+			var zoom = "fit";
+	
+			if (img.width < $("#graph").width())
+				zoom = 100;
+	
+			$("#graph").iviewer({
+				   zoom: zoom,
+		           src: img.src,
+		           zoom_min: 5,
+		           zoom_max: 1000,
+		           update_on_resize: true,
+		           ui_disabled: false,
+		           initCallback: function() {
+				   if (iviewer)
+		        	   iviewer.img_object.object.remove();
+	        	   
+				   iviewer = this;
+		           }
+		      });
+		})
+		
+	    .error(function () {
+	    	loadPlaceHolder(graph_error);
+	    })
+	
+	    .attr('src', graph_src);
+	});
+}
 
 $(function() {
 	$("#graph").resizable({
@@ -177,6 +193,45 @@ function resourceSelectSwap(actual) {
 		document.editFrm.show_a_res.checked = false;
 	}
 }
+
+function buildGraphUrl() {
+	var show_names = $("#show_names:checked").val();
+	var show_alerts = $("#show_alerts:checked").val();
+	var show_progress = $("#show_progress:checked").val();
+	var show_p_data = $("#show_p_data:checked").val();
+	var show_a_data = $("#show_a_data:checked").val();
+	var show_p_res = $("#show_p_res:checked").val();
+	var show_a_res = $("#show_a_res:checked").val();
+	var show_p_time = $("#show_p_time:checked").val();
+	var show_a_time = $("#show_a_time:checked").val();
+	
+	var url = "?m=tasks&suppressHeaders=1&a=wbs&project_id="+projectID+
+		      "&names="+(show_names ? "true" : "false")+
+		      "&progress="+(show_progress ? "true" : "false")+
+		      "&alerts="+(show_alerts ? "true" : "false")+
+		      "&p_data="+(show_p_data ? "true" : "false")+
+		      "&a_data="+(show_a_data ? "true" : "false")+
+		      "&p_res="+(show_p_res ? "true" : "false")+
+		      "&a_res="+(show_a_res ? "true" : "false")+
+		      "&p_time="+(show_p_time ? "true" : "false")+
+		      "&a_time="+(show_a_time ? "true" : "false");
+
+	if (expandChanged) {
+		url += '&explode_tasks='+$("#explode_tasks").val();
+		expandChanged = false;
+	}
+	
+    return url;
+}
+
+function doSubmit() {
+	//document.editFrm.submit(); //TODO enable on old browsers 
+	loadPlaceHolder(loader);
+	loadGraph(buildGraphUrl());
+}
+
+loadPlaceHolder(loader);
+loadGraph('<?php  echo $graph_img_src; ?>');
 
 </script>
 <form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
@@ -283,7 +338,7 @@ function resourceSelectSwap(actual) {
 			</td>
 				
 			<td valign="bottom" align="left"> <!-- FIXME this form only submit works! -->
-				<input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='submit();'>
+				<input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='doSubmit();'>
 			</td>
 		</tr>
 	</table>
