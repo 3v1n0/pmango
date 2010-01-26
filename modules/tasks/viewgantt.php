@@ -268,7 +268,7 @@ function loadGraph(src) {
 }
 
 function buildGraphUrl() {
-	var show_names = $("#show_names:checked").val()
+	var show_names = $("#show_names:checked").val();
 	var show_deps = $("#show_deps:checked").val();
 	var show_bw = $("#show_bw:checked").val();
 	var start_date = document.editFrm.sdate.value;
