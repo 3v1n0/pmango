@@ -94,19 +94,24 @@ $graph_img_src = "?m=tasks&suppressHeaders=1&a=wbs&project_id=$project_id" .
              height: 400px;
              border: 1px solid black;
              position: relative;
+             background: #fff;
          }
 </style>
 
 <script type="text/javascript">
 
-var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth : document.body.offsetWidth) * 0.95;
 var expandChanged = false;
 var iviewer;
 
 $(function(){
+	var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth : document.body.offsetWidth) * 0.95;
+	$("#graph").width(graphWidth);
+});
+
+$(function(){
 	$("#graph").iviewer({
            src: "./style/default/images/loader.gif",
-           zoom: 200,
+           zoom: 100,
            zoom_min: 5,
            zoom_max: 1000,
            update_on_resize: true,
@@ -119,26 +124,27 @@ $(function(){
 
 $(function () {
 	var img = new Image();
-
+	
 	$(img).load(function () {
-		$(this).hide();
-		iviewer.settings.ui_disabled = false;
-		iviewer.settings.zoom = "fit";
-		iviewer.img_object.display_width = 0;
-		iviewer.img_object.display_height = 0;
-		iviewer.img_object.orig_width = img.width;
-		iviewer.img_object.orig_height = img.height;
-		iviewer.createui();
-		iviewer.loadImage(img.src);
-		$(this).fadeIn();
+		iviewer.img_object.object.remove();
+		$("#graph").iviewer({
+	           src: img.src,
+	           zoom_min: 5,
+	           zoom_max: 1000,
+	           update_on_resize: true,
+	           ui_disabled: false,
+	           initCallback: function() {
+	               iviewer = this;
+	           }
+	      });
 	})
+	
+    .error(function () {
+     iviewer.loadImage('./style/default/images/graph_loading_error.png');
+    })
 
-	    .error(function () {
- 	    	iviewer.loadImage('./style/default/images/graph_loading_error.png');
-	    })
-
-	    .attr('src', '<?php  echo $graph_img_src; ?>');
-	});
+    .attr('src', '<?php  echo $graph_img_src; ?>');
+});
 
 $(function() {
 	$("#graph").resizable({
@@ -282,10 +288,6 @@ function resourceSelectSwap(actual) {
 if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )) {
 ?>
 		<div id="graph" class="graph"></div>
-		
-		<script type="text/javascript">
-			$('#graph').width(graphWidth);
-		</script>
 <?php
 } else {
 	echo $AppUI->_( "No tasks to display" );
