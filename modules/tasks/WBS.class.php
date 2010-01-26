@@ -287,42 +287,44 @@ class WBS /*implements PMGraph TODO */ {
 	private function populateTree() {
 
 		foreach ($this->pTasks as $task) {
-				
-			$tbdb = $task['tbxdb'];
-		
-			$tbx = new TaskBox($tbdb->getWBS());
-			
-			if ($this->pShowNames)
-				$tbx->setName($tbdb->getTaskName());
-			
-			if ($this->pShowProgress)
-				$tbx->setProgress($tbdb->getProgress());
-			
-			if ($this->pShowPlannedData)
-				$tbx->setPlannedDataArray($tbdb->getPlannedData());
-			
-			if ($this->pShowActualData)
-				$tbx->setActualDataArray($tbdb->getActualData());
-			
-			if ($this->pShowPlannedTimeframe)
-				$tbx->setPlannedTimeframeArray($tbdb->getPlannedTimeframe());
-			
-			if ($this->pShowActualTimeframe)
-				$tbx->setActualTimeframeArray($tbdb->getActualTimeframe());
-			
-			if ($this->pShowPlannedResources)
-				$tbx->setResourcesArray($tbdb->getPlannedResources());
-			else if ($this->pShowActualResources)
-				$tbx->setResourcesArray($tbdb->getActualResources());
-
-			if ($this->pShowAlerts)
-				$tbx->setAlerts($tbdb->isAlerted());
-		
-			$tbx->showExpand((!$tbdb->isLeaf() && !$this->findTaskChild($task)));
 			
 			$parent = 1;
-			if ($task['task_parent'] != $task['task_id'] && $task['task_parent'] > 1)
+			if ($task['task_parent'] != $task['task_id'] && $task['task_parent'] > 1) {
 				$parent = $this->pTasksTable[$task['task_parent']];
+				
+				if (!$parent) continue;
+			}
+				
+			$tbxdb = $task['tbxdb'];
+			$tbx = new TaskBox($tbxdb->getWBS());
+			
+			if ($this->pShowNames)
+				$tbx->setName($tbxdb->getTaskName());
+			
+			if ($this->pShowProgress)
+				$tbx->setProgress($tbxdb->getProgress());
+			
+			if ($this->pShowPlannedData)
+				$tbx->setPlannedDataArray($tbxdb->getPlannedData());
+			
+			if ($this->pShowActualData)
+				$tbx->setActualDataArray($tbxdb->getActualData());
+			
+			if ($this->pShowPlannedTimeframe)
+				$tbx->setPlannedTimeframeArray($tbxdb->getPlannedTimeframe());
+			
+			if ($this->pShowActualTimeframe)
+				$tbx->setActualTimeframeArray($tbxdb->getActualTimeframe());
+			
+			if ($this->pShowPlannedResources)
+				$tbx->setResourcesArray($tbxdb->getPlannedResources());
+			else if ($this->pShowActualResources)
+				$tbx->setResourcesArray($tbxdb->getActualResources());
+
+			if ($this->pShowAlerts)
+				$tbx->setAlerts($tbxdb->isAlerted());
+		
+			$tbx->showExpand((!$tbxdb->isLeaf() && !$this->findTaskChild($task)));
 				
 			$alert_padding = intval($tbx->getAlertSize()/2);
 			
