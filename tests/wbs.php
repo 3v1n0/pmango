@@ -23,6 +23,18 @@ include "TaskBoxDB.class.php";
 
 include "$baseDir/lib/phptreegraph/GDRenderer.php";
 
+
+function wbs_item_has_child($target, $wbs_array) {
+	
+	foreach ($wbs_array as $item) {
+		if ($item['task_parent'] == $target['task_id'] && $item['task_id'] != $target['task_id'])
+			return true;
+	}
+	
+	return false;
+}
+
+
 ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
 
 $project_id = 5;
@@ -77,15 +89,15 @@ foreach ($results as $task) {
 		   $add = true;
 	}
 
-	if (@in_array($task["task_id"], $tasks_opened) ||
-		@in_array($task["task_parent"], $tasks_opened))
+	if (in_array($task["task_id"], $tasks_opened) ||
+		in_array($task["task_parent"], $tasks_opened))
 		$add = true;
 		
 	if ($add) {
 		$tbxdb = new taskBoxDB($task['task_id']);
+		
 		$wbs = $tbxdb->getWBS();
 		$translate[$task['task_id']] = $id;
-		
 		$items[$wbs]['task_id'] = $task['task_id'];
 		$items[$wbs]['task_parent'] = $task['task_parent'];
 		$items[$wbs]['tbxdb'] = $tbxdb;
@@ -118,6 +130,8 @@ foreach ($items as $item) {
 //	$tbx->setActualTimeframeArray($tbdb->getActualTimeframe());
 //	$tbx->setResourcesArray($tbdb->getActualResources());
 	$tbx->setAlerts($tbdb->isAlerted()); //FIXME change the position in wbs.
+
+	$tbx->showExpand((!$tbdb->isLeaf() && !wbs_item_has_child($item, $items)));
 	
 	$objTree->add($item['id'], $parent, '', $tbx->getWidth(), $tbx->getHeight(),
 	              $tbx->getImage(), 1-intval($tbx->getAlertSize()/2), intval($tbx->getAlertSize()/2));
