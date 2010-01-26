@@ -7,6 +7,8 @@
  * PHP version 5
  * @copyright  Mathias Herrmann 2007
  * @author     Mathias Herrmann <mathias_herrmann@arcor.de>
+ * @copyright  Marco Trevisan 2010
+ * @author     Marco Trevisan (Treviño) <mail@3v1n0.net>
  * @license    LGPL
   *                                                                          *
   * This PHP class is free software; you can redistribute it and/or          *

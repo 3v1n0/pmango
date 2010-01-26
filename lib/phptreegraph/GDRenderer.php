@@ -8,6 +8,8 @@
  * @copyright  Mathias Herrmann 2007
  * @author     Mathias Herrmann <mathias_herrmann@arcor.de>
  * @license    LGPL
+ * @copyright  Marco Trevisan 2010
+ * @author     Marco Trevisan (Treviño) <mail@3v1n0.net>
   *                                                                          *
   * This PHP class is free software; you can redistribute it and/or          *
   * modify it under the terms of the GNU Lesser General Public               *
