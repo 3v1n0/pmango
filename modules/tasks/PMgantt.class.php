@@ -54,14 +54,12 @@
 
 define('TTF_DIR', "{$dPconfig['root_dir']}/fonts/Droid/");
 
-include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
-include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
+include "{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php";
+include "{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php";
 
 ########################################
 ////////////////////////////////////////
 ########################################
-
-// TODO: better implementation, split classes and show line to unite bars
 
 class PMGanttBar extends GanttPlotObject {
 	public $progress;
@@ -405,7 +403,7 @@ class PMGantt /*implements PMGraph TODO */ {
 	}
 
 	public function setProject($p) {
-		$this->pProject = $p;
+		$this->pProject = abs(intval($p));
 	}
 
 	public function setTaskLevel($tl) {
@@ -465,9 +463,22 @@ class PMGantt /*implements PMGraph TODO */ {
 		return $this->pGraph->Stroke(_IMG_HANDLER);
 	}
 
-	public function draw($file = null) {
-		$this->buildGANTT();
-		$this->pGraph->Stroke($file);
+	public function draw($format = "png", $file = null) {
+		switch ($format) {
+			case "png":
+				if (!$file) header("Content-type: image/png");
+				imagepng($this->getImage(), $file);
+				break;
+			case "jpg":
+			case "jpeg":
+				if (!$file) header("Content-type: image/jpeg");
+				imagejpeg($this->getImage(), $file);
+				break;
+			case "gif":
+				if (!$file) header("Content-type: image/jpeg");
+				imagegif($this->getImage(), $file);
+				break;
+		}
 	}
 
 	//--
@@ -485,7 +496,6 @@ class PMGantt /*implements PMGraph TODO */ {
 		        "project_finish_date FROM projects WHERE project_id = ".$this->pProjectID;
 		$prc = db_exec($psql);
 		echo db_error();
-		$pnums = db_num_rows($prc);
 		$this->pProject = db_fetch_row($prc);
 	}
 
@@ -553,9 +563,11 @@ class PMGantt /*implements PMGraph TODO */ {
 				$this->findTaskChild($this->pProject['tasks'], $task["task_id"]);
 			}
 		}
+		
+		unset($this->pProject['tasks']);
 
 		if(!$this->pShowTaskGroups) {
-			for($i = 0; $i < count($this->pTasks); $i ++ ) {
+			for($i = 0; $i < count($this->pTasks); $i++) {
 				// remove task groups
 				if($i != count($this->pTasks)-1 && $this->pTasks[$i + 1]['level'] > $this->pTasks[$i]['level']) {
 					// it's not a leaf => remove
@@ -611,7 +623,7 @@ class PMGantt /*implements PMGraph TODO */ {
 
 		$this->pGraph->SetUserFont1('DroidSans.ttf', 'DroidSans-Bold.ttf');
 		$this->pGraph->SetUserFont2('DroidSerif-Regular.ttf', 'DroidSerif-Bold.ttf',
-		                     'DroidSerif-Italic.ttf', 'DroidSerif-BoldItalic.ttf');
+		                            'DroidSerif-Italic.ttf', 'DroidSerif-BoldItalic.ttf');
 		$this->pGraph->SetUserFont3('DroidSansMono.ttf');
 
 		$this->pGraph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY | GANTT_HWEEK);
@@ -713,7 +725,10 @@ class PMGantt /*implements PMGraph TODO */ {
 //				$name = utf8_decode($name);
 //			}
 
-			$name = str_repeat(" ", $level).$name;
+			if ($task_leaf && !CTask::isLeafSt($a["task_id"]))
+				$name = "+".@str_repeat(" ", $level-2).$name;
+			else
+				$name = str_repeat(" ", $level).$name;
 
 			//using new jpGraph determines using Date object instead of string
 			$start = $a["task_start_date"];
@@ -761,7 +776,7 @@ class PMGantt /*implements PMGraph TODO */ {
 				$caption = substr($caption, 0, strlen($caption)-1);
 				}*/
 
-			$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.10);//se padre sarebbe meglio 1
+			$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.25);//se padre sarebbe meglio 1
 			$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
 
 			if (!$this->pUseColors) {
@@ -823,7 +838,7 @@ class PMGantt /*implements PMGraph TODO */ {
 						}
 					}
 
-					$bar2 = new PMGanttBar($row++, '', $start, $end, '', $task_leaf ? 0.3 : 0.15);
+					$bar2 = new PMGanttBar($row++, '', $start, $end, '', $task_leaf ? 0.3 : 0.20);
 
 					if ($task_leaf) {
 						$bar2->SetPattern(GANTT_RDIAG, $this->pUseColors ? 'red' : 'black', 95);
