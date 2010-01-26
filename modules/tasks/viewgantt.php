@@ -26,6 +26,7 @@
  PMango - A web application for project planning and control.
 
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi
+ Copyright (C) 2009-2010 Marco Trevisan (Treviño) <mail@3v1n0.net>
  All rights reserved.
 
  PMango reuses part of the code of dotProject 2.0.1: dotProject code is
@@ -53,9 +54,6 @@
 */
 
 GLOBAL $min_view, $m, $a;
-
-// re-set the memory limit for gantt chart drawing acc. to the config value of reset_memory_limit
-ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
 
 $min_view = defVal( @$min_view, false);
 
@@ -457,7 +455,3 @@ if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )
 </tr>
 </table>
 <br />
-<?php
-// reset the php memory limit to the original php.ini value
-ini_restore('memory_limit');
-?>

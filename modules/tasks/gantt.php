@@ -84,6 +84,8 @@ $show_names = ($show_names == "true") ? true : false;
 $draw_deps = ($draw_deps == "true") ? true : false;
 $colors = ($colors == "true") ? true : false;
 
+// re-set the memory limit for gantt chart drawing acc. to the config value of reset_memory_limit
+ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
 
 $gantt = new PMGantt($project_id);
 $gantt->setTaskLevel($task_level);
@@ -96,5 +98,8 @@ $gantt->showNames($show_names);
 $gantt->showDeps($draw_deps);
 $gantt->useColors($colors);
 $gantt->draw();
+
+// reset the php memory limit to the original php.ini value
+ini_restore('memory_limit');
 
 ?>
