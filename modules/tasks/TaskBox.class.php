@@ -263,7 +263,9 @@ class TaskBox {
 	}
 
 	private function init() {
-		if (!$this->pFontPath) $this->pFontPath = '../fonts/Droid/';
+		global $dPconfig;
+		
+		if (!$this->pFontPath) $this->pFontPath = $dPconfig['root_dir'].'/fonts/Droid/';
 		if (!$this->pFont) $this->pFont = "DroidSans.ttf";
 		if (!$this->pFontBold) $this->pFontBold = "DroidSans-Bold.ttf";
 
