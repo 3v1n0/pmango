@@ -153,7 +153,7 @@ class Tree
 		$node->x = $xTmp + 5;
 
         $node->y = $yTmp - $this->defaultHeight ;
-		$this->h = ($this->h > $node->y + $node->w) ? $this->h : $node->y + $node->w;
+		$this->h = ($this->h > $node->y + $node->h) ? $this->h : $node->y + $node->h;
 		$this->w = ($this->w > $node->x + $node->w) ? $this->w : $node->x + $node->w + 10;
 
         if($node->numChilds())
