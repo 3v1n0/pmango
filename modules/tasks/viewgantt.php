@@ -146,7 +146,7 @@ $graph_img_src = "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id" .
 ?>
 <script language="javascript">
 var projectID = <?php  echo $project_id ?>;
-var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth :document.body.offsetWidth) * 0.95;
+var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth : document.body.offsetWidth) * 0.95;
 var expandChanged = false;
 var calendarField = '';
 
@@ -257,9 +257,9 @@ function loadGraph(src) {
 }
 
 function buildGraphUrl() {
-	var show_names = document.editFrm.show_names.value;
-	var show_deps = document.editFrm.show_dependencies.value;
-	var show_bw = document.editFrm.show_bw.value;
+	var show_names = $("#show_names:checked").val()
+	var show_deps = $("#show_deps:checked").val();
+	var show_bw = $("#show_bw:checked").val();
 	var start_date = document.editFrm.sdate.value;
 	var end_date = document.editFrm.edate.value;
 	var explode = document.editFrm.explode_tasks.value;
@@ -296,10 +296,10 @@ function doSubmit() {
 loadGraph('<?php echo $graph_img_src; ?>');
 </script>
 
-<table id='tab_settings_content' border="0" cellpadding="4" cellspacing="0" align="center" style="display: none">
-
 <form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
 <input type="hidden" name="display_option" value="<?php echo $display_option;?>" />
+
+<table id='tab_settings_content' border="0" cellpadding="4" cellspacing="0" align="center" style="display: none">
 
 <tr>
 	<td align="left" valign="top" width="20">
@@ -436,10 +436,8 @@ loadGraph('<?php echo $graph_img_src; ?>');
 		<input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>" onclick='doSubmit();'>
 	</td>
 </tr>
-
-</form>
-
 </table>
+</form>
 
 <form id='tab_content' name='pdf_options' method='POST' action='<?php echo $query_string; ?>'>
 	<table id='' width='100%' border='0' cellpadding='1' cellspacing='0'>
@@ -509,19 +507,19 @@ loadGraph('<?php echo $graph_img_src; ?>');
 		</td>
 	</tr>
 <?php } ?>
-<tr>
-	<td <?php if ($display_option != "all") echo "colspan='2'" ?>>
+	<tr>
+		<td <?php if ($display_option != "all") echo "colspan='2'" ?>>
 <?php
 if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )) {
 ?>
-	<div id="graphloader"></div>
-	<div id="graph"></div>
+		<div id="graphloader"></div>
+		<div id="graph"></div>
 <?php
 } else {
 	echo $AppUI->_( "No tasks to display" );
 }
 ?>
-	</td>
-</tr>
+		</td>
+	</tr>
 </table>
 <br />
