@@ -208,10 +208,10 @@ function scrollNext() {
 	$new_end = $end_date;
 	$new_start->addMonths( $scroll_date+1 );
 	$new_end->addMonths( $scroll_date+1 );
-	echo "f.sdate.value='" . $new_start->format( FMT_TIMESTAMP_DATE ) . "';";
-	echo "f.edate.value='" . $new_end->format( FMT_TIMESTAMP_DATE ) . "';";
 ?>
-	document.editFrm.display_option.value = 'custom';
+	f.sdate.value = '<?php echo $new_start->format( FMT_TIMESTAMP_DATE ) ?>';
+	f.edate.value = '<?php echo $new_end->format( FMT_TIMESTAMP_DATE ) ?>';
+	f.display_option.value = 'custom';
 	f.submit();
 }
 
@@ -458,8 +458,19 @@ loadGraph('<?php echo $graph_img_src; ?>');
 		</table>
 	</td>
 
-	<td valign="bottom" align="left">
-		<input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>" onclick='doSubmit();'>
+	<td align='left' valign="bottom" style="border-right: solid transparent 20px;">
+		<table border="0" cellspacing="0">
+			<tr>
+				<td align="left">
+					&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>"  onclick='doSubmit();'>
+				</td>
+			</tr>
+			<tr>
+				<td align="left">
+					&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+				</td>
+			</tr>
+		</table>
 	</td>
 </tr>
 </table>

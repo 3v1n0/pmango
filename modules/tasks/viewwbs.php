@@ -91,13 +91,13 @@ $graph_img_src = "?m=tasks&suppressHeaders=1&a=wbs&project_id=$project_id".
 ?>
 
 <style type="text/css">
-		.graph {
-             width: 600px;
-             height: 400px;
-             border: 1px solid black;
-             position: relative;
-             background: #fff;
-         }
+	#graph {
+		width: 600px;
+		height: 400px;
+		border: 1px solid black;
+		position: relative;
+		background: #fff;
+	}
 </style>
 
 <script type="text/javascript">
@@ -155,10 +155,10 @@ function loadGraph(graph_src) {
 		           update_on_resize: true,
 		           ui_disabled: false,
 		           initCallback: function() {
-				   if (iviewer)
-		        	   iviewer.img_object.object.remove();
-	        	   
-				   iviewer = this;
+					   if (iviewer)
+			        	   iviewer.img_object.object.remove();
+		        	   
+					   iviewer = this;
 		           }
 		      });
 		})
@@ -334,11 +334,36 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 							</select>
 						</td>
 					</tr>
+<!--					
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='doSubmit();'>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+						</td>
+					</tr>
+-->
 				</table>
 			</td>
 				
-			<td valign="bottom" align="left"> <!-- FIXME this form only submit works! -->
-				<input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='doSubmit();'>
+			<td align='left' valign="bottom" style="border-right: solid transparent 20px;">
+				<table border="0" cellspacing="0">
+					<tr>
+						<td align="left">
+							&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>"  onclick='doSubmit();'>
+						</td>
+					</tr>
+					<tr>
+						<td align="left">
+							&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+						</td>
+					</tr>
+				</table>
 			</td>
 		</tr>
 	</table>
