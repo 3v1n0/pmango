@@ -18,19 +18,19 @@
 
  Version history.
  - 2010.01.22, Marco Trevisan
-   Seventh version, fixed the actual/planned resources methods
+   0.8, fixed the actual/planned resources methods
  - 2010.01.19, Matteo Pratesi
-   Sixth version, leaf support.
+   0.6, leaf support.
  - 2010.01.18, Marco Trevisan
-   Fifth version, Code review, moved to a class with caching support
+   0.5, Code review, moved to a class with caching support
  - 2010.01.15, Marco Trevisan
-   Fourth version, WBS support and code cleanup.
+   0.3.5, WBS support and code cleanup.
  - 2010.01.12, Matteo Pratesi
-   Third version, Actual Data, Timeframe, Resources
+   0.3, Actual Data, Timeframe, Resources
  - 2010.01.07, Matteo Pratesi
-   Second version, Planned Timeframe and Progress queries.
+   0.2, Planned Timeframe and Progress queries.
  - 2009.12.18, Marco Trevisan
-   First version, added basic queries.
+   0.1, added basic queries.
 
 ---------------------------------------------------------------------------
 
