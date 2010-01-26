@@ -18,13 +18,13 @@
 
  Version history.
  - 2010.01.14
-   Fourth version, alert support.
+   0.5, alert support.
  - 2010.01.12
-   Third version, caching support.
+   0.3, caching support.
  - 2010.01.04
-   Second version, progress bar bugfixing.
+   0.2, progress bar bugfixing.
  - 2009.12.23
-   First version, basic taskbox support.
+   0.1, basic taskbox support.
 
 ---------------------------------------------------------------------------
 
