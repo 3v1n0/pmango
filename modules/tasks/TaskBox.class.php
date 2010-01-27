@@ -377,7 +377,9 @@ class TaskBox {
 			$hbox->setSpace(2);
 			$hbox->setHomogeneous(true);
 
-			$hbox->addBlock(new TextBlock($txt, $this->pFont, $this->pFontSize, "left"));
+			$txtblk = new TextBlock($txt, $this->pFont, $this->pFontSize, "left");
+			$txtblk->setWrap(new ResourceWrapping($txtblk));		
+			$hbox->addBlock($txtblk);
 
 			$hbox->setMinHeight($this->pMinHeight);
 			$hbox->setWidth($this->pMaxWidth);
@@ -565,11 +567,63 @@ class TaskBox {
 				imagejpeg($this->getImage(), $file);
 				break;
 			case "gif":
-				if (!$file) header("Content-type: image/jpeg");
+				if (!$file) header("Content-type: image/gif");
 				imagegif($this->getImage(), $file);
 				break;
 		}
 	}
+}
+
+class ResourceWrapping implements TextBlockWrapping {
+	private $pTxtBlock;
+	
+	public function ResourceWrapping(TextBlock $txtblk) {
+		$this->pTxtBlock = $txtblk;
+	}
+	
+	public function wrap($text, $max_size) {
+		
+		$ressize = $this->pTxtBlock->getTextSize(strip_tags($text));
+
+		if ($ressize['w'] < $max_size)
+			return $text;
+
+		$res = explode(', ', $text);
+		
+		$fixed_size = $this->pTxtBlock->getTextSize(strip_tags($res[0].', , '));
+		$max_cuttable_size = round(intval(($max_size - $fixed_size['w'])/2));
+		
+		$tsize[1] = $this->pTxtBlock->getTextSize($res[1]);
+		$tsize[2] = $this->pTxtBlock->getTextSize($res[2]);
+
+		$cut[1] = strlen($res[1]) * $max_cuttable_size / $tsize[1]['w'] + 1;
+		$cut[2] = strlen($res[2]) * $max_cuttable_size / $tsize[2]['w'] + 1;
+		
+		$i = 0;
+		while ($ressize['w'] > $max_size && strlen($text) > 1) {
+			
+			if ($cut[1] != 0)
+				$res[1] = trim(substr($res[1], 0, $cut[1]));
+			
+			if ($cut[2] != 0)
+				$res[2] = trim(substr($res[2], 0, $cut[2]));
+
+			$text = $res[0].", ".$res[1]."..., ".$res[2]."...";
+			$ressize = $this->pTxtBlock->getTextSize(strip_tags($text));
+			
+			if ($i % 2) {
+				$cut[1] = -1;
+				$cut[2] = 0;
+			} else {
+				$cut[1] = 0;
+				$cut[2] = -1;
+			}
+			
+			$i++;
+		}
+
+		return $text;
+	}	
 }
 
 ?>
