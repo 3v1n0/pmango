@@ -1,5 +1,4 @@
 <?php
-//TODO aggioungere time gaps su default dependences
 /**
 ---------------------------------------------------------------------------
 
@@ -255,8 +254,7 @@ class TaskNetwork {
 	}
 	
 	private function buildTN(){
-		
-		$tasks= null; //TODO gestire l'arrivo dei tasks da visualizzare
+		$tasks= $this->pOpenedTasks;
 		$vertical = $this->pShowVertical;
 		$res=$this->getTbxFromLevel($this->pTaskLevel,$tasks);
 		
@@ -1404,7 +1402,7 @@ class TaskNetwork {
 	}
 	
 	private function getTbxFromLevel($level,$tasks=null){
-		if(!$tasks){//se non mi è stato passato un array di task aperti me li creo io
+		
 			$id = "SELECT task_id FROM tasks t WHERE task_parent=task_id and task_project=".$this->project." ORDER BY task_id";
 			$result = TaskNetwork::doQuery($id);
 			foreach($result as $res){
@@ -1432,14 +1430,26 @@ class TaskNetwork {
 				$int++;
 			}
 			unset($result);
-		}
-		else{// uso quello passatomi
-			$results = $tasks;
-		}
-		
-		if (!$results)
-			return array();
 
+			foreach($tasks as $id){
+				for($k=0;$k<sizeof($results);$k++){
+					if($results[$k]==$id){
+						unset($results[$k]);
+						$q = "SELECT task_id FROM tasks t WHERE task_parent <> task_id and task_parent=".$id." and task_project=".$this->project." ORDER BY task_wbs_index";
+						$children = TaskNetwork::doQuery($q);
+						foreach($children as $child){
+							$res[sizeof($res)]= $child["task_id"];
+						}
+						$children = $res;
+						unset($res); 
+					}
+				}
+				$results = TaskNetwork::trimArray($results);
+				$results = TaskNetwork::arrayConcat($results,$children);
+				unset($children);
+			}
+		
+		
 		foreach($results as $task){
 			$wbslv = CTask::getWBS($task);
 			$wbs = intval(substr($wbslv,0,1));
