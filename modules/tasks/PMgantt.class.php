@@ -371,6 +371,7 @@ class PMGantt /*implements PMGraph TODO */ {
 
 	private $pStartDate;
 	private $pEndDate;
+	private $pToday;
 
 	private $pShowNames;
 	private $pShowDependencies;
@@ -493,7 +494,7 @@ class PMGantt /*implements PMGraph TODO */ {
 
 	private function pullProjectData() {
 		$psql = "SELECT project_id, project_color_identifier, project_name, project_start_date, ".
-		        "project_finish_date FROM projects WHERE project_id = ".$this->pProjectID;
+		        "project_finish_date, project_today FROM projects WHERE project_id = ".$this->pProjectID;
 		$prc = db_exec($psql);
 		echo db_error();
 		$this->pProject = db_fetch_row($prc);
@@ -616,6 +617,8 @@ class PMGantt /*implements PMGraph TODO */ {
 		    empty($this->pProject["project_finish_date"])) {
 			 $this->pProject["project_finish_date"] = $this->pStartDate;
 		}
+		
+		$this->pToday = date("Y-m-d", strtotime($this->pProject['project_today']))." 12:00:00";
 	}
 
 	private function initGraph() {
@@ -706,7 +709,7 @@ class PMGantt /*implements PMGraph TODO */ {
 		global $AppUI;
 
 		$now = "2009-12-05 12:00:00";//date("y-m-d");
-		$now = date("Y-m-d")." 12:00:00";
+		$now = $this->pToday;
 
 		for($i = 0, $row = 0; $i < count(@$this->pTasks); $i++) {
 
