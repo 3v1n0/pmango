@@ -17,6 +17,8 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
+ - 2010.01.27
+   0.6, resource wrapping support.
  - 2010.01.14
    0.5, alert support.
  - 2010.01.12
