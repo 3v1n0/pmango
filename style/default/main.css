@@ -534,3 +534,8 @@ table.tbl td.event td {
 .tab_setting_title {
 	font-weight: bold;
 }
+
+abbr {
+	cursor: help;
+	border-bottom: 1px dotted #555;
+}
