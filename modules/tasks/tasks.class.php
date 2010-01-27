@@ -1008,11 +1008,11 @@ class CTask extends CDpObject {
 	}
 
 	function getName($tid = null) {
-		if (!is_null($this->task_name))
+		if (isset($this) && !is_null($this->task_name))
 			return $this->task_name;
 
 		if (is_null($tid))
-			if (!is_null($this->task_id))
+			if (isset($this) && !is_null($this->task_id))
 				$tid = $this->task_id;
 			else
 				return "";
@@ -1023,11 +1023,11 @@ class CTask extends CDpObject {
 	}
 
 	function getProjectID($tid = null) {
-		if (!is_null($this->task_project))
+		if (isset($this) && !is_null($this->task_project))
 			return $this->task_project;
 
 		if (is_null($tid))
-			if (!is_null($this->task_id))
+			if (isset($this) && !is_null($this->task_id))
 				$tid = $this->task_id;
 			else
 				return "";
@@ -1039,7 +1039,7 @@ class CTask extends CDpObject {
 
 	function getWBSIndexFromParent($tid = null, $pid=null) {
 		if (is_null($tid))
-			if (!is_null($this->task_id))
+			if (isset($this) && !is_null($this->task_id))
 				$tid = $this->task_id;
 			else
 				return "";
@@ -1056,7 +1056,7 @@ class CTask extends CDpObject {
 
 	function getWBS($tid = null, $isRootChildren = false) {
 		if (is_null($tid))
-			if (!is_null($this->task_id))
+			if (isset($this) && !is_null($this->task_id))
 				$tid = $this->task_id;
 			else
 				return "";
@@ -1085,7 +1085,7 @@ class CTask extends CDpObject {
 	function getTaskLevel($tid = null) {
 
 	 if (is_null($tid))
-		if (!is_null($this->task_id))
+		if (isset($this) && !is_null($this->task_id))
 			$tid = $this->task_id;
 		else
 			return "";
