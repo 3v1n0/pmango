@@ -119,7 +119,7 @@ class TaskNetwork {
 	private $pShowActualTimeframe;
 	private $pShowAlerts;
 
-	function TaskNetwork($project=null){
+	function TaskNetwork($project){
 		$this->project = $project;
 		$this->pTaskLevel = 1;
 		$this->pOpenedTasks = array();
@@ -140,7 +140,6 @@ class TaskNetwork {
 		$this->img = ImageCreate(1,1); //immagine vuota iniziale della TN
 		$this->x = 1; 					//larghezza della TN
 		$this->y = 1;					//altezza della TN
-		$this->project = $project;
 	}
 
 	
@@ -381,7 +380,7 @@ class TaskNetwork {
 	public function draw($format = "png", $file = null) {
 		switch ($format) {
 			case "png":
-				if (!$file) header("Content-type: image/png");
+				//if (!$file) header("Content-type: image/png");
 				imagepng($this->getImage(), $file);
 				break;
 			case "jpg":
@@ -846,20 +845,18 @@ class TaskNetwork {
 	}
 	
 	private function drawCriticalPath(){
-		
-		$level = CTask::getLevel($project_id);
+		$level = CTask::getLevel($this->project);
 		$vertical = $this->pShowVertical;
 		$allArrow = $this->pShowAllArrow;
 		$timeGaps = $this->pShowTimeGaps;
 		
-		$index = $this->getTbxFromLevel($level);
+		$index = $this->getTbxFromLevel($level-1);
 
 		//pezzo per ottenere le tbx da quali partire
 		$query = "SELECT dependencies_task_id FROM task_dependencies t;";
 		$results = TaskNetwork::doQuery($query);
 		
-		
-		$tbxarray;
+		$tbxarray = array();
 		for($a=0;$a<sizeof($index);$a++){
 				for($b=0;$b<sizeof($index[$a]);$b++){
 					$bool =false;
@@ -886,12 +883,11 @@ class TaskNetwork {
 		
 		$out;$cont=0;//array che conterrà i cammini possibili di tbx
 		$stack; $ind=0;// pila per simulare la ricorsione
-		
-	
+
 		$tbxarray = TaskNetwork::computeDependence($tbxarray);
 	
 	
-		$output;
+		$output = array();
 		foreach($tbxarray as $tbx){
 			$stack[sizeof($stack)] = $tbx;
 			
@@ -924,7 +920,6 @@ class TaskNetwork {
 		$tbxidpath = explode(",",$cPath["id"]);
 		
 	//controlla se dipendenze sono nascoste	
-				
 		$tbxfrom = $tbxidpath[1];
 		$coordfrom = $this->getTbxIndex($tbxfrom);
 		$control = true;
@@ -944,7 +939,7 @@ class TaskNetwork {
 				
 			}
 		}
-		
+
 		$this->connect($this,null,$coordfrom,true,false,$under,$upper,25,$vertical,"black",false,$allArrow);//connetto la start al primo task
 	
 		for($i=2;$i<sizeof($tbxidpath)-1;$i++){
@@ -1023,7 +1018,7 @@ class TaskNetwork {
 //------Funzioni di merging------------
 //esegue il merging di due immagini separete da 50 px di spazio
 	private function mergeArrayRight($array){
-		$TN = new TaskNetwork();
+		$TN = new TaskNetwork(null);
 
 		$array = TaskNetwork::trimArray($array);
 		for($val=0;$val<sizeof($array);$val++){
@@ -1092,7 +1087,7 @@ class TaskNetwork {
 	}
 
 	private function mergeArrayUnder($array,$vertical=false){
-		$TN = new TaskNetwork();
+		$TN = new TaskNetwork(null);
 
 		$array = TaskNetwork::trimArray($array);
 		for($val=0;$val<sizeof($array);$val++){
@@ -1282,11 +1277,10 @@ class TaskNetwork {
 	}
 
 	private function trimArray($array){
-		$result;$j=0;
-		foreach($array as $coord){
-			$result[$j] = $coord;
-			$j++; 
-		}
+		$result = array();
+		foreach(@$array as $coord)
+			$result[] = $coord;
+
 		return $result;
 	}
 	
@@ -1325,13 +1319,6 @@ class TaskNetwork {
 		$this->index[$row][$col] = $tbx;
 	}
 
-	private function arrayConcat($arr1,$arr2){
-		foreach($arr2 as $x){
-			$arr1[sizeof($arr1)] = $x;
-		}
-		return $arr1;
-	}
-	
 	private function orderWbsId($array){
 		$task = new CTask();
 		for($i=0; $i< sizeof($array); $i++) {
@@ -1363,15 +1350,14 @@ class TaskNetwork {
 			$result = TaskNetwork::doQuery($id);
 			foreach($result as $res){
 				$results[sizeof($results)]= $res[0];
-			}	
+			}
 			unset($res);
 			
 			$int=0;$sons;
 			while($int<$level){
 				$size = sizeof($results);
 				for($i=0;$i<$size;$i++){
-					$DB = new taskBoxDB($results[$i]);
-					$q = "SELECT task_id FROM tasks t WHERE task_parent <> task_id and task_parent=".$DB->getId()." and task_project=".$this->project." ORDER BY task_wbs_index";
+					$q = "SELECT task_id FROM tasks t WHERE task_parent <> task_id and task_parent=".$results[$i]." and task_project=".$this->project." ORDER BY task_wbs_index";
 					$children = TaskNetwork::doQuery($q);
 					if(isset($children[0])){
 						unset($results[$i]);
@@ -1381,7 +1367,7 @@ class TaskNetwork {
 					}
 				}
 				$results = TaskNetwork::trimArray($results);
-				$results = TaskNetwork::arrayConcat($results,$sons);
+				$results = @array_merge($results,$sons);
 				
 				unset($sons);			
 				$int++;
@@ -1392,6 +1378,9 @@ class TaskNetwork {
 			$results = $tasks;
 		}
 		
+		if (!$results)
+			return array();
+
 		foreach($results as $task){
 			$wbslv = CTask::getWBS($task);
 			$wbs = intval(substr($wbslv,0,1));
