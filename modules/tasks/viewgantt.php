@@ -62,7 +62,7 @@ $tab = dPgetParam($_REQUEST, 'tab', 0);
 if (!empty($_POST)) {
 	$task_level = $AppUI->getState('ExplodeTasks');
 	$new_task_level = dPgetParam($_POST, 'explode_tasks', '1');
-	
+
 	if ($task_level != $new_task_level) {
 		$task_level = $new_task_level;
 		$AppUI->setState('ExplodeTasks', $task_level);
@@ -91,8 +91,9 @@ if ($showWork!='0') {
 $show_names = dPgetParam($_POST, 'show_names', false);
 if (empty($_POST)) $show_names = true;
 
-$show_deps = dPgetParam($_POST, 'show_dependencies', false);
-$show_bw = dPgetParam($_POST, 'show_bw', false);
+$show_deps = dPgetBoolParam($_POST, 'show_dependencies');
+$show_bw = dPgetBoolParam($_POST, 'show_bw');
+$show_res = dPgetBoolParam($_POST, 'show_res');
 
 // months to scroll
 $scroll_date = 1;
@@ -140,6 +141,7 @@ $graph_img_src = "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id".
                  "&show_names=".($show_names ? "true" : "false").
                  "&draw_deps=".($show_deps ? "true" : "false").
                  "&colors=".($show_bw ? "false" : "true").
+                 "&show_res=".($show_res ? "true" : "false").
                     ($display_option == 'all' ? '' :
                       '&start_date='.$start_date->format("%Y-%m-%d").
                       '&finish_date='.$end_date->format("%Y-%m-%d"));
@@ -255,10 +257,10 @@ $(function(){
 	$("#graphloader").css("background-color", "#fff");
 });
 
-function loadGraph(src) { 
+function loadGraph(src) {
 	$(function () {
 		var img = new Image();
-	
+
 		$(img).load(function () {
 			$(this).hide();
 			$('#graphloader').hide();
@@ -266,7 +268,7 @@ function loadGraph(src) {
 			$('#graph').show();
 	      	$(this).fadeIn();
 		})
-		
+
 	    .error(function () {
 	    	var errimg = new Image();
 
@@ -280,7 +282,7 @@ function loadGraph(src) {
 
 			.attr('src', graph_load_error);
 	    })
-		
+
 	    .attr('src', src+'&width='+graphWidth);
 	});
 }
@@ -289,6 +291,7 @@ function buildGraphUrl() {
 	var show_names = $("#show_names:checked").val();
 	var show_deps = $("#show_deps:checked").val();
 	var show_bw = $("#show_bw:checked").val();
+	var show_res = $("#show_res:checked").val();
 	var start_date = document.editFrm.sdate.value;
 	var end_date = document.editFrm.edate.value;
 	var explode = document.editFrm.explode_tasks.value;
@@ -296,7 +299,8 @@ function buildGraphUrl() {
 	var url = '?m=tasks&a=gantt&suppressHeaders=1&project_id='+projectID+
 	          '&show_names='+(show_names ? 'true' : 'false')+
 	          '&draw_deps='+(show_deps ? 'true' : 'false')+
-			  '&colors='+(show_bw ? 'false' : 'true');
+			  '&colors='+(show_bw ? 'false' : 'true')+
+			  '&show_res='+(show_res ? 'true' : 'false');
 
 	if (expandChanged) {
 		url += '&explode_tasks='+explode;
@@ -315,7 +319,7 @@ function doSubmit() {
 	if (document.editFrm.edate.value < document.editFrm.sdate.value)
 		alert("Start date must before end date");
 	else {
-		//document.editFrm.submit(); //TODO enable on old browsers 
+		//document.editFrm.submit(); //TODO enable on old browsers
 		$('#graph').empty();
 		$('#graphloader').fadeIn();
 		loadGraph(buildGraphUrl());
@@ -362,15 +366,10 @@ loadGraph('<?php echo $graph_img_src; ?>');
 				</td>
 			</tr>
 			<tr>
-				<td class="tab_setting_title">
-					<?php echo $AppUI->_('Size').": ";?>
-				</td>
-				<td>&nbsp;
-					<select name="image_size" class="text" onchange=""> <!-- add custom inputs onchange -->
-						<option value="1" selected="selected">Default</option>
-						<option value="2" >Custom</option>
-						<option value="3" >Fit in Window</option>
-					</select>
+				<td class="tab_setting_title">&nbsp;</td>
+				<td>
+					<input type='checkbox' id='show_res' name='show_res'" <? echo $show_res ? 'checked="checked"' : '' ?> />
+					<label for="show_res"><?php echo $AppUI->_('Resources'); ?></label>
 				</td>
 			</tr>
 		</table>
@@ -457,6 +456,18 @@ loadGraph('<?php echo $graph_img_src; ?>');
 					</select>
 				</td>
 			</tr>
+			<tr>
+				<td class="tab_setting_title">
+					<?php echo $AppUI->_('Size').": ";?>
+				</td>
+				<td>&nbsp;
+					<select name="image_size" class="text" onchange=""> <!-- add custom inputs onchange -->
+						<option value="1" selected="selected">Default</option>
+						<option value="2" >Custom</option>
+						<option value="3" >Fit in Window</option>
+					</select>
+				</td>
+			</tr>
 		</table>
 	</td>
 
@@ -519,7 +530,7 @@ loadGraph('<?php echo $graph_img_src; ?>');
 
 				<input type="hidden" name="make_pdf" value="false" />
 				<input type="hidden" name="addreport" value="-1" />
-				
+
 				<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 				<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
 				<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'>

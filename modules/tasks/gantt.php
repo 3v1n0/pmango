@@ -85,6 +85,7 @@ $start_date = dPgetParam($_GET, 'start_date', null);
 $end_date   = dPgetParam($_GET, 'finish_date', null);
 
 $show_names = dPgetBoolParam($_GET, 'show_names');
+$show_res   = dPgetBoolParam($_GET, 'show_res');
 $draw_deps  = dPgetBoolParam($_GET, 'draw_deps');
 $colors     = dPgetBoolParam($_GET, 'colors');
 
@@ -100,6 +101,7 @@ $gantt->setStartDate($start_date);
 $gantt->setEndDate($end_date);
 $gantt->showNames($show_names);
 $gantt->showDeps($draw_deps);
+$gantt->showResources($show_res);
 $gantt->useColors($colors);
 $gantt->draw();
 

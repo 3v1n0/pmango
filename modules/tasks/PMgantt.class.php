@@ -56,6 +56,7 @@ define('TTF_DIR', "{$dPconfig['root_dir']}/fonts/Droid/");
 
 include "{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php";
 include "{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php";
+include "TaskBoxDB.class.php";
 
 ########################################
 ////////////////////////////////////////
@@ -191,9 +192,9 @@ class PMGanttBar extends GanttPlotObject {
 		} else {
 			$yt = $ypre;
 			$yb = $ypre+$vs;
-			
+
 			$join_len = 0;
-			
+
 			if ($xb > $xbpre && $xt >= $xbpre) {
 				$join_len = $xb - $xbpre;
 				$join_x = $xbpre;
@@ -201,7 +202,7 @@ class PMGanttBar extends GanttPlotObject {
 				$join_len = $xtpre - $xt;
 				$join_x = $xt;
 			}
-			
+
 			if ($join_len > 0) {
 				$join = $factory->Create($this->iPattern,$this->iFrameColor);
 				$join->SetDensity($this->progress->iDensity);
@@ -540,7 +541,7 @@ class PMGantt /*implements PMGraph TODO */ {
 				$this->findTaskChild($this->pProject['tasks'], $task["task_id"]);
 			}
 		}
-		
+
 		unset($this->pProject['tasks']);
 
 		if(!$this->pShowTaskGroups) {
@@ -593,7 +594,7 @@ class PMGantt /*implements PMGraph TODO */ {
 		    empty($this->pProject["project_finish_date"])) {
 			 $this->pProject["project_finish_date"] = $this->pStartDate;
 		}
-		
+
 		$this->pToday = date("Y-m-d", strtotime($this->pProject['project_today']))." 12:00:00";
 	}
 
@@ -738,26 +739,9 @@ class PMGantt /*implements PMGraph TODO */ {
 				$cap = "";
 			}
 
-			$caption = "";
-//			if ($showLabels=='1') {
-				$sql = "select ut.task_id, u.user_username, ut.perc_effort from user_tasks ut, users u where u.user_id = ut.user_id and ut.task_id = ".$a["task_id"];
-				$res = db_exec( $sql );
-				while ($rw = db_fetch_row( $res )) {
-				switch ($rw[2]) {
-				case 100:
-				$caption = $caption."".$rw[1].";";
-				break;
-				default:
-				$caption = $caption."".$rw[1]."[".$rw[2]."%];";
-				break;
-				}
-				}
-				$caption = substr($caption, 0, strlen($caption)-1);
-//				}*/
-
 			$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.25);//se padre sarebbe meglio 1
 			$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
-
+//TODO use proprtional cut
 			if (!$this->pUseColors) {
 				$bar->SetColor('black');
 				$bar->SetFillColor('white');
@@ -787,18 +771,18 @@ class PMGantt /*implements PMGraph TODO */ {
 			$plMarkshow = false;
 
 			if (!empty($tstart['task_log_start_date'])) {
-				
+
 				$lstart = $tstart['task_log_start_date'];
 
 				if (strtotime($lstart) <= strtotime($start)+43200)
 					$plMarkshow = true;
 
 				$lMarkshow = (!$plMarkshow);
-				
+
 				$tend = CTask::getActualFinishDate($a["task_id"], $child);
 
 				if (!empty($tend['task_log_finish_date'])) {
-					
+
 					$lend = $tend['task_log_finish_date'];
 
 					if ($progress < 100 && strtotime($lend) < strtotime($now) ||
@@ -808,20 +792,19 @@ class PMGantt /*implements PMGraph TODO */ {
 				} else {
 					$lend = substr($now, 0, 10);
 				}
-				
+
 				if (strtotime($lend) >= strtotime($end))
 					$prMarkshow = true;
-				
-				if (strtotime($lend) == strtotime(substr($now, 0, 10)))
+
+				if (strtotime(substr($lend, 0, 10)) == strtotime(substr($now, 0, 10)))
 				    $prMarkshow = false;
-					
+
 				$rMarkshow = (!$prMarkshow);
-				
+
 				if ($rMarkshow && strtotime($end) == strtotime(substr($now, 0, 10)) ||
 				    ($progress < 100 && strtotime($end) < strtotime($now))) {
 					$rMarkshow = false;
 				}
-
 
 				$bar2 = new PMGanttBar($row++, '', $lstart, $lend, '', $task_leaf ? 0.3 : 0.20);
 
@@ -866,7 +849,7 @@ class PMGantt /*implements PMGraph TODO */ {
 
 				$bar2->progress->Set($progress/100);
 			}
-	
+
 
 			if (!$task_leaf) {
 
@@ -891,20 +874,51 @@ class PMGantt /*implements PMGraph TODO */ {
 				}
 			}
 
-			//adding captions
-			$bar->caption = new TextProperty($caption);
-			$bar->caption->Align("left","center");
+			if ($this->pShowResources) {
+				if (!$task_leaf) {
+					$caption = CTask::getActualEffort($a['task_id'], $child)."/".CTask::getEffort($a['task_id'])." ph";
+				} else {
+					$tbxdb = new TaskBoxDB($a['task_id']);
+
+					$res = $tbxdb->getActualResources();
+
+					$tst = new Image();
+					$tst->ttf->SetUserFont3('DroidSansMono.ttf');
+
+					$caption = '';
+					foreach($res as $r) {
+						$cap = trim($r['actual_effort'].'/'.$r['planned_effort']." ph, ".$r['name'].", ".$r['role'])."; ";
+
+						$bar->caption = new TextProperty($cap);
+						$bar->caption->SetFont(FF_USERFONT3, FS_NORMAL, 7);
+
+						$cut = 2;
+						while ($bar->caption->GetWidth($tst) >= $this->getWidth()/3/count($res) && $cut < strlen($cap)) {
+							$cap = substr($cap, 0, strlen($cap)-(1+$cut))."...";
+							$bar->caption->Set($cap);
+							$cut++;
+						}
+
+						$caption .= $cap;
+					}
+				}
+
+				//adding captions
+				$bar->caption = new TextProperty($caption);
+				$bar->caption->SetFont(FF_USERFONT3, FS_NORMAL, 7);
+				$bar->caption->Align("left", ($task_leaf || strtotime($end) > strtotime($lend) ? "center" : "bottom"));
+			}
 
 			// show tasks which are both finished and past in (dark)gray
 			if ($progress >= 100 && $end_date->isPast() && get_class($bar) == "PMGanttBar_DISABLED") {
-				$bar->caption->SetColor('darkgray');
+				//$bar->caption->SetColor('darkgray');
 				$bar->title->SetColor('darkgray');
 				$bar->setColor('darkgray');
 				$bar->SetFillColor('darkgray');
 				$bar->SetPattern(BAND_SOLID,'gray');
 
 				if ($bar2 != null && get_class($bar2) == "PMGanttBar_DISABLED") {
-					$bar2->caption->SetColor('gray5');
+					//$bar2->caption->SetColor('gray5');
 					$bar2->setColor('gray5');
 					$bar2->SetFillColor('gray5');
 					$bar2->SetPattern(BAND_SOLID,'gray3');
@@ -930,7 +944,7 @@ class PMGantt /*implements PMGraph TODO */ {
 				$deps = db_exec($sql);
 
 				while($dep = db_fetch_assoc($deps)) {
-					for($d = 0; $d < count($this->pTasks); $d++ ) {						
+					for($d = 0; $d < count($this->pTasks); $d++ ) {
 						if($this->pTasks[$d]["task_id"] == $dep[0]) {
 							$task['bar']->SetConstrain($this->pTasks[$d]['bar']->GetLineNbr(), CONSTRAIN_ENDSTART, $this->pUseColors ? 'brown' : 'gray4');
 							break;
@@ -938,8 +952,8 @@ class PMGantt /*implements PMGraph TODO */ {
 					}
 				}
 			}
-		}		
-		
+		}
+
 		//$today = date("y-m-d");
 		$vline = new GanttVLine(/*$today*/$now, $AppUI->_('Today', UI_OUTPUT_RAW), ($this->pUseColors ? 'darkred' : 'gray3'));
 		$vline->title->SetFont(FF_USERFONT3, FS_NORMAL, 9);
