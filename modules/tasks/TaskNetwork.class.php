@@ -150,7 +150,7 @@ class TaskNetwork {
 	}
 
 	public function setTaskLevel($tl) {
-		$this->pTaskLevel = intval($tl) > 1 ? intval($tl) : 1;
+		$this->pTaskLevel = intval($tl) > 1 ? intval($tl)-1 : 0;
 	}
 
 	public function setOpenedTasks($tsk) {
