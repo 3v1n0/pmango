@@ -313,7 +313,7 @@ class TaskNetwork {
 			$rows[$i] = $this->mergeArrayRight($this->index[$i]);
 		}
 
-		$final = $this->mergeArrayUnder($rows,$vertical);
+		$final = $this->mergeArrayUnder($rows);
 		
 		$this->index = $final->index; 
 		$this->img = $final->img;
@@ -1097,8 +1097,9 @@ class TaskNetwork {
 
 	}
 
-	private function mergeArrayUnder($array,$vertical=false){
+	private function mergeArrayUnder($array){
 		$TN = new TaskNetwork(null);
+		$vertical = $this->pShowVertical;
 
 		$array = TaskNetwork::trimArray($array);
 		for($val=0;$val<sizeof($array);$val++){
