@@ -54,13 +54,18 @@ include "TaskBoxDB.class.php";
 
 class TNNode extends TaskBox {
 
-	private $leftx, $lefty, $rightx, $righty;
+	private $ID,$leftx, $lefty, $rightx, $righty;
 
 	//leftx = ascissa punto mediano sx del tb (dove arrivano le frecce)
 	//lefty = ordinata punto mediano sx del tb (dove arrivano le frecce)
 	//rightx = ascissa punto mediano dx del tb (dove partono le frecce)
 	//righty = ordinata punto mediano dx del tb (dove partono le frecce)
 
+	public function TNNode($wbs,$id){
+		parent::TaskBox($wbs);		
+		$this->ID = $id;
+	}
+	
 	function setLeft($x,$y){
 		$this->leftx = $x;
 		$this->lefty = $y;
@@ -86,6 +91,11 @@ class TNNode extends TaskBox {
 	function getRightY(){
 		return $this->righty;
 	}
+	
+	function getId(){
+		return $this->ID;
+	}
+	
 }
 
 
@@ -121,21 +131,22 @@ class TaskNetwork {
 
 	function TaskNetwork($project){
 		$this->project = $project;
-		$this->pTaskLevel = 1;
-		$this->pOpenedTasks = array();
-		$this->pClosedTasks = array();
-		$this->pShowVertical = false;		
-
-		$this->pShowNames = false;
-		$this->pShowProgress = false;
-		$this->pShowPlannedData = false;
-		$this->pShowActualData = false;
-		$this->pShowPlannedResources = false;
-		$this->pShowActualResources = false;
-		$this->pShowPlannedTimeframe = false;
-		$this->pShowActualTimeframe = false;
-		$this->pShowAlerts = false;
-		
+		if(!is_null($project)){
+			$this->pTaskLevel = 1;
+			$this->pOpenedTasks = array();
+			$this->pClosedTasks = array();
+			$this->pShowVertical = false;		
+	
+			$this->pShowNames = false;
+			$this->pShowProgress = false;
+			$this->pShowPlannedData = false;
+			$this->pShowActualData = false;
+			$this->pShowPlannedResources = false;
+			$this->pShowActualResources = false;
+			$this->pShowPlannedTimeframe = false;
+			$this->pShowActualTimeframe = false;
+			$this->pShowAlerts = false;
+		}		
 		$this->index = array();
 		$this->img = ImageCreate(1,1); //immagine vuota iniziale della TN
 		$this->x = 1; 					//larghezza della TN
@@ -256,10 +267,10 @@ class TaskNetwork {
 				$wbslv = CTask::getWBS($res[$j][$k]);
 				
 				$DB = new taskBoxDB($res[$j][$k]);
-				$tbx = new TNNode($res[$j][$k]);
+				$tbx = new TNNode($wbslv,$res[$j][$k]);
 
 				if($this->pShowNames){
-					$tbx->setName($wbslv." ".$DB->getTaskName());
+					$tbx->setName($DB->getTaskName());
 				}
 				if($this->pShowPlannedData){
 					$tbx->setPlannedDataArray($DB->getPlannedData());
@@ -1020,7 +1031,7 @@ class TaskNetwork {
 //esegue il merging di due immagini separete da 50 px di spazio
 	private function mergeArrayRight($array){
 		$TN = new TaskNetwork(null);
-
+		
 		$array = TaskNetwork::trimArray($array);
 		for($val=0;$val<sizeof($array);$val++){
 			$b =$array[$val];
@@ -1068,8 +1079,7 @@ class TaskNetwork {
 
 			$TN->img = $out; $TN->x = $outx; $TN->y = $outy; $TN->index = $index;
 
-		}
-
+		}		
 
 
 			//ingrandisco il disegno di 25 px in alto e in basso
@@ -1278,10 +1288,11 @@ class TaskNetwork {
 	}
 
 	private function trimArray($array){
-		$result = array();
-		foreach(@$array as $coord)
-			$result[] = $coord;
-
+		$result;$j=0;
+		foreach($array as $coord){
+			$result[$j] = $coord;
+			$j++; 
+		}
 		return $result;
 	}
 	
