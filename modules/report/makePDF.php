@@ -57,11 +57,11 @@ $orient='L';
 $y=40;
 
 switch($dPconfig['currency_symbol']){
-	case '€': $currency='�';
+	case '€': $currency='�';
 	break;
-	case '£': $currency='�';
+	case '£': $currency='�';
 	break;
-	case '¥': $currency='�';
+	case '¥': $currency='�';
 	break;
 	default: $currency=$dPconfig['currency_symbol'];
 }
@@ -344,6 +344,43 @@ function PM_headerPdf($project_name, $page='P', $border=1, $group='', $image_fil
 			
 			}
 			else if($row_number<=1) $this->Cell($width,$cell_height,$content,$border,$new_line,$align);
+		}
+		
+		function WordWrap(&$text, $maxwidth) {
+			
+		    $text = trim($text);
+		    if ($text==='')
+		        return 0;
+		    $space = $this->GetStringWidth(' ');
+		    $lines = explode("\n", $text);
+		    $text = '';
+		    $count = 0;
+		
+		    foreach ($lines as $line)
+		    {
+		        $words = preg_split('/ +/', $line);
+		        $width = 0;
+		
+		        foreach ($words as $word)
+		        {
+		            $wordwidth = $this->GetStringWidth($word);
+		            if ($width + $wordwidth <= $maxwidth)
+		            {
+		                $width += $wordwidth + $space;
+		                $text .= $word.' ';
+		            }
+		            else
+		            {
+		                $width = $wordwidth + $space;
+		                $text = rtrim($text)."\n".$word.' ';
+		                $count++;
+		            }
+		        }
+		        $text = rtrim($text)."\n";
+		        $count++;
+		    }
+		    $text = rtrim($text);
+		    return $count;
 		}
 		
 		//Page footer
