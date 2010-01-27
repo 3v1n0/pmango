@@ -8,7 +8,7 @@
 
  File:       viewtasknetwork.php
  Location:   pmango/modules/tasks
- Started:    2010.11.11
+ Started:    2010.01.27
  Author:     Marco Trevisan
  Type:       PHP
 
@@ -17,7 +17,8 @@
 
  Version history.
  - 2010.01.27
-   0.1 first version
+   0.5 use jquery and redesign the interface 
+   0.3 first version
 
 ---------------------------------------------------------------------------
 
