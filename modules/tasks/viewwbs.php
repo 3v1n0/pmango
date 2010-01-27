@@ -16,6 +16,8 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
+ - 2010.01.27
+   0.8 dynamic version with graph viewer
  - 2010.01.26
    0.5 added controls
  - 2009.11.11
@@ -52,9 +54,10 @@
 ---------------------------------------------------------------------------
 */
 
-global $m, $a;
+global $m, $a, $tab;
 
-$project_id = dPgetParam($_GET, 'project_id', 0);
+$project_id = dPgetParam($_REQUEST, 'project_id', 0);
+$tab = dPgetParam($_REQUEST, 'tab', 0);
 
 if (!empty($_POST)) {
 	$task_level = $AppUI->getState('ExplodeTasks');
@@ -97,6 +100,11 @@ $graph_img_src = "?m=tasks&suppressHeaders=1&a=wbs&project_id=$project_id".
 		border: 1px solid black;
 		position: relative;
 		background: #fff;
+	}
+	
+	abbr {
+		cursor: help;
+		border-bottom: 1px dotted #555;
 	}
 </style>
 
@@ -260,7 +268,6 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 							<label for="show_progress"><?php echo $AppUI->_('Progress'); ?></label>
 						</td>
 					</tr>
-					<tr>
 				</table>
 			</td>
 			<td align='left' valign="top" style="border-right: solid transparent 20px;">
@@ -269,21 +276,33 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 						<td class="tab_setting_title"><?php echo $AppUI->_('Planned Info'); ?>:</td>
 						<td align="left">
 							<input type='checkbox' id="show_p_data" name='show_p_data' <? echo $show_p_data ? 'checked="checked" ' : '' ?>/>
-							<label for="show_p_data"><?php echo $AppUI->_('Data'); ?></label>
+							<label for="show_p_data">
+								<abbr title="<?php echo $AppUI->_('Duration, effort and cost'); ?>">
+									<?php echo $AppUI->_('Data'); ?>
+								</abbr>
+							</label>
 						</td>
 					</tr>
 					<tr>
 						<td class="tab_setting_title">&nbsp;</td>
 						<td align="left">
 							<input type='checkbox' id="show_p_res" name='show_p_res' onclick="resourceSelectSwap(false);" <? echo $show_p_res ? 'checked="checked" ' : '' ?>/>
-							<label for="show_p_res"><?php echo $AppUI->_('Resources'); ?></label>
+							<label for="show_p_res">
+								<abbr title="<?php echo $AppUI->_('Personal Effort, Person and Role'); ?>">
+									<?php echo $AppUI->_('Resources'); ?>
+								</abbr>
+							</label>
 						</td>
 					</tr>
 					<tr>
 						<td class="tab_setting_title">&nbsp;</td>
 						<td align="left">
 							<input type='checkbox' id="show_p_time" name='show_p_time' <? echo $show_p_time ? 'checked="checked" ' : '' ?>/>
-							<label for="show_p_time"><?php echo $AppUI->_('Timeframe'); ?></label>
+							<label for="show_p_time">
+								<abbr title="<?php echo $AppUI->_('Start and End dates'); ?>">
+									<?php echo $AppUI->_('Timeframe'); ?>
+								</abbr>
+							</label>
 						</td>
 					</tr>
 				</table>
@@ -294,21 +313,33 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 						<td class="tab_setting_title"><?php echo $AppUI->_('Actual Info'); ?>:</td>
 						<td align="left">
 							<input type='checkbox' id="show_a_data" name='show_a_data' <? echo $show_a_data ? 'checked="checked" ' : '' ?>/>
-							<label for="show_a_data"><?php echo $AppUI->_('Data'); ?></label>
+							<label for="show_a_data">
+								<abbr title="<?php echo $AppUI->_('Duration, effort and cost'); ?>">
+									<?php echo $AppUI->_('Data'); ?>
+								</abbr>
+							</label>
 						</td>
 					</tr>
 					<tr>
 						<td class="tab_setting_title">&nbsp;</td>
 						<td align="left">
 							<input type='checkbox' id="show_a_res" name='show_a_res' onclick="resourceSelectSwap(true);" <? echo $show_a_res ? 'checked="checked" ' : '' ?>/>
-							<label for="show_a_res"><?php echo $AppUI->_('Resources'); ?></label>
+							<label for="show_a_res">
+								<abbr title="<?php echo $AppUI->_('Personal Effort, Person and Role'); ?>">
+									<?php echo $AppUI->_('Resources'); ?>
+								</abbr>
+							</label>
 						</td>
 					</tr>
 					<tr>
 						<td class="tab_setting_title">&nbsp;</td>
 						<td align="left">
 							<input type='checkbox' id="show_a_time" name='show_a_time' <? echo $show_a_time ? 'checked="checked" ' : '' ?>/>
-							<label for="show_a_time"><?php echo $AppUI->_('Timeframe'); ?></label>
+							<label for="show_a_time">
+								<abbr title="<?php echo $AppUI->_('Start and End dates'); ?>">
+									<?php echo $AppUI->_('Timeframe'); ?>
+								</abbr>
+							</label>
 						</td>
 					</tr>
 				</table>
@@ -386,6 +417,3 @@ if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )
 	</tr>
 </table>
 <br />
-
-
-
