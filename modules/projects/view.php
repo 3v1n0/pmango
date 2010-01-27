@@ -209,7 +209,7 @@ function delIt() {
 	</td>
 </tr>
 <?php
-	if (empty($AppUI->properties) && empty($_POST['properties']))
+	if (empty($AppUI->properties) && empty($_POST['properties']) && empty($_REQUEST['make_prop_pdf']))
 		$display = "display: none;";
 ?>
 <tr id="project_infos" style="<? echo $display ?>">
