@@ -380,7 +380,7 @@ class TaskNetwork {
 	public function draw($format = "png", $file = null) {
 		switch ($format) {
 			case "png":
-				//if (!$file) header("Content-type: image/png");
+				if (!$file) header("Content-type: image/png");
 				imagepng($this->getImage(), $file);
 				break;
 			case "jpg":
