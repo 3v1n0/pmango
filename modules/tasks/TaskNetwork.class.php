@@ -389,7 +389,7 @@ class TaskNetwork {
 				imagejpeg($this->getImage(), $file);
 				break;
 			case "gif":
-				if (!$file) header("Content-type: image/jpeg");
+				if (!$file) header("Content-type: image/gif");
 				imagegif($this->getImage(), $file);
 				break;
 		}
