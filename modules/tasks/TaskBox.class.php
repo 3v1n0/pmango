@@ -623,7 +623,7 @@ class ResourceWrapping implements TextBlockWrapping {
 		}
 
 		return $text;
-	}	
+	}
 }
 
 ?>
