@@ -799,89 +799,87 @@ class PMGantt /*implements PMGraph TODO */ {
 
 			$bar2 = null;
 
-		//	if ($task_leaf) {
-				//if ($now > )
-				$child = CTask::getChild($a["task_id"], $this->pProjectID);
-				$tstart = CTask::getActualStartDate($a["task_id"], $child);
+			$child = CTask::getChild($a["task_id"], $this->pProjectID);
+			$tstart = CTask::getActualStartDate($a["task_id"], $child);
 
-				$rMarkshow = true;
-				$lMarkshow = true;
-				$prMarkshow = false;
-				$plMarkshow = false;
+			$rMarkshow = true;
+			$lMarkshow = true;
+			$prMarkshow = false;
+			$plMarkshow = false;
 
-				if (!empty($tstart['task_log_start_date'])) {
+			if (!empty($tstart['task_log_start_date'])) {
 
-					if (strtotime($tstart['task_log_start_date']) <= strtotime($start))
-						$plMarkshow = true;
+				if (strtotime($tstart['task_log_start_date']) <= strtotime($start))
+					$plMarkshow = true;
 
-					$lMarkshow = (!$plMarkshow);
+				$lMarkshow = (!$plMarkshow);
 
-					$start = $tstart['task_log_start_date'];
-					$tend = CTask::getActualFinishDate($a["task_id"], $child);
+				$start = $tstart['task_log_start_date'];
+				$tend = CTask::getActualFinishDate($a["task_id"], $child);
 
-					if (!empty($tend['task_log_finish_date'])) {
+				if (!empty($tend['task_log_finish_date'])) {
 
-						if (strtotime($tend['task_log_finish_date']) >= strtotime($end))
-							$prMarkshow = true;
+					if (strtotime($tend['task_log_finish_date']) >= strtotime($end))
+						$prMarkshow = true;
 
-						$rMarkshow = (!$prMarkshow);
+					$rMarkshow = (!$prMarkshow);
 
-						if ($progress < 100 && strtotime($tend['task_log_finish_date']) < strtotime($now) ||
-						       strtotime($end) > strtotime($now) && strtotime($start) < strtotime($now)) {
+					if ($progress < 100 && strtotime($tend['task_log_finish_date']) < strtotime($now) ||
+					       strtotime($end) > strtotime($now) && strtotime($start) < strtotime($now)) {
 
-						    if (strtotime($end) <= strtotime($now))
-						    	$prMarkshow = $rMarkshow = false;
+					    if (strtotime($end) <= strtotime($now))
+					    	$prMarkshow = $rMarkshow = false;
 
-							$end = substr($now, 0, 10);
-						} else {
-							$end = $tend['task_log_finish_date'];
-						}
-					}
-
-					$bar2 = new PMGanttBar($row++, '', $start, $end, '', $task_leaf ? 0.3 : 0.20);
-
-					if ($task_leaf) {
-						$bar2->SetPattern(GANTT_RDIAG, $this->pUseColors ? 'red' : 'black', 95);
+						$end = substr($now, 0, 10);
 					} else {
-						$bar2->SetColor('black');
-						$bar2->SetFillColor('black');
-						$bar2->SetPattern(BAND_SOLID, $this->pUseColors ? 'gray3' : 'white');
+						$end = $tend['task_log_finish_date'];
+					}
+				}
 
-						$bar2->progress->SetFillColor($this->pUseColors ? 'green' : 'gray6');
-						$bar2->progress->SetPattern(BAND_SOLID, $this->pUseColors ? 'green' : 'gray6', 98);
+				$bar2 = new PMGanttBar($row++, '', $start, $end, '', $task_leaf ? 0.3 : 0.20);
 
-						if ($plMarkshow) {
-							$bar2->leftMark->Show();
-							$bar2->leftMark->SetType(MARK_LEFTTRIANGLE);
-							$bar2->leftMark->SetWidth(2);
+				if ($task_leaf) {
+					$bar2->SetPattern(GANTT_RDIAG, $this->pUseColors ? 'red' : 'black', 95);
+				} else {
+					$bar2->SetColor('black');
+					$bar2->SetFillColor('black');
+					$bar2->SetPattern(BAND_SOLID, $this->pUseColors ? 'gray3' : 'white');
 
-							if ($progress == 0) {
-								$bar2->leftMark->SetColor('black');
-								$bar2->leftMark->SetFillColor('black');
-							} else {
-								$bar2->leftMark->SetColor($this->pUseColors ? 'green' : 'gray6');
-								$bar2->leftMark->SetFillColor($this->pUseColors ? 'green' : 'gray6');
-							}
-						}
+					$bar2->progress->SetFillColor($this->pUseColors ? 'green' : 'gray6');
+					$bar2->progress->SetPattern(BAND_SOLID, $this->pUseColors ? 'green' : 'gray6', 98);
 
-						if ($prMarkshow) {
-							$bar2->rightMark->Show();
-							$bar2->rightMark->SetType(MARK_RIGHTTRIANGLE);
-							$bar2->rightMark->SetWidth(2);
+					if ($plMarkshow) {
+						$bar2->leftMark->Show();
+						$bar2->leftMark->SetType(MARK_LEFTTRIANGLE);
+						$bar2->leftMark->SetWidth(2);
 
-							if ($progress != 100) {
-								$bar2->rightMark->SetColor($this->pUseColors ? 'gray3' : 'white');
-								$bar2->rightMark->SetFillColor($this->pUseColors ? 'gray3' : 'white');
-							} else {
-								$bar2->rightMark->SetColor($this->pUseColors ? 'green' : 'gray6');
-								$bar2->rightMark->SetFillColor($this->pUseColors ? 'green' : 'gray6');
-							}
+						if ($progress == 0) {
+							$bar2->leftMark->SetColor('black');
+							$bar2->leftMark->SetFillColor('black');
+						} else {
+							$bar2->leftMark->SetColor($this->pUseColors ? 'green' : 'gray6');
+							$bar2->leftMark->SetFillColor($this->pUseColors ? 'green' : 'gray6');
 						}
 					}
 
-					$bar2->progress->Set($progress/100);
+					if ($prMarkshow) {
+						$bar2->rightMark->Show();
+						$bar2->rightMark->SetType(MARK_RIGHTTRIANGLE);
+						$bar2->rightMark->SetWidth(2);
+
+						if ($progress != 100) {
+							$bar2->rightMark->SetColor($this->pUseColors ? 'gray3' : 'white');
+							$bar2->rightMark->SetFillColor($this->pUseColors ? 'gray3' : 'white');
+						} else {
+							$bar2->rightMark->SetColor($this->pUseColors ? 'green' : 'gray6');
+							$bar2->rightMark->SetFillColor($this->pUseColors ? 'green' : 'gray6');
+						}
+					}
 				}
-		//	}
+
+				$bar2->progress->Set($progress/100);
+			}
+	
 
 			if (!$task_leaf) {
 
@@ -929,28 +927,32 @@ class PMGantt /*implements PMGraph TODO */ {
 				}
 			}
 
-			if ($this->pShowDeps) {
-				$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE dependencies_req_task_id=" . $a["task_id"];
-				$query = db_exec($sql);
-
-				while($dep = db_fetch_assoc($query)) {
-					// find row num of dependencies
-					for($d = 0; $d < count($this->pTasks); $d++ ) {
-						if($this->pTasks[$d]["task_id"] == $dep["dependencies_task_id"] && $d != $bar->GetLineNbr()) {
-							$bar->SetConstrain(2*$d, CONSTRAIN_ENDSTART, $this->pUseColors ? 'brown' : 'gray4');
-						}
-					}
-				}
-			}
-
 			if ($a["task_milestone"])
 				$bar->title->SetColor("#CC0000");
 
+			$this->pTasks[$i]['bar'] = $bar;
 			$this->pGraph->Add($bar);
 
 			if ($bar2 != null)
 				$this->pGraph->Add($bar2);
 		}
+
+		if ($this->pShowDeps) {
+			foreach ($this->pTasks as $task) {
+				$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE dependencies_req_task_id = " . $task["task_id"];
+				$deps = db_exec($sql);
+
+				while($dep = db_fetch_assoc($deps)) {
+					for($d = 0; $d < count($this->pTasks); $d++ ) {						
+						if($this->pTasks[$d]["task_id"] == $dep[0]) {
+							$task['bar']->SetConstrain($this->pTasks[$d]['bar']->GetLineNbr(), CONSTRAIN_ENDSTART, $this->pUseColors ? 'brown' : 'gray4');
+							break;
+						}
+					}
+				}
+			}
+		}		
+		
 		//$today = date("y-m-d");
 		$vline = new GanttVLine(/*$today*/$now, $AppUI->_('Today', UI_OUTPUT_RAW), ($this->pUseColors ? 'darkred' : 'gray3'));
 		$vline->title->SetFont(FF_USERFONT3, FS_NORMAL, 9);
