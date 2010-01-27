@@ -705,8 +705,8 @@ class PMGantt /*implements PMGraph TODO */ {
 	private function populateGraph() {
 		global $AppUI;
 
-		$now = "2009-12-05 12:00:00";//date("y-m-d");
-		//$now = date("Y-m-d")." 12:00:00";
+//		$now = "2009-12-05 12:00:00";//date("y-m-d");
+		$now = date("Y-m-d")." 12:00:00";
 
 		for($i = 0, $row = 0; $i < count(@$this->pTasks); $i++) {
 
@@ -808,35 +808,41 @@ class PMGantt /*implements PMGraph TODO */ {
 			$plMarkshow = false;
 
 			if (!empty($tstart['task_log_start_date'])) {
+				
+				$lstart = $tstart['task_log_start_date'];
 
-				if (strtotime($tstart['task_log_start_date']) <= strtotime($start))
+				if (strtotime($lstart) <= strtotime($start)+43200)
 					$plMarkshow = true;
 
 				$lMarkshow = (!$plMarkshow);
-
-				$start = $tstart['task_log_start_date'];
+				
 				$tend = CTask::getActualFinishDate($a["task_id"], $child);
 
 				if (!empty($tend['task_log_finish_date'])) {
+					
+					$lend = $tend['task_log_finish_date'];
 
-					if (strtotime($tend['task_log_finish_date']) >= strtotime($end))
-						$prMarkshow = true;
-
-					$rMarkshow = (!$prMarkshow);
-
-					if ($progress < 100 && strtotime($tend['task_log_finish_date']) < strtotime($now) ||
-					       strtotime($end) > strtotime($now) && strtotime($start) < strtotime($now)) {
-
-					    if (strtotime($end) <= strtotime($now))
-					    	$prMarkshow = $rMarkshow = false;
-
-						$end = substr($now, 0, 10);
-					} else {
-						$end = $tend['task_log_finish_date'];
+					if ($progress < 100 && strtotime($lend) < strtotime($now) ||
+					       strtotime($end) > strtotime($now) && strtotime($lstart) < strtotime($now)) {
+						$lend = substr($now, 0, 10);
 					}
+				} else {
+					$lend = substr($now, 0, 10);
+				}
+				
+				if (strtotime($lend) >= strtotime($end))
+					$prMarkshow = true;
+				
+				if (strtotime($lend) <= strtotime($now))
+				    $prMarkshow = false;
+					
+				$rMarkshow = (!$prMarkshow);
+				
+				if ($rMarkshow && strtotime($end) == strtotime($now)) {
+					$rMarkshow = false;
 				}
 
-				$bar2 = new PMGanttBar($row++, '', $start, $end, '', $task_leaf ? 0.3 : 0.20);
+				$bar2 = new PMGanttBar($row++, '', $lstart, $lend, '', $task_leaf ? 0.3 : 0.20);
 
 				if ($task_leaf) {
 					$bar2->SetPattern(GANTT_RDIAG, $this->pUseColors ? 'red' : 'black', 95);
