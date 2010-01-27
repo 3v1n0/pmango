@@ -700,7 +700,7 @@ class TextBlock extends ImgBlock {
 			$this->pTextWidth = $this->getMinWidth();
 	}
 
-	private function getTextSize($text = null) {
+	public function getTextSize($text = null) {
 
 		if ($text == null)
 			$text = $this->pText;
@@ -715,10 +715,11 @@ class TextBlock extends ImgBlock {
 	}
 
 	private function getWrappedText($text) {
-		if ($this->pTextWrap)
+		if ($this->pTextWrap) {
 			return $this->pTextWrap->wrap($text, $this->getMaxWidth());
-		else
+		} else {
 			return $this->getSimpleWrappedText($text);
+		}
 	}
 
 	private function getSimpleWrappedText($text) {
