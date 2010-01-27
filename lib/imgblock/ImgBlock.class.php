@@ -149,10 +149,7 @@ class BorderedBlock extends ImgBlock {
 		$this->setAlign($align);
 	}
 
-	public function setContent($content) {
-		if (!is_subclass_of($content, "ImgBlock"))
-			return;
-
+	public function setContent(ImgBlock $content) {
 		$this->pContent = $content;
 	}
 
@@ -299,10 +296,7 @@ class CircleBlock extends ImgBlock {
 		$this->setPadding($padding);
 	}
 
-	public function setContent($content) {
-		if (!is_subclass_of($content, "ImgBlock"))
-			return;
-
+	public function setContent(ImgBlock $content) {
 		$this->pContent = $content;
 	}
 
@@ -376,10 +370,7 @@ class FixedBlock extends ImgBlock {
 		$this->setBgColor("#FFFF");
 	}
 
-	public function addContent($content, $x, $y) {
-		if (!is_subclass_of($content, "ImgBlock"))
-			return;
-
+	public function addContent(ImgBlock $content, $x, $y) {
 		$this->pContent[] = array('blk' => $content, 'x' => intval($x), 'y' => intval($y));
 	}
 
@@ -807,9 +798,7 @@ class HorizontalBoxBlock extends ImgBlock {
 		$this->pHomogeneous = $homogeneous;
 	}
 
-	public function addBlock($block) {
-		if (!is_subclass_of($block, "ImgBlock"))
-			return;
+	public function addBlock(ImgBlock $block) {
 
 		if ($this->pBorders > 0) {
 			$padding = $this->pMerge ? $this->pSpace : 0;
@@ -1014,10 +1003,7 @@ class VerticalBoxBlock extends ImgBlock {
 		$this->pHomogeneous = $homogeneous;
 	}
 
-	public function addBlock($block) {
-		if (!is_subclass_of($block, "ImgBlock"))
-			return;
-
+	public function addBlock(ImgBlock $block) {
 //		if ($block->getWidth() < 1)
 //			$block->setWidth($this->getWidth());
 //
