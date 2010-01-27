@@ -716,10 +716,10 @@ class TextBlock extends ImgBlock {
 
 	private function getWrappedText($text) {
 		if ($this->pTextWrap) {
-			return $this->pTextWrap->wrap($text, $this->getMaxWidth());
-		} else {
-			return $this->getSimpleWrappedText($text);
+			$text = $this->pTextWrap->wrap($text, $this->getMaxWidth());
 		}
+		
+		return $this->getSimpleWrappedText($text);
 	}
 
 	private function getSimpleWrappedText($text) {
@@ -736,7 +736,7 @@ class TextBlock extends ImgBlock {
 			$tagHack = true;
 		}
 
-		$cut = strlen($text) * $this->getMaxWidth() / $tsize['w'] + 1;
+		$cut = strlen(strip_tags($text)) * $this->getMaxWidth() / $tsize['w'] + 1;
 
 		while ($tsize['w'] >= $this->getMaxWidth() && strlen($text) > 1) {
 			$text = trim(substr($text, 0, $cut));
