@@ -67,26 +67,44 @@ if (!empty($_POST)) {
 	}
 }
 
-$show_names    = dPgetBoolParam($_POST, 'show_names');
-$show_progress = dPgetBoolParam($_POST, 'show_progress');
-$show_alerts   = dPgetBoolParam($_POST, 'show_alerts');
-$show_p_data   = dPgetBoolParam($_POST, 'show_p_data');
-$show_a_data   = dPgetBoolParam($_POST, 'show_a_data');
-$show_p_res    = dPgetBoolParam($_POST, 'show_p_res');
-$show_a_res    = dPgetBoolParam($_POST, 'show_a_res');
-$show_p_time   = dPgetBoolParam($_POST, 'show_p_time');
-$show_a_time   = dPgetBoolParam($_POST, 'show_a_time');
+$show_names     = dPgetBoolParam($_POST, 'show_names');
+$show_progress  = dPgetBoolParam($_POST, 'show_progress');
+$show_alerts    = dPgetBoolParam($_POST, 'show_alerts');
+$show_p_data    = dPgetBoolParam($_POST, 'show_p_data');
+$show_a_data    = dPgetBoolParam($_POST, 'show_a_data');
+$show_p_res     = dPgetBoolParam($_POST, 'show_p_res');
+$show_a_res     = dPgetBoolParam($_POST, 'show_a_res');
+$show_p_time    = dPgetBoolParam($_POST, 'show_p_time');
+$show_a_time    = dPgetBoolParam($_POST, 'show_a_time');
+$show_vertical  = dPgetBoolParam($_POST, 'show_vertical');
+$show_def_dep   = dPgetBoolParam($_POST, 'show_def_dep');
+$show_dep       = dPgetBoolParam($_POST, 'show_dep');
+$show_all_arrow = dPgetBoolParam($_POST, 'show_all_arrow');
+$show_time_gaps = dPgetBoolParam($_POST, 'show_time_gaps');
+$show_cr_path   = dPgetBoolParam($_POST, 'show_cr_path');
+
+if (isset($_POST)) {
+	$show_def_dep = true;
+	$show_all_arrow = true;
+}
 
 $graph_img_src = "?m=tasks&suppressHeaders=1&a=tasknetwork&project_id=$project_id".
-	             "&names=".($show_names ? "true" : "false").
-	             "&progress=".($show_progress ? "true" : "false").
-	             "&alerts=".($show_alerts ? "true" : "false").
-      	         "&p_data=".($show_p_data ? "true" : "false").
-      	         "&a_data=".($show_a_data ? "true" : "false").
-	             "&p_res=".($show_p_res ? "true" : "false").
-	             "&a_res=".($show_a_res ? "true" : "false").
-      	         "&p_time=".($show_p_time ? "true" : "false").
-      	         "&a_time=".($show_a_time ? "true" : "false");
+                 "&names=".($show_names ? "true" : "false").
+                 "&progress=".($show_progress ? "true" : "false").
+                 "&alerts=".($show_alerts ? "true" : "false").
+                 "&p_data=".($show_p_data ? "true" : "false").
+                 "&a_data=".($show_a_data ? "true" : "false").
+                 "&p_res=".($show_p_res ? "true" : "false").
+                 "&a_res=".($show_a_res ? "true" : "false").
+                 "&p_time=".($show_p_time ? "true" : "false").
+                 "&a_time=".($show_a_time ? "true" : "false").
+                 "&vertical=".($show_vertical ? "true" : "false").
+                 "&def_dep=".($show_def_dep ? "true" : "false").
+                 "&dep=".($show_dep ? "true" : "false").
+                 "&all_arrow=".($show_all_arrow ? "true" : "false").
+                 "&time_gaps=".($show_time_gaps ? "true" : "false").
+                 "&cr_path=".($show_cr_path ? "true" : "false");
+
 ?>
 
 <style type="text/css">
@@ -208,6 +226,12 @@ function buildGraphUrl() {
 	var show_a_res = $("#show_a_res:checked").val();
 	var show_p_time = $("#show_p_time:checked").val();
 	var show_a_time = $("#show_a_time:checked").val();
+	var show_vertical = $("#vertical:checked").val();
+	var show_def_dep = $("#def_dep:checked").val();
+	var show_dep = $("#dep:checked").val();
+	var show_all_arrow = $("#all_arrow:checked").val();
+	var show_time_gaps = $("#time_gaps:checked").val();
+	var show_cr_path = $("#cr_path:checked").val();
 	
 	var url = "?m=tasks&suppressHeaders=1&a=tasknetwork&project_id="+projectID+
 		      "&names="+(show_names ? "true" : "false")+
@@ -218,7 +242,13 @@ function buildGraphUrl() {
 		      "&p_res="+(show_p_res ? "true" : "false")+
 		      "&a_res="+(show_a_res ? "true" : "false")+
 		      "&p_time="+(show_p_time ? "true" : "false")+
-		      "&a_time="+(show_a_time ? "true" : "false");
+		      "&a_time="+(show_a_time ? "true" : "false")+
+		      "&vertical="+(show_vertical ? "true" : "false")+
+	          "&def_dep="+(show_def_dep ? "true" : "false")+
+	          "&dep="+(show_dep ? "true" : "false")+
+	          "&all_arrow="+(show_all_arrow ? "true" : "false")+
+	          "&time_gaps="+(show_time_gaps ? "true" : "false")+
+	          "&cr_path="+(show_cr_path ? "true" : "false");
 
 	if (expandChanged) {
 		url += '&explode_tasks='+$("#explode_tasks").val();
@@ -264,11 +294,45 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 							<label for="show_progress"><?php echo $AppUI->_('Progress'); ?></label>
 						</td>
 					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="time_gaps" name='time_gaps' <? echo $show_time_gaps ? 'checked="checked" ' : '' ?>/>
+							<label for="time_gaps"><?php echo $AppUI->_('Time Gaps'); ?></label>
+						</td>
+					</tr>
 				</table>
 			</td>
 			<td align='left' valign="top" style="border-right: solid transparent 20px;">
 				<table border="0" cellspacing="0">
-					
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="vertical" name='vertical' <? echo $show_vertical ? 'checked="checked" ' : '' ?>/>
+							<label for="vertical"><?php echo $AppUI->_('Vertical View'); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="def_dep" name='def_dep' <? echo $show_def_dep ? 'checked="checked" ' : '' ?>/>
+							<label for="def_dep"><?php echo $AppUI->_('Default Dependencies'); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="dep" name='dep' <? echo $show_dep ? 'checked="checked" ' : '' ?>/>
+							<label for="dep"><?php echo $AppUI->_('Dependencies'); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<td class="tab_setting_title">&nbsp;</td>
+						<td align="left">
+							<input type='checkbox' id="cr_path" name='cr_path' <? echo $show_cr_path ? 'checked="checked" ' : '' ?>/>
+							<label for="cr_path"><?php echo $AppUI->_('Critical Path'); ?></label>
+						</td>
+					</tr>
 				</table>
 			</td>
 			<td align='left' valign="top" style="border-right: solid transparent 20px;">
@@ -306,9 +370,10 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 							</label>
 						</td>
 					</tr>
-					<tr>
-						<td class="tab_setting_title">&nbsp;</td>
-					</tr>
+				</table>
+			</td>
+			<td align='left' valign="top" style="border-right: solid transparent 20px;">
+				<table border="0" cellspacing="0">
 					<tr>
 						<td class="tab_setting_title"><?php echo $AppUI->_('Actual Info'); ?>:</td>
 						<td align="left">
@@ -342,10 +407,6 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 							</label>
 						</td>
 					</tr>
-				</table>
-			</td>
-			<td align='left' valign="top" style="border-right: solid transparent 20px;">
-				<table border="0" cellspacing="0">
 					<tr>
 						<td class="tab_setting_title"><?php echo $AppUI->_('Explode tasks'); ?>:</td>
 						<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
@@ -365,6 +426,11 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 							</select>
 						</td>
 					</tr>
+				</table>
+			</td>
+			<td align='left' valign="top" style="border-right: solid transparent 20px;">
+				<table border="0" cellspacing="0">
+					
 <!--					
 					<tr>
 						<td class="tab_setting_title">&nbsp;</td>
