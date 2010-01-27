@@ -941,7 +941,7 @@ class TaskNetwork {
 			}
 		}
 
-		$this->connect($this,null,$coordfrom,true,false,$under,$upper,25,$vertical,"black",false,$allArrow);//connetto la start al primo task
+		$this->connect($this,null,$coordfrom,true,false,false,$upper,25,$vertical,"black",false,$allArrow);//connetto la start al primo task
 	
 		for($i=2;$i<sizeof($tbxidpath)-1;$i++){
 			$tbxto =  $tbxarray[$i];
@@ -1010,7 +1010,7 @@ class TaskNetwork {
 			}
 		}
 		
-		$this->connect($this,$coordfrom,null,true,false,$under,$upper,25,$vertical,"black",false,$allArrow);
+		$this->connect($this,$coordfrom,null,true,false,$under,false,25,$vertical,"black",false,$allArrow);
 		
 	}
 	
