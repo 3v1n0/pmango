@@ -53,11 +53,11 @@
 ---------------------------------------------------------------------------
 */
 
-GLOBAL $min_view, $m, $a;
+GLOBAL $min_view, $m, $a, $tab;
 
-$min_view = defVal( @$min_view, false);
-
-$project_id = defVal( @$_GET['project_id'], 0);
+$min_view = defVal(@$min_view, false);
+$project_id = defVal($_REQUEST['project_id'], 0);
+$tab = dPgetParam($_REQUEST, 'tab', 0);
 
 if (!empty($_POST)) {
 	$task_level = $AppUI->getState('ExplodeTasks');
@@ -136,11 +136,13 @@ if (!@$min_view) {
 	$titleBlock->show();
 }
 
-$graph_img_src = "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id" .
-	  "&show_names=".($show_names ? "true" : "false")."&draw_deps=".($show_deps ? "true" : "false").
-	  "&colors=".($show_bw ? "false" : "true").
-	  ($display_option == 'all' ? '' :
-		'&start_date='.$start_date->format("%Y-%m-%d").'&finish_date='.$end_date->format("%Y-%m-%d"));
+$graph_img_src = "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id".
+                 "&show_names=".($show_names ? "true" : "false").
+                 "&draw_deps=".($show_deps ? "true" : "false").
+                 "&colors=".($show_bw ? "false" : "true").
+                    ($display_option == 'all' ? '' :
+                      '&start_date='.$start_date->format("%Y-%m-%d").
+                      '&finish_date='.$end_date->format("%Y-%m-%d"));
 ?>
 
 <style type="text/css">
@@ -516,13 +518,11 @@ loadGraph('<?php echo $graph_img_src; ?>');
 
 
 				<input type="hidden" name="make_pdf" value="false" />
-				<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF ' );?>" onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
-			<? if($tview==0){?>
 				<input type="hidden" name="addreport" value="-1" />
-				<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>" onclick='document.pdf_options.addreport.value="1"; document.pdf_options.submit();'><?}
-			else{?>
-				<input type="hidden" name="addreport" value="-1" />
-				<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>" onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'><?}?>
+				
+				<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+				<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
+				<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'>
 			</td>
 		</tr>
 	</table>
