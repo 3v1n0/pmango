@@ -1,5 +1,5 @@
 <?php
-
+//TODO aggioungere time gaps su default dependences
 /**
 ---------------------------------------------------------------------------
 
@@ -341,8 +341,22 @@ class TaskNetwork {
 	}
 
 	private function addDefaultDependancies(){
+		$gray = ImageColorAllocate($this->img,150,150,150);//grigio
+		
+		$query = "SELECT project_finish_date FROM projects p WHERE p.project_id =".$this->project;
+		$res = TaskNetwork::doQuery($query);
+		$EpD = str_replace("-",".",substr($res[0][0],0,10));
+		$EpD = substr($EpD,8,2).".".substr($EpD,5,2).".".substr($EpD,0,4); //End Project Date
+		unset($res);
+		
+		$query = "SELECT project_start_date FROM projects p WHERE p.project_id =".$this->project;
+		$res = TaskNetwork::doQuery($query);
+		$SpD = str_replace("-",".",substr($res[0][0],0,10));
+		$SpD = substr($SpD,8,2).".".substr($SpD,5,2).".".substr($SpD,0,4); //Start Project Date
+		unset($res);
+		
 		$allArrow = $this->pShowAllArrow;
-	$index = $this->getIndex();
+		$index = $this->getIndex();
 		
 	$query = "SELECT dependencies_task_id FROM task_dependencies t;";
 	$results = TaskNetwork::doQuery($query);
@@ -361,6 +375,15 @@ class TaskNetwork {
 							$ID2["riga"] = $a; $ID2["colonna"] = $b;
 												 //TN  			 cr.path dash  under upper dist vertical color timegap arrow
 							TaskNetwork::connect($this,null,$ID2, false, true,false,false,38,false,"gray",false,$allArrow);
+							
+							if($this->pShowTimeGaps){
+								
+								$tbx2 = $index[$a][$b];
+								$value=TaskNetwork::getTimeDiff($SpD,$tbx2)."d";
+								
+								//aggiungo il testo
+								imagestring($this->img, 5, $tbx2->getLeftX()-40, $tbx2->getLeftY()-15, $value, $gray);
+							}
 						}
 					}
 			}
@@ -382,6 +405,15 @@ class TaskNetwork {
 							$ID1["riga"] = $a; $ID1["colonna"] = $b;
 												 //TN  			 cr.path dash  under upper dist
 							TaskNetwork::connect($this,$ID1,null, false, false,false,false,45,false,"gray",false,$allArrow);
+							
+						if($this->pShowTimeGaps){
+								
+								$tbx1 = $index[$a][$b];
+								$value=TaskNetwork::getTimeDiff($tbx1,$EpD)."d";
+								
+								//aggiungo il testo
+								imagestring($this->img, 5, $tbx1->getRightX()+5, $tbx1->getRightY()-15, $value, $gray);
+							}
 						}
 					}
 
@@ -1319,9 +1351,13 @@ class TaskNetwork {
 			$end = strtotime(str_replace(".","-",$end1["end"]));
 		}
 		
-		$DB2 = new TaskBoxDB($tbx2->getId());
-		$start2= $DB2->getPlannedTimeframe();
-		$start = strtotime(str_replace(".","-",$start2["start"]));
+		if(is_string($tbx2)){
+			$start = strtotime(str_replace(".","-",$tbx2));
+		}else{
+			$DB2 = new TaskBoxDB($tbx2->getId());
+			$start2= $DB2->getPlannedTimeframe();
+			$start = strtotime(str_replace(".","-",$start2["start"]));
+		}
 		
 		$result= $start-$end;
 		return round($result/24/60/60);//in giorni		
