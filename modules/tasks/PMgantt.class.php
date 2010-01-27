@@ -214,33 +214,6 @@ class PMGanttBar extends GanttPlotObject {
 		$middle = round($yt+($yb-$yt)/2);
 		$this->StrokeActInfo($aImg,$aScale,$middle);
 
-		// CSIM for title
-		if( ! empty($this->title->csimtarget) ) {
-			$colwidth = $this->title->GetColWidth($aImg);
-			$colstarts=array();
-			$aScale->actinfo->GetColStart($aImg,$colstarts,true);
-			$n = min(count($colwidth),count($this->title->csimtarget));
-			for( $i=0; $i < $n; ++$i ) {
-				$title_xt = $colstarts[$i];
-				$title_xb = $title_xt + $colwidth[$i];
-				$coords = "$title_xt,$yt,$title_xb,$yt,$title_xb,$yb,$title_xt,$yb";
-
-				if( ! empty($this->title->csimtarget[$i]) ) {
-					$this->csimarea .= "<area shape=\"poly\" coords=\"$coords\" href=\"".$this->title->csimtarget[$i]."\"";
-
-					if( ! empty($this->title->csimwintarget[$i]) ) {
-						$this->csimarea .= "target=\"".$this->title->csimwintarget[$i]."\" ";
-					}
-
-					if( ! empty($this->title->csimalt[$i]) ) {
-						$tmp = $this->title->csimalt[$i];
-						$this->csimarea .= " title=\"$tmp\" alt=\"$tmp\" ";
-					}
-					$this->csimarea .= " />\n";
-				}
-			}
-		}
-
 		// Check if the bar is totally outside the current scale range
 		if( $en <  $aScale->iStartDate || $st > $aScale->iEndDate )
 		return;
@@ -248,8 +221,6 @@ class PMGanttBar extends GanttPlotObject {
 
 		// Remember the positions for the bar
 		$this->SetConstrainPos($xt,$yt,$xb,$yb);
-
-
 
 		$prect->ShowFrame(false);
 		$prect->SetBackground($this->iFillColor);
@@ -275,22 +246,6 @@ class PMGanttBar extends GanttPlotObject {
 				$aImg->SetColor($this->iFrameColor);
 				$aImg->Rectangle($xt,$yt,$xb,$yb);
 			}
-		}
-		// CSIM for bar
-		if( ! empty($this->csimtarget) ) {
-
-			$coords = "$xt,$yt,$xb,$yt,$xb,$yb,$xt,$yb";
-			$this->csimarea .= "<area shape=\"poly\" coords=\"$coords\" href=\"".$this->csimtarget."\"";
-
-			if( !empty($this->csimwintarget) ) {
-				$this->csimarea .= " target=\"".$this->csimwintarget."\" ";
-			}
-
-			if( $this->csimalt != '' ) {
-				$tmp = $this->csimalt;
-				$this->csimarea .= " title=\"$tmp\" alt=\"$tmp\" ";
-			}
-			$this->csimarea .= " />\n";
 		}
 
 		// Draw progress bar inside activity bar
@@ -784,7 +739,7 @@ class PMGantt /*implements PMGraph TODO */ {
 			}
 
 			$caption = "";
-			/*if ($showLabels=='1') {
+//			if ($showLabels=='1') {
 				$sql = "select ut.task_id, u.user_username, ut.perc_effort from user_tasks ut, users u where u.user_id = ut.user_id and ut.task_id = ".$a["task_id"];
 				$res = db_exec( $sql );
 				while ($rw = db_fetch_row( $res )) {
@@ -798,7 +753,7 @@ class PMGantt /*implements PMGraph TODO */ {
 				}
 				}
 				$caption = substr($caption, 0, strlen($caption)-1);
-				}*/
+//				}*/
 
 			$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.25);//se padre sarebbe meglio 1
 			$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
