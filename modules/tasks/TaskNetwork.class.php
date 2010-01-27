@@ -48,31 +48,9 @@
 
 ---------------------------------------------------------------------------
 */
+
 include "TaskBox.class.php";
 include "TaskBoxDB.class.php";
-
-
-$baseDir = "..";
-
-include "$baseDir/includes/config.php";
-include "$baseDir/includes/db_adodb.php";
-include "$baseDir/includes/db_connect.php";
-include "$baseDir/includes/main_functions.php";
-include "$baseDir/classes/ui.class.php";
-if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
-    if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
-    {
-        $AppUI =& $_SESSION['AppUI'];
-		$user_id = $AppUI->user_id;
-        addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
-    }
-
-	$_SESSION['AppUI'] = new CAppUI;
-}
-$AppUI =& $_SESSION['AppUI'];
-include "$baseDir/modules/tasks/tasks.class.php";
-
-Header("Content-Type: image/jpeg");
 
 class TNNode extends TaskBox {
 
@@ -276,13 +254,12 @@ class TaskNetwork {
 			$res[$j] = TaskNetwork::orderWbsId($res[$j]);
 					
 			for($k=0;$k<sizeof($res[$j]);$k++){	
-				$wbslv = CTask::getWBS($res[$j][$k]);
 				 				
 				$DB = new taskBoxDB($res[$j][$k]);
-				$tbx = new TNNode($res[$j][$k]);
-				$tbx->setFontPath("../fonts/Droid");
+				$tbx = new TNNode($DB->getWBS());
+
 				if($this->pShowNames){
-					$tbx->setName($wbslv." ".$DB->getTaskName());
+					$tbx->setName($DB->getTaskName());
 				}
 				if($this->pShowPlannedData){
 					$tbx->setPlannedDataArray($DB->getPlannedData());
@@ -311,7 +288,7 @@ class TaskNetwork {
 					$tbx->setAlerts($DB->isAlerted());
 				}
 				
-				$tbx->showExpand(!$tbxdb->isLeaf());
+				$tbx->showExpand(!$DB->isLeaf());
 	
 				if($vertical){$this->addTbx($tbx,$k,$j);}else{$this->addTbx($tbx,$j,$k);}
 						
@@ -1513,11 +1490,6 @@ class TaskNetwork {
 		}
 		return $array;
 	}
-		
-//------Funzioni di setting------------fine
-	
 }
 
-//esempio query
-//http://localhost/pmango/tests/TaskNetwork.php?project_id=5&task_name=true&task_alerts=true&task_progress=true&resources=planned&explode_tasks=1&vertical_view=false&default_dep=true&all_arrow=true&dependencies=true&time_gaps=true&critical_path=true
 ?>

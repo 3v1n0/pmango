@@ -79,20 +79,20 @@ $project = db_fetch_row($prc);
 if (!$perms->checkModule('projects', 'view', '', intval($project['project_group']), 1))
 	$AppUI->redirect("m=public&a=access_denied");
 
-$show_names    = dPgetBoolParam($_GET, 'names');
-$show_progress = dPgetBoolParam($_GET, 'progress');
-$show_alerts   = dPgetBoolParam($_GET, 'alerts');
-$show_p_data   = dPgetBoolParam($_GET, 'p_data');
-$show_a_data   = dPgetBoolParam($_GET, 'a_data');
-$show_p_res    = dPgetBoolParam($_GET, 'p_res');
-$show_a_res    = dPgetBoolParam($_GET, 'a_res');
-$show_p_time   = dPgetBoolParam($_GET, 'p_time');
-$show_a_time   = dPgetBoolParam($_GET, 'a_time');
-$show_vertical   = dPgetBoolParam($_GET, 'vertical');
+$show_names     = dPgetBoolParam($_GET, 'names');
+$show_progress  = dPgetBoolParam($_GET, 'progress');
+$show_alerts    = dPgetBoolParam($_GET, 'alerts');
+$show_p_data    = dPgetBoolParam($_GET, 'p_data');
+$show_a_data    = dPgetBoolParam($_GET, 'a_data');
+$show_p_res     = dPgetBoolParam($_GET, 'p_res');
+$show_a_res     = dPgetBoolParam($_GET, 'a_res');
+$show_p_time    = dPgetBoolParam($_GET, 'p_time');
+$show_a_time    = dPgetBoolParam($_GET, 'a_time');
+$show_vertical  = dPgetBoolParam($_GET, 'vertical');
 $show_def_dep   = dPgetBoolParam($_GET, 'def_dep');
-$show_dep   = dPgetBoolParam($_GET, 'dep');
-$show_all_arrow   = dPgetBoolParam($_GET, 'all_arrow');
-$show_time_gaps   = dPgetBoolParam($_GET, 'time_gaps');
+$show_dep       = dPgetBoolParam($_GET, 'dep');
+$show_all_arrow = dPgetBoolParam($_GET, 'all_arrow');
+$show_time_gaps = dPgetBoolParam($_GET, 'time_gaps');
 $show_cr_path   = dPgetBoolParam($_GET, 'cr_path');
 
 // re-set the memory limit for gantt chart drawing acc. to the config value of reset_memory_limit
