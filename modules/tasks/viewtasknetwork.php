@@ -83,10 +83,11 @@ $show_all_arrow = dPgetBoolParam($_POST, 'show_all_arrow');
 $show_time_gaps = dPgetBoolParam($_POST, 'show_time_gaps');
 $show_cr_path   = dPgetBoolParam($_POST, 'show_cr_path');
 
-if (isset($_POST)) {
+if (!isset($_POST['show_dep']))
 	$show_def_dep = true;
+
+if (!isset($_POST['show_all_arrow']))
 	$show_all_arrow = true;
-}
 
 $graph_img_src = "?m=tasks&suppressHeaders=1&a=tasknetwork&project_id=$project_id".
                  "&names=".($show_names ? "true" : "false").
@@ -166,7 +167,7 @@ function loadGraph(graph_src) {
 	
 			var zoom = "fit";
 	
-			if (img.width < $("#graph").width())
+			if (img.width < $("#graph").width() && img.height < $("#graph").height())
 				zoom = 100;
 	
 			$("#graph").iviewer({
@@ -259,9 +260,9 @@ function buildGraphUrl() {
 }
 
 function doSubmit() {
-	//document.editFrm.submit(); //TODO enable on old browsers 
-	loadPlaceHolder(loader);
-	loadGraph(buildGraphUrl());
+	document.editFrm.submit(); //TODO enable on old browsers 
+//	loadPlaceHolder(loader);
+//	loadGraph(buildGraphUrl());
 }
 
 loadPlaceHolder(loader);

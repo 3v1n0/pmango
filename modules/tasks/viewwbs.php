@@ -152,7 +152,7 @@ function loadGraph(graph_src) {
 	
 			var zoom = "fit";
 	
-			if (img.width < $("#graph").width())
+			if (img.width < $("#graph").width() && img.height < $("#graph").height())
 				zoom = 100;
 	
 			$("#graph").iviewer({
@@ -233,7 +233,7 @@ function buildGraphUrl() {
 }
 
 function doSubmit() {
-	//document.editFrm.submit(); //TODO enable on old browsers 
+//	document.editFrm.submit(); //TODO enable on old browsers 
 	loadPlaceHolder(loader);
 	loadGraph(buildGraphUrl());
 }
