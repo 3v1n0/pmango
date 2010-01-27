@@ -181,14 +181,35 @@ class PMGanttBar extends GanttPlotObject {
 		$xt = round($aScale->TranslateDate($limst));
 		$xb = round($aScale->TranslateDate($limen));
 
-		static $ypre;
+		static $ypre, $xtpre, $xbpre;
 		if (strlen($this->iLabel)) {
 			$yt = round($aScale->TranslateVertPos($this->iVPos)-$vs-($aScale->GetVertSpacing()/2-$vs/2));
 			$yb = round($aScale->TranslateVertPos($this->iVPos)-($aScale->GetVertSpacing()/2-$vs/2));
 			$ypre = $yb;
+			$xtpre = $xt;
+			$xbpre = $xb;
 		} else {
 			$yt = $ypre;
 			$yb = $ypre+$vs;
+			
+			$join_len = 0;
+			
+			if ($xb > $xbpre && $xt >= $xbpre) {
+				$join_len = $xb - $xbpre;
+				$join_x = $xbpre;
+			} else if ($xt < $xtpre && $xb <= $xtpre) {
+				$join_len = $xtpre - $xt;
+				$join_x = $xt;
+			}
+			
+			if ($join_len > 0) {
+				$join = $factory->Create($this->iPattern,$this->iFrameColor);
+				$join->SetDensity($this->progress->iDensity);
+				$join->SetBackground($this->progress->iFillColor);
+				$pos = new Rectangle($join_x, $ypre, $join_len, 1);
+				$join->SetPos($pos);
+				$join->Stroke($aImg);
+			}
 		}
 		$middle = round($yt+($yb-$yt)/2);
 		$this->StrokeActInfo($aImg,$aScale,$middle);
@@ -708,7 +729,7 @@ class PMGantt /*implements PMGraph TODO */ {
 	private function populateGraph() {
 		global $AppUI;
 
-		$now = "2009-12-05 12:00:00";//date("y-m-d");
+//		$now = "2009-12-05 12:00:00";//date("y-m-d");
 		$now = $this->pToday;
 
 		for($i = 0, $row = 0; $i < count(@$this->pTasks); $i++) {
