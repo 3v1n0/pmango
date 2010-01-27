@@ -80,7 +80,7 @@ $sql="SELECT projects.project_start_date FROM projects WHERE project_id ='$proje
 $db_start_date = db_loadColumn($sql);
 $sql="SELECT projects.project_finish_date FROM projects WHERE project_id ='$project_id'";
 $db_finish_date = db_loadColumn($sql);
-
+$tab = dPgetParam($_REQUEST, 'tab', 0);
 
 if (isset($_POST['show_sdate']))	$AppUI->setState('StartDate', dPgetParam($_POST, 'show_sdate', $db_start_date[0]));
 if (isset($_POST['show_edate']))	$AppUI->setState('EndDate', dPgetParam($_POST, 'show_edate', $db_finish_date[0]));
@@ -192,10 +192,10 @@ function showFullProject() {
 <script type="text/javascript" src="/js/dateControl.js"></script>
 
 <table border="0" cellpadding="1" cellspacing="0" width="100%">
-<form name="frmFilter" action="./index.php?m=projects&a=view&project_id=<?=$project_id?>&tab=3" method="post">
+<form name="frmFilter" action="./index.php?m=projects&a=view&project_id=<?=$project_id?>&tab=<?=$tab?>" method="post">
 <input type='hidden' name='show_log_options' value='1'>
 <tr>
-	<td align='left'valign="top"  width='50%' style="border-right: outset #d1d1cd 1px">
+	<td id="tab_settings_content" align='left'valign="top"  width='50%' style="display: none; border-right: outset #d1d1cd 1px">
 		<table border="0" cellpadding="4" cellspacing="0">
 			<tr align="left">
 
@@ -250,7 +250,7 @@ function showFullProject() {
 			</tr>
 			
 			</form>
-			<form name="pdfFilter" action="./index.php?m=projects&a=view&project_id=<?=$project_id?>&tab=3" method="post">
+			<form name="pdfFilter" action="./index.php?m=projects&a=view&project_id=<?=$project_id?>&tab=<?=$tab?>" method="post">
 			<tr>
 				<td align="right" valign="bottom">
 				
