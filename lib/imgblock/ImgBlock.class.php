@@ -12,7 +12,7 @@
  * This program is distributed in the hope that it will be useful,             *
  * but WITHOUT ANY WARRANTY; without even the implied warranty of              *
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the               *
- * GNU General Public License for more details.                                *
+ * GNU Lesser General Public License for more details.                                *
  *                                                                             *
  * You should have received a copy of the GNU Lesser General Public License    *
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.       *
@@ -452,6 +452,10 @@ class FixedBlock extends ImgBlock {
 	}
 }
 
+interface TextBlockWrapping {
+    public function wrap($text, $max_size);
+}
+
 class TextBlock extends ImgBlock {
 	private $pText;
 	private $pFont;
@@ -462,6 +466,7 @@ class TextBlock extends ImgBlock {
 	private $pTextLines;
 	private $pTextLinesInfo;
 	private $pTextWidth;
+	private $pTextWrap;
 
 	public function TextBlock($text, $font, $font_size, $align = "center") {
 		parent::ImgBlock();
@@ -469,6 +474,7 @@ class TextBlock extends ImgBlock {
 		$this->pAlign = $align;
 		$this->pFont = $font;
 		$this->pFontSize = $font_size;
+		$this->pTextWrap = null;
 		$this->pTextBox = $this->getTextSize();
 		$this->processText();
 	}
@@ -525,6 +531,10 @@ class TextBlock extends ImgBlock {
 
 		if ($this->pTextHeight < $this->getMinHeight())
 			$this->processText();
+	}
+	
+	public function setWrap(TextBlockWrapping $wrap) {
+		$this->pTextWrap = $wrap;
 	}
 
 	public function getWidth() {
@@ -618,7 +628,7 @@ class TextBlock extends ImgBlock {
 			$lsize = $this->getTextSize($stripped_line);
 
 			if ($this->getMaxWidth() > 0 && $lsize['w'] > $this->getMaxWidth()) {
-				$line = $this->getSimpleWrappedText($line);
+				$line = $this->getWrappedText($line);
 				$stripped_line = strip_tags($line);
 				$lsize = $this->getTextSize($stripped_line);
 			}
@@ -713,7 +723,12 @@ class TextBlock extends ImgBlock {
 		return array('w' => $txtW, 'h' => $txtH, 'box' => $txtbox);
 	}
 
-//	public function setWrappingFunc() {}
+	private function getWrappedText($text) {
+		if ($this->pTextWrap)
+			return $this->pTextWrap->wrap($text, $this->getMaxWidth());
+		else
+			return $this->getSimpleWrappedText($text);
+	}
 
 	private function getSimpleWrappedText($text) {
 		// XXX better tag handling... (short text completely underlined causes problems)
