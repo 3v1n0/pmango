@@ -245,7 +245,7 @@ class TaskNetwork {
 	
 	private function buildTN(){
 		
-		$tasks= ""; //TODO gestire l'arrivo dei tasks da visualizzare
+		$tasks= null; //TODO gestire l'arrivo dei tasks da visualizzare
 		$vertical = $this->pShowVertical;
 		$res=$this->getTbxFromLevel($this->pTaskLevel,$tasks);
 		
@@ -253,12 +253,13 @@ class TaskNetwork {
 			$res[$j] = TaskNetwork::orderWbsId($res[$j]);
 					
 			for($k=0;$k<sizeof($res[$j]);$k++){	
-				 				
+				$wbslv = CTask::getWBS($res[$j][$k]);
+				
 				$DB = new taskBoxDB($res[$j][$k]);
-				$tbx = new TNNode($DB->getWBS());
+				$tbx = new TNNode($res[$j][$k]);
 
 				if($this->pShowNames){
-					$tbx->setName($DB->getTaskName());
+					$tbx->setName($wbslv." ".$DB->getTaskName());
 				}
 				if($this->pShowPlannedData){
 					$tbx->setPlannedDataArray($DB->getPlannedData());
@@ -1301,10 +1302,13 @@ class TaskNetwork {
 		if(is_string($tbx1)){
 			$end = strtotime(str_replace(".","-",$tbx1));
 		}else{
-			$end1= $tbx1->getPlannedTimeframe();
+			$DB = new TaskBoxDB($tbx1->getId());
+			$end1= $DB->getPlannedTimeframe();
 			$end = strtotime(str_replace(".","-",$end1["end"]));
 		}
-		$start2= $tbx2->getPlannedTimeframe();
+		
+		$DB2 = new TaskBoxDB($tbx2->getId());
+		$start2= $DB2->getPlannedTimeframe();
 		$start = strtotime(str_replace(".","-",$start2["start"]));
 		
 		$result= $start-$end;
@@ -1319,6 +1323,13 @@ class TaskNetwork {
 		$this->index[$row][$col] = $tbx;
 	}
 
+	private function arrayConcat($arr1,$arr2){
+		foreach($arr2 as $x){
+			$arr1[sizeof($arr1)] = $x;
+		}
+		return $arr1;
+	}
+	
 	private function orderWbsId($array){
 		$task = new CTask();
 		for($i=0; $i< sizeof($array); $i++) {
@@ -1367,7 +1378,7 @@ class TaskNetwork {
 					}
 				}
 				$results = TaskNetwork::trimArray($results);
-				$results = @array_merge($results,$sons);
+				$results = TaskNetwork::arrayConcat($results,$sons);
 				
 				unset($sons);			
 				$int++;
