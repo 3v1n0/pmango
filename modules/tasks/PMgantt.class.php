@@ -705,7 +705,7 @@ class PMGantt /*implements PMGraph TODO */ {
 	private function populateGraph() {
 		global $AppUI;
 
-//		$now = "2009-12-05 12:00:00";//date("y-m-d");
+		$now = "2009-12-05 12:00:00";//date("y-m-d");
 		$now = date("Y-m-d")." 12:00:00";
 
 		for($i = 0, $row = 0; $i < count(@$this->pTasks); $i++) {
@@ -833,14 +833,16 @@ class PMGantt /*implements PMGraph TODO */ {
 				if (strtotime($lend) >= strtotime($end))
 					$prMarkshow = true;
 				
-				if (strtotime($lend) <= strtotime($now))
+				if (strtotime($lend) == strtotime(substr($now, 0, 10)))
 				    $prMarkshow = false;
 					
 				$rMarkshow = (!$prMarkshow);
 				
-				if ($rMarkshow && strtotime($end) == strtotime($now)) {
+				if ($rMarkshow && strtotime($end) == strtotime(substr($now, 0, 10)) ||
+				    ($progress < 100 && strtotime($end) < strtotime($now))) {
 					$rMarkshow = false;
 				}
+
 
 				$bar2 = new PMGanttBar($row++, '', $lstart, $lend, '', $task_leaf ? 0.3 : 0.20);
 
