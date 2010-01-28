@@ -15,12 +15,12 @@
  This file is part of the PMango project
  Further information at: http://penelope.di.unipi.it
 
- Version history. 
+ Version history.
  - 2006.07.30 Lorenzo
    Second version, modified to modify PMango task.
  - 2006.07.30 Lorenzo
    First version, unmodified from dotProject 2.0.1.
-   
+
 ---------------------------------------------------------------------------
 
  PMango - A web application for project planning and control.
@@ -28,12 +28,12 @@
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi
  All rights reserved.
 
- PMango reuses part of the code of dotProject 2.0.1: dotProject code is 
+ PMango reuses part of the code of dotProject 2.0.1: dotProject code is
  released under GNU GPL, further information at: http://www.dotproject.net
  Copyright (C) 2003-2005 The dotProject Development Team.
 
  Other libraries used by PMango are redistributed under their own license.
- See ReadMe.txt in the root folder for details. 
+ See ReadMe.txt in the root folder for details.
 
  PMango is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ function setMilestoneEndDate(checked){
     if(checked){
         document.finish_date.value      = document.start_date.value;
         document.task_finish_date.value = document.task_start_date.value;
-    } 
+    }
 }
 
 
@@ -95,7 +95,7 @@ function setCalendar( idate, fdate ) {
 	e_fdate = document.getElementById('finish_date');
 	s_date = document.getElementById('task_' + 'start_date');
 	s_fdate = document.getElementById('start_date');
-	
+
 	var s = Date.UTC(s_date.value.substring(0,4),(s_date.value.substring(4,6)-1),s_date.value.substring(6,8), s_date.value.substring(8,10), s_date.value.substring(10,12));
 	var e = Date.UTC(e_date.value.substring(0,4),(e_date.value.substring(4,6)-1),e_date.value.substring(6,8), e_date.value.substring(8,10), e_date.value.substring(10,12));
 
@@ -103,7 +103,7 @@ function setCalendar( idate, fdate ) {
 		e_date.value = s_date.value;
 		e_fdate.value = s_fdate.value;
 	}
-	
+
 	if (eff_perc) {
 		var hours = calcDuration(document.editFrm,1);
 		if (document.resourceFrm.ass_users != null) {
@@ -111,11 +111,11 @@ function setCalendar( idate, fdate ) {
 			len = au;
 			for (au; au > -1; au--) {
 				wl = Math.round((resourceFrm.ass_mh.options[au].value) * 100/ hours);
-				
+
 				opt = new Option( wl + " %", wl);
 				resourceFrm.ass_perc.options[au] = opt;
 			}
-			if (len > -1) 
+			if (len > -1)
 				alert('The percentage of effort can be modified');
 		}
 	}
@@ -131,7 +131,7 @@ function changeWorkLoad(form) {
 		form.work_load[0].value = 1;
 		form.work_load[1].value = 0;
 	}
-	if (form.work_load[1].checked) 
+	if (form.work_load[1].checked)
 		form.wl_desc.value = "%";
 	else
 		form.wl_desc.value = "ph";
@@ -144,21 +144,21 @@ function submitIt(form,form2){//alert(calcDuration(form,1));return false;
 		form.task_name.focus();
 		return false;
 	}
-	
+
 	if (!form.task_start_date.value) {
 		alert( task_start_msg );
 		return false;
 	}
-	
+
 	if (!form.task_finish_date.value) {
 		alert( task_end_msg );
 		return false;
 	}
-	
+
 	cdur = calcDuration(form,24)
 	if (cdur==0)
 		return false;
-	
+
 	// Controllo durata delle ore per persona che non sia superiore alle ore giornaliere
 	var maxHours= 24 * Math.round(cdur);
 	fl = form2.ass_users.length -1;
@@ -167,13 +167,13 @@ function submitIt(form,form2){//alert(calcDuration(form,1));return false;
 			alert( 'The assigned effort to '+ form2.ass_users.options[fl].text+' as '+ form2.ass_roles.options[fl].text+' is invalid');
 			return false;
 		}
-		if (eff_perc) 
+		if (eff_perc)
 			if (form2.ass_perc.options[fl].value == 0 || isNaN(form2.ass_perc.options[fl].value)) {
 				alert( 'The assigned percentage to '+ form2.ass_users.options[fl].text+' as '+ form2.ass_roles.options[fl].text+' is invalid');
 				return false;
 			}
 	}
-	
+
 	fl = form2.ass_users.length -1;
 	for (fl; fl > -1; fl--) {
 		s = new String(form2.ass_users.options[fl].value);
@@ -192,16 +192,16 @@ function submitIt(form,form2){//alert(calcDuration(form,1));return false;
 			}
 		}
 	}
-	
+
 	if ( form.task_start_date.value.length > 0 ) {
 			form.task_start_date.value += form.start_hour.value + form.start_minute.value;
 	}
 	if ( form.task_finish_date.value.length > 0 ) {
 		form.task_finish_date.value += form.end_hour.value + form.end_minute.value;
 	}
-	
+
 	// I dati di resource sono salvati in subform come quelli anche degli altri
-	
+
 	// Check the sub forms
 	for (var i = 0; i < subForm.length; i++) {
 		if (!subForm[i].check())
@@ -240,7 +240,7 @@ function addTaskDependency(form) {
 	var td = form.task_dependencies.length -1;
 	/*var dav = form.dep_ass.options[form.dep_ass.selectedIndex].value;
 	var dat = form.dep_ass.options[form.dep_ass.selectedIndex].text;*/
-	
+
 	var tasks = "x";
 
 	//Check to see if None is currently in the dependencies list, and if so, remove it.
@@ -299,7 +299,7 @@ function isInArray(myArray, intValue) {
 		if (myArray[i] == intValue) {
 			return true;
 		}
-	}		
+	}
 	return false;
 }
 
@@ -310,17 +310,17 @@ function calcDuration(f,typeDur) {
 
 	var int_st_date = new String(f.task_start_date.value + f.start_hour.value + f.start_minute.value);
 	var int_en_date = new String(f.task_finish_date.value + f.end_hour.value + f.end_minute.value);
-	
-	if(int_st_date.substring(0,12) == int_en_date.substring(0,12)) 
+
+	if(int_st_date.substring(0,12) == int_en_date.substring(0,12))
 		return 0;
-		
+
 	var sDate = new Date(int_st_date.substring(0,4),(int_st_date.substring(4,6)-1),int_st_date.substring(6,8), int_st_date.substring(8,10), int_st_date.substring(10,12));
 	var eDate = new Date(int_en_date.substring(0,4),(int_en_date.substring(4,6)-1),int_en_date.substring(6,8), int_en_date.substring(8,10), int_en_date.substring(10,12));
-	
+
 	var s = Date.UTC(int_st_date.substring(0,4),(int_st_date.substring(4,6)-1),int_st_date.substring(6,8), int_st_date.substring(8,10), int_st_date.substring(10,12));
 	var e = Date.UTC(int_en_date.substring(0,4),(int_en_date.substring(4,6)-1),int_en_date.substring(6,8), int_en_date.substring(8,10), int_en_date.substring(10,12));
 	var durn = (e - s) / hourMSecs; //hours absolute diff start and end
-	
+
 	//now we should subtract non-working days from durn variable
 	var duration = durn  / 24;
 	var weekendDays = 0;
@@ -339,14 +339,14 @@ function calcDuration(f,typeDur) {
 	durn = durn - weekendDays*24;	// total hours minus non-working days (work day hours)
 
 	// check if the last day is a weekendDay
-	// if so we subtracted some hours too much before, 
+	// if so we subtracted some hours too much before,
 	// we have to fill up the last working day until cal_day_start + daily_working_hours
 	if ( !isInArray(working_days, eDate.getDay()) && eDate.getHours() != cal_day_start) {
 		durn = durn + Math.max(0, (cal_day_start + daily_working_hours - eDate.getHours()));
 	}
-	
+
 	//could be 1 or 24 (based on TaskDurationType value)
-	var durnType = parseFloat(typeDur);	
+	var durnType = parseFloat(typeDur);
 	durn /= durnType;
 	//alert(durn);
 	if (durnType == 1){
@@ -370,9 +370,9 @@ function calcDuration(f,typeDur) {
 
 		// Total working hours
 		durn = Math.floor(full_work_days) * daily_working_hours + partial_day_hours;
-		
+
 		// check if the last day is a weekendDay
-		// if so we subtracted some hours too much before, 
+		// if so we subtracted some hours too much before,
 		// we have to fill up the last working day until cal_day_start + daily_working_hours
 		if ( !isInArray(working_days, eDate.getDay()) && eDate.getHours() != cal_day_start) {
 			durn = durn + Math.max(0, (cal_day_start + daily_working_hours - eDate.getHours()));
@@ -392,7 +392,7 @@ function calcDuration(f,typeDur) {
 		return(durn);
 }
 /**
-* Get the end of the previous working day 
+* Get the end of the previous working day
 */
 function prev_working_day( dateObj ) {
 	while ( ! isInArray(working_days, dateObj.getDay()) || dateObj.getHours() < cal_day_start ||
@@ -406,7 +406,7 @@ function prev_working_day( dateObj ) {
 	return dateObj;
 }
 /**
-* Get the start of the next working day 
+* Get the start of the next working day
 */
 function next_working_day( dateObj ) {
 	while ( ! isInArray(working_days, dateObj.getDay()) || dateObj.getHours() >= cal_day_end ) {
@@ -546,11 +546,11 @@ function checkResource(form) {
 
 function saveResource(form) {
 	var fl = form.ass_users.length -1;
-	
+
 	ass_res = form.ass_resources;
 	ass_res.value = "|";
 	for (fl; fl > -1; fl--){
-		if (eff_perc) 
+		if (eff_perc)
 			ass_res.value += form.ass_users.options[fl].value +","+ form.ass_mh.options[fl].value +","+ form.ass_perc.options[fl].value + "|";
 		else
 			ass_res.value += form.ass_users.options[fl].value +","+ form.ass_mh.options[fl].value +",0|";
@@ -623,9 +623,9 @@ function selectPeople(form, block) {
 				}
 			}
 	}
-	
+
 	//Pull selected resources and add them to list
-	
+
 }
 
 function selectAssigned(form, block) {
@@ -678,7 +678,7 @@ function selectAssigned(form, block) {
 			}
 		}
 	}
-	
+
 	if (eff_perc)
 		if (block == 4) {
 			for (fl; fl > -1; fl--) {
@@ -694,9 +694,9 @@ function selectAssigned(form, block) {
 				}
 			}
 	}
-	
+
 	//Pull selected resources and add them to list
-	
+
 }
 
 function changeResources(form,form2) {
@@ -714,13 +714,13 @@ function changeResources(form,form2) {
 		form2.meffort.options[fl] = null;
 		if (eff_perc)
 			form2.dwh.options[fl] = null;
-	}	
+	}
 	var nt = form.task_parent.value;
-	
+
 	uhl = new String(form.us_hours_list.value);
 	unl = new String(form.us_name_list.value);
 	prl = new String(form.proles_list.value);//
-	
+
 	// Gestisco le wbs
 	wbsl = new String(form.wbs_list.value);//alert(form.wbs_list.value);
 	bwbsl = wbsl.indexOf("|"+nt+"=")+2+nt.length;
@@ -734,7 +734,7 @@ function changeResources(form,form2) {
 		maxWBSi = currentMaxWBSi;//
 	else
 		maxWBSi = form.task_wbs_index.value;
-			
+
 	tl = new String(form.task_list.value);//alert(nt);alert(tl);alert(form.wbs_list.value);
 	bt = new String("-"+nt+"[");
 	et = new String("]"+nt+"-");//alert(tl.indexOf(tl.indexOf(bt)+1+nt.length));
@@ -743,26 +743,26 @@ function changeResources(form,form2) {
 	}
 	newTask = tl.slice(tl.indexOf(bt)+2+nt.length,tl.indexOf(et));
 	// ho trovato il task che mi interessa
-	
+
 	var i=0;
-	
+
 	while ((newTask.indexOf(")") != -1)) {
 		user = newTask.slice(newTask.indexOf("(")+1,newTask.indexOf(")"));
 		newTask = newTask.slice(newTask.indexOf(")")+1,newTask.length);
-		
+
 		ui_v = user.slice(0,user.indexOf(","));
 		ri_v = user.slice(user.indexOf(",")+1,user.indexOf("|"));
 		ef_v = user.slice(user.indexOf("|")+1,user.length);
-		
+
 		bunl = unl.indexOf("|"+ui_v+"=")+2+ui_v.length;
 		ui_t = unl.slice(bunl,unl.indexOf("|",bunl));
-		
+
 		buhl = uhl.indexOf("|"+ui_v+"=")+2+ui_v.length;
 		uh_v = uhl.slice(buhl,uhl.indexOf("|",buhl));
-		
+
 		bprl = prl.indexOf("|"+ri_v+"=")+2+ri_v.length;
 		ri_t = prl.slice(bprl,prl.indexOf("|",bprl));
-		
+
 		opt = new Option(ui_t, ui_v+","+ri_v);
 		form2.users.options[i] = opt;
 		opt = new Option(ri_t, ui_v+","+ri_v);
@@ -810,13 +810,13 @@ function addUser(form, form2) {
 		alert( task_end_msg );
 		return false;
 	}
-	
+
 	wl = parseFloat(form.wl_value.value);
 	if (isNaN(wl) || wl < 0) {
 		alert( 'Please, enter a valid number of person hours or percentage');
 		return false;
 	}
-	
+
 	var fl = form.users.length -1;
 	var au = form.ass_users.length -1;
 	//gets value of percentage assignment of selected resource
@@ -839,6 +839,8 @@ function addUser(form, form2) {
 				if (form.work_load[0].checked) {//settata person hours
 					wl2 = Math.round((wl * 100)/ calcDuration(form2,1));
 					if (isNaN(wl2)) return false;
+					if (wl == 0) wl = 1;
+					if (wl2 == 0) wl2 = 1;
 					opt = new Option( wl + " ph", wl);
 					form.ass_mh.options[t] = opt;
 					//calcolo la percentuale corrispondente all'impegno in ore-uomo
@@ -847,9 +849,11 @@ function addUser(form, form2) {
 				} else if (form.work_load[1].checked) {
 					wl2 = Math.round(wl * calcDuration(form2,1) / 100);
 					if (isNaN(wl2)) return false;
+					if (wl == 0) wl = 1;
+					if (wl2 == 0) wl2 = 1;
 					opt = new Option( wl + " %", wl);
 					form.ass_perc.options[t] = opt;
-					//calcolo l'impegno in ore uomo corrispondente alla percentuale inserita	
+					//calcolo l'impegno in ore uomo corrispondente alla percentuale inserita
 					opt = new Option( wl2 + " ph", wl2);
 					form.ass_mh.options[t] = opt;
 				}
@@ -857,12 +861,12 @@ function addUser(form, form2) {
 				opt = new Option( wl + " ph", wl);
 				form.ass_mh.options[t] = opt;
 			}
-			
+
 			opt = new Option( form.users.options[fl].text, form.users.options[fl].value);
 			form.ass_users.options[t] = opt;
 			opt = new Option( form.roles.options[fl].text, form.roles.options[fl].value);
 			form.ass_roles.options[t] = opt;
-			//LA LETTURA AVVIENE IN SAVERESOURCES 
+			//LA LETTURA AVVIENE IN SAVERESOURCES
 		}
 	}
 }
