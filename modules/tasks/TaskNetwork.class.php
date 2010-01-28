@@ -254,9 +254,8 @@ class TaskNetwork {
 	}
 	
 	private function buildTN(){
-		$tasks= $this->pOpenedTasks;
 		$vertical = $this->pShowVertical;
-		$res=$this->getTbxFromLevel($this->pTaskLevel,$tasks);
+		$res=$this->getTbxFromLevel($this->pTaskLevel);
 		
 		for($j=0;$j<sizeof($res);$j++){
 			$res[$j] = TaskNetwork::orderWbsId($res[$j]);
@@ -1401,8 +1400,10 @@ class TaskNetwork {
 		return $array;
 	}
 	
-	private function getTbxFromLevel($level,$tasks=null){
-		
+	private function getTbxFromLevel($level){
+			$opened= $this->pOpenedTasks;
+			$closed= $this->pClosedTasks;
+
 			$id = "SELECT task_id FROM tasks t WHERE task_parent=task_id and task_project=".$this->project." ORDER BY task_id";
 			$result = TaskNetwork::doQuery($id);
 			foreach($result as $res){
@@ -1431,31 +1432,60 @@ class TaskNetwork {
 			}
 			unset($result);
 
-			foreach($tasks as $id){
-				for($k=0;$k<sizeof($results);$k++){
-					if($results[$k]==$id){
-						unset($results[$k]);
-						$q = "SELECT task_id FROM tasks t WHERE task_parent <> task_id and task_parent=".$id." and task_project=".$this->project." ORDER BY task_wbs_index";
-						$children = TaskNetwork::doQuery($q);
-						foreach($children as $child){
-							$res[sizeof($res)]= $child["task_id"];
+			foreach($closed as $id){
+				$q = "SELECT task_parent FROM tasks t WHERE task_id=".$id." and task_project=".$this->project;
+				$father = TaskNetwork::doQuery($q);
+				$father = $father[0]["task_parent"];
+
+				if($id!=$father){
+					for($k=0;$k<sizeof($results);$k++){
+						if($results[$k]==$id){
+							unset($results[$k]);
 						}
-						$children = $res;
-						unset($res); 
 					}
+				}else{
+					$results["f"] = $father;
 				}
+				$results = TaskNetwork::trimArray($results);
+			}
+
+			foreach($opened as $id){
+				if(in_array($id,$results)){
+					for($k=0;$k<sizeof($results);$k++){
+						if($results[$k]==$id){
+							unset($results[$k]);
+							$q = "SELECT task_id FROM tasks t WHERE task_parent <> task_id and task_parent=".$id." and task_project=".$this->project." ORDER BY task_wbs_index";
+							$children = TaskNetwork::doQuery($q);
+							foreach($children as $child){
+								$res[sizeof($res)]= $child["task_id"];
+							}
+							$children = $res;
+							unset($res); 
+						}
+					}
+				}else{
+					$q = "SELECT task_id FROM tasks t WHERE task_parent <> task_id and task_parent=".$id." and task_project=".$this->project." ORDER BY task_wbs_index";
+					$children = TaskNetwork::doQuery($q);
+					foreach($children as $child){
+						$res[sizeof($res)]= $child["task_id"];
+					}
+					$children = $res;
+					unset($res);
+				}
+				
 				$results = TaskNetwork::trimArray($results);
 				$results = TaskNetwork::arrayConcat($results,$children);
 				unset($children);
 			}
-		
-		
+
+			
 		foreach($results as $task){
 			$wbslv = CTask::getWBS($task);
 			$wbs = intval(substr($wbslv,0,1));
 			$res[$wbs-1][sizeof($res[$wbs-1])]= $task;
 		}
 		
+
 		return $res;
 	}
 	
