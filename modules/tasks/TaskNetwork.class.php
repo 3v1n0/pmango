@@ -731,7 +731,7 @@ class TaskNetwork {
 				if(!$under){
 					$points[0]["x"]= $tbx1rx-$tbx1shift	;$points[0]["y"]=$tbx1ry+($tbx1shift/2);
 					$points[1]["x"]= $tbx1BlankRight	;$points[1]["y"]=$tbx1ry+($tbx1shift/2);
-					$points[2]["x"]= $tbx1BlankRight	;$points[2]["y"]=$tbx1BlankDown;
+					$points[2]["x"]= $tbx1BlankRight	;$points[2]["y"]=isset($tbx2)?$tbx1BlankDown:min($tbx1BlankDown,$tbx2BlankUp);
 				}else{
 					$points[0]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[0]["y"]=$tbx1ry+($tbx1y/2);
 					$points[1]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[1]["y"]=$tbx1BlankDown;
@@ -748,7 +748,7 @@ class TaskNetwork {
 					}
 				}
 				else{
-					$points[3]["x"]=$points[1]["x"];$points[3]["y"]=($tbx1BlankDown+$tbx2BlankUp)/2;
+					$points[3]["x"]=$points[1]["x"];$points[3]["y"]=isset($tbx2)?(($tbx1BlankDown+$tbx2BlankUp)/2):min($tbx1BlankDown,$tbx2BlankUp);
 					$points[4]["x"]=$points[1]["x"];$points[4]["y"]=$tbx2BlankUp;
 				}
 									
@@ -786,8 +786,8 @@ class TaskNetwork {
 					}
 				}
 				else{
-				$points[4]["x"]= $tbx1BlankRight	;$points[4]["y"]=($tbx1BlankUp+$tbx2BlankDown)/2;
-				$points[5]["x"]= $tbx2BlankLeft		;$points[5]["y"]=($tbx1BlankUp+$tbx2BlankDown)/2;
+				$points[4]["x"]= $tbx1BlankRight	;$points[4]["y"]=(isset($tbx1))?(($tbx1BlankUp+$tbx2BlankDown)/2):$tbx2BlankDown;
+				$points[5]["x"]= $tbx2BlankLeft		;$points[5]["y"]=(isset($tbx1))?(($tbx1BlankUp+$tbx2BlankDown)/2):$tbx2BlankDown;
 				
 				}
 				$points[6]["x"]= $tbx2BlankLeft	;$points[6]["y"]=$tbx2BlankDown;				
