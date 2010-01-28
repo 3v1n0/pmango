@@ -1444,7 +1444,9 @@ class TaskNetwork {
 						}
 					}
 				}else{
-					$results["f"] = $father;
+					if(!in_array($father,$results)){
+						$results["f"] = $father;
+					}
 				}
 				$results = TaskNetwork::trimArray($results);
 			}
