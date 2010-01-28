@@ -1065,21 +1065,26 @@ class CTask extends CDpObject {
 		$r = db_loadList($sql);
 
 		$currentTask = $tid;
-		$wbs = $r[0]['task_wbs_index'];//if ($tid == 24) echo strrev($wbs);
-		if ($r[0]['task_parent']==$tid && $isRootChildren)
-			return "";
+		$wbs = $r[0]['task_wbs_index'];
+
+		if ($r[0]['task_parent'] == $tid) {
+			if (!$isRootChildren)
+				return $wbs;
+			else
+				return "";
+		}
 
 		while ($currentTask != $r[0]['task_parent']) {
 			$currentTask = $r[0]['task_parent'];
 			if (!is_null($currentTask)) {
 				$sql = "SELECT task_wbs_index, task_parent FROM tasks WHERE $currentTask = task_id";
 				$r = db_loadList($sql);
-				if ($r[0]['task_wbs_index'] == "")
-					return strrev($wbs);
-				$wbs .= ".".$r[0]['task_wbs_index'];
+				if (empty($r[0]['task_wbs_index']))
+					break;
+				$wbs = $r[0]['task_wbs_index'].".".$wbs;
 			}
 		}
-		return strrev($wbs);
+		return $wbs;
 	}
 
 	function getTaskLevel($tid = null) {
