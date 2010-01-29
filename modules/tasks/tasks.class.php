@@ -1099,7 +1099,7 @@ class CTask extends CDpObject {
 		else
 			return "";
 
-	 $t_level = strlen(str_replace(".","",CTask::getWBS($tid)));
+	 $t_level = count(explode('.', CTask::getWBS($tid)));
 	 return $t_level;
 	 }
 
