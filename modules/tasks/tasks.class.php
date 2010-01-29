@@ -1045,10 +1045,10 @@ class CTask extends CDpObject {
 				return "";
 
 		if ($tid == "^") {
-			$sql = "SELECT MAX(task_wbs_index) FROM tasks WHERE task_parent = task_id && $pid = task_project";
+			$sql = "SELECT MAX(CAST(task_wbs_index as UNSIGNED)) FROM tasks WHERE task_parent = task_id && $pid = task_project";
 			$r = db_loadResult($sql);
 		} else {
-			$sql = "SELECT MAX(task_wbs_index) FROM tasks WHERE $tid = task_parent && task_parent != task_id";
+			$sql = "SELECT MAX(CAST(task_wbs_index as UNSIGNED)) FROM tasks WHERE $tid = task_parent && task_parent != task_id";
 			$r = db_loadResult($sql);
 		}
 		return $r+1;
