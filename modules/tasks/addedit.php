@@ -147,7 +147,7 @@ function sumLeafEffort($task_root, &$lEffort) {
 	
 	//echo"$task_root inizio: ";print_r($lEffort);echo "<br>";
 	//echo"$task_root PRIMA: "."<br>";
-	if (!in_array($task_root, $parentTasks)) {//echo"$task_root FOGLIA: ";print_r($effortTasks[$task_root]);echo "<br>";// $task_root è una foglia 
+	if (!in_array($task_root, $parentTasks)) {//echo"$task_root FOGLIA: ";print_r($effortTasks[$task_root]);echo "<br>";// $task_root Ã¨ una foglia 
 		$temp2 = $effortTasks[$task_root];
 		if (is_array($temp2))
 			foreach ($temp2 as $uipi => $ef) 
@@ -160,7 +160,7 @@ function sumLeafEffort($task_root, &$lEffort) {
 		$temp = $parentTasks;
 		foreach($temp as $tid => $pid) {
 			
-			if ($pid == $task_root && $tid != $task_root) {//echo $tid."<br>";//$tid è figlio di $task_root
+			if ($pid == $task_root && $tid != $task_root) {//echo $tid."<br>";//$tid Ã¨ figlio di $task_root
 				sumLeafEffort($tid, $lEffort);//splitto i valori*/
 				//print_r($lEffort);echo "<br>";
 			}
@@ -176,11 +176,11 @@ function findMaxEffort($task_root) {
 	global $parentTasks, $effortTasks;
 	
 	$sum = array();
-	if ($parentTasks[$task_root] == $task_root) { //echo $task_root." - <BR>";print_r($effortTasks[$task_root]);// è figlio di project
+	if ($parentTasks[$task_root] == $task_root) { //echo $task_root." - <BR>";print_r($effortTasks[$task_root]);// Ã¨ figlio di project
 		return "-";
 	}
 	foreach ($parentTasks as $tid => $pid) {
-		if ($pid != $tid && $task_root != $tid && $pid == $parentTasks[$task_root])	{// $tid è fratello di task_root
+		if ($pid != $tid && $task_root != $tid && $pid == $parentTasks[$task_root])	{// $tid Ã¨ fratello di task_root
 			// fai la somma del valore delle foglie di tid
 			// quindi faccio una funzione che dato tid mi calcola il valore delle sue foglie
 			// mi restituisce un array(ui,pi => ef)
@@ -217,7 +217,7 @@ function findMaxEffortFromParent($parent, $originTask = 0) {
 	
 	$sum = array();
 	foreach ($parentTasks as $tid => $pid) {
-		if ($pid != $tid && $parent != $tid && $pid == $parent && $originTask != $tid)	{// $tid è figlio di parent
+		if ($pid != $tid && $parent != $tid && $pid == $parent && $originTask != $tid)	{// $tid Ã¨ figlio di parent
 			// fai la somma del valore delle foglie di tid
 			// quindi faccio una funzione che dato tid mi calcola il valore delle sue foglie
 			// mi restituisce un array(ui,pi => ef)
@@ -354,7 +354,7 @@ function constructTaskTree($task_data, $depth = 0, $wbs = "") {
 	$wbs2 = $wbs;
 	if ($task_data['task_id'] == $task_parent && $task_id > 0 && $task_parent > 0)
 		$wbs_list .= $task_data['task_id']."=".$wbs.",".$twi."|";
-	else {// NON c'è bisogno di parentTask è in task_data ->'task_parent' USARE task_wbs_index
+	else {// NON c'Ã¨ bisogno di parentTask Ã¨ in task_data ->'task_parent' USARE task_wbs_index
 		if (isset($task_data['task_parent']) && $task_id > 0) // si gestisono i fratelli
 			if ($task_data['task_parent'] == $task_parent) { // per i task non figli di project
 				if ($wbs > CTask::getWBS($task_id)) 
@@ -597,8 +597,8 @@ function delIt() {
 				<img src="./images/icons/updown.gif" align="absmiddle" border=0 usemap="#arrow"/>
 				<input type="text" class="text" name="task_name" value="<?php echo dPformSafe( $obj->task_name );?>" size="49" maxlength="255" />
 				<map name="arrow">
-					<area coords="0,0,10,7" href="#" onclick="minusWBS(document.editFrm)">
-					<area coords="0,8,10,14" href="#" onclick="plusWBS(document.editFrm)">
+					<area coords="0,0,10,7" href="#" onclick="plusWBS(document.editFrm)">
+					<area coords="0,8,10,14" href="#" onclick="minusWBS(document.editFrm)">
 				</map>
 				<SCRIPT language="JavaScript">
 					var currentMaxWBSi = <?php if ($task_id > 0 && $task_parent != $task_id)
