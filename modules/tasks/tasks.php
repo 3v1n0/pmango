@@ -344,7 +344,7 @@ if ( ! $min_view && $f2 != 'all' ) {
 // patch 2.12.04 ADD GROUP BY clause for assignee count
 $tsql = "SELECT $select FROM $from $join WHERE $where && task_project IN (" . implode(',', $allowedProjects) . ')'.
   "\nGROUP BY task_id" .
-  "\nORDER BY project_id, task_wbs_index";
+  "\nORDER BY project_id, CAST(task_wbs_index as UNSIGNED)";
 //echo $tsql;
 if (count($allowedProjects) > 0) {
 	$ptrc = db_exec( $tsql );

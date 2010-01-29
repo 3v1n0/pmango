@@ -486,7 +486,7 @@ class PMGantt /*implements PMGraph TODO */ {
 		$join = "LEFT JOIN projects ON project_id = task_project";
 		$where = "task_project = $this->pProjectID";
 
-		$tsql = "SELECT $select FROM tasks $join WHERE $where ORDER BY project_id, task_wbs_index";
+		$tsql = "SELECT $select FROM tasks $join WHERE $where ORDER BY project_id, CAST(task_wbs_index as UNSIGNED)";
 
 		$ptrc = db_exec($tsql);
 		$nums = db_num_rows($ptrc);
@@ -922,7 +922,6 @@ class PMGantt /*implements PMGraph TODO */ {
 					$bar2->setColor('gray5');
 					$bar2->SetFillColor('gray5');
 					$bar2->SetPattern(BAND_SOLID,'gray3');
-
 					$bar2->progress->SetFillColor('gray5');
 					$bar2->progress->SetPattern(BAND_SOLID,'gray3',98);
 				}
