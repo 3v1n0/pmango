@@ -1065,7 +1065,10 @@ class CTask extends CDpObject {
 		$r = db_loadList($sql);
 
 		$currentTask = $tid;
-		$wbs = $r[0]['task_wbs_index'];
+
+		$max_wbs = CTask::getWBSIndexFromParent($r[0]['task_parent'])-1;
+		$max_wbs_len = strlen($max_wbs);
+		$wbs = str_pad($r[0]['task_wbs_index'], $max_wbs_len, "0", STR_PAD_LEFT);
 
 		if ($r[0]['task_parent'] == $tid) {
 			if (!$isRootChildren)
