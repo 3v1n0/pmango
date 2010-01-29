@@ -905,7 +905,7 @@ function PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_op
 	$q->addQuery('task_id, task_name, task_parent, task_project, task_start_date, task_finish_date, task_status, task_milestone');
 	$q->addTable('tasks');
 	$q->addWhere("task_project = $project_id ");
-	$q->addOrder('task_wbs_index');
+	$q->addOrder('CAST(task_wbs_index as UNSIGNED)');
 	$tasks = $q->loadList();
 	
 	$q  = new DBQuery;
@@ -1256,7 +1256,7 @@ function PM_sortTask( $project_id, $task_level, $tasks_opened, $tasks_closed){
 	$q->addQuery('task_id, task_name, task_parent, task_project, task_start_date, task_finish_date, task_status, task_milestone');
 	$q->addTable('tasks');
 	$q->addWhere("task_project = $project_id ");
-	$q->addOrder('task_wbs_index');
+	$q->addOrder('CAST(task_wbs_index as UNSIGNED)');
 	$tasks = $q->loadList();
 	
 	$a_task=array();
