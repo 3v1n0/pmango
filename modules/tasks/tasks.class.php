@@ -1079,9 +1079,13 @@ class CTask extends CDpObject {
 			if (!is_null($currentTask)) {
 				$sql = "SELECT task_wbs_index, task_parent FROM tasks WHERE $currentTask = task_id";
 				$r = db_loadList($sql);
-				if (empty($r[0]['task_wbs_index']))
+				$task_index = $r[0]['task_wbs_index'];
+				if (empty($task_index))
 					break;
-				$wbs = $r[0]['task_wbs_index'].".".$wbs;
+				
+				$max_wbs = CTask::getWBSIndexFromParent($r[0]['task_parent'])-1;
+				$max_wbs_len = strlen($max_wbs);
+				$wbs = $task_index.".".str_pad($wbs, $max_wbs_len, "0", STR_PAD_LEFT);
 			}
 		}
 		return $wbs;
