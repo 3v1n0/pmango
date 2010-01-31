@@ -76,12 +76,16 @@ function switchItemDisplay(id) {
 
 function projectViewSwitch() {
 	var img = document.getElementById('project_expander_img');
-	var shown = switchItemDisplay('project_infos');
+	
+	$("#project_infos").toggle(
+		"fast",
 
-	if (shown)
-		img.src = 'images/icons/collapse.gif';
-	else
-		img.src = 'images/icons/expand.gif';}
+		function callback() {
+			if ($("#project_infos").is(":hidden"))
+				img.src = 'images/icons/expand.gif';
+			else
+				img.src = 'images/icons/collapse.gif';
+	});}
 
 function displayItemSwitch(id1, id2) {
 	switchItemDisplay(id1);
