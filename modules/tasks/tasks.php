@@ -776,8 +776,7 @@ function showFullProject() {
 				
 				$pdf = PM_headerPdf($name[0]['project_name'],'P',1,$group_name);
 				PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_opened, $roles, $tview, $start_date, $end_date, $showIncomplete); //TODO show mine!
-				if ($tview) $filename=PM_footerPdf($pdf, $name[0]['project_name'], 2);
-				else $filename=PM_footerPdf($pdf, $name[0]['project_name'], 1);
+				$filename = PM_footerPdf($pdf, $name[0]['project_name'], ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
 				?>
 				<a href="<?echo $filename;?>"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a><?
 			}?>

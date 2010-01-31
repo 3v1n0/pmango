@@ -503,7 +503,7 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 		}
 }
 
-	$filename = PM_footerPdf($pdf, $name, 0);
+	$filename = PM_footerPdf($pdf, $name, PMPDF_REPORT);
 
 	if($msg!=null) $AppUI->setMsg($msg,6);
 

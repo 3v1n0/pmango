@@ -425,7 +425,7 @@ function delIt() {
 						$pdf = PM_headerPdf($name[0]['project_name']);
 						PM_makePropPdf($pdf, str_replace("@","'",$string),$project_id,'P');
 						
-						$filename=PM_footerPdf($pdf, $name[0]['project_name'], 4);
+						$filename=PM_footerPdf($pdf, $name[0]['project_name'], PMPDF_PROPERTIES);
 						?>
 						<a href="<?echo $filename;?>" TARGET="_new"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a><?
 				}?>
@@ -457,21 +457,23 @@ $tabBox = new CTabBox( "?m=projects&a=view&project_id=$project_id", "", $tab );
 $query_string = "?m=projects&a=view&project_id=$project_id";
 // tabbed information boxes
 // Note that we now control these based upon module requirements.
+
 $canViewTask = $perms->checkModule('tasks', 'view','',intval($obj->project_group),1);
+
 if ($canViewTask) {
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Planned view)' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Actual view)');
 	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Inactive)' );
-	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtodo", 'Tasks TODO' );
+	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtodo", 'Tasks TODO' );	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewwbs", 'WBS Chart' );
+	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewgantt", 'Gantt Chart' );
+	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtasknetwork", 'Tasks Network' );
+ 	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_logs", 'Task Logs' );
+ 	
+// 	if ($perms->checkModule('files', 'view'))
+//		$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_files", 'Files' );
+ 	
 }
-//if ($perms->checkModule('files', 'view'))
-//	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_files", 'Files' );
-if ($canViewTask) {
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewwbs", 'WBS');
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewgantt", 'Gantt Chart');
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtasknetwork", 'Tasks Network');
-	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_logs", 'Task Logs');
-}
+
 $tabBox->loadExtras($m);
 $f = 'all';
 $min_view = true;

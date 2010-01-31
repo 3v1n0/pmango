@@ -50,9 +50,17 @@
 -------------------------------------------------------------------------------------------
 */
 global $dPconfig;
+
 define("CELLH",3);
 define("SPACE",1);
 define("BORD",1);
+
+define("PMPDF_REPORT", 0);
+define("PMPDF_PLANNED", 1);
+define("PMPDF_ACTUAL", 2);
+define("PMPDF_LOG", 3);
+define("PMPDF_PROPERTIES", 4);
+
 $orient='L';
 $y=40;
 
@@ -412,18 +420,18 @@ function PM_headerPdf($project_name, $page='P', $border=1, $group='', $image_fil
 	return $pdf;
 }
 
-function PM_footerPdf($pdf, $project_name, $p=0){
+function PM_footerPdf($pdf, $project_name, $pdf_type = 0){
 
-	switch($p){
-	 	case 0: $filename=$project_name.".pdf";
+	switch($pdf_type){
+	 	case PMPDF_REPORT: $filename=$project_name.".pdf";
 	 	break;
-		case 1: $filename=$project_name."- Planned.pdf";
+		case PMPDF_PLANNED: $filename=$project_name."- Planned.pdf";
 		break;
-		case 2: $filename=$project_name."- Actual.pdf";
+		case PMPDF_ACTUAL: $filename=$project_name."- Actual.pdf";
 		break;
-		case 3: $filename=$project_name."- Log.pdf";
+		case PMPDF_LOG: $filename=$project_name."- Log.pdf";
 		break;
-		case 4: $filename=$project_name."- Properties.pdf";
+		case PMPDF_PROPERTIES: $filename=$project_name."- Properties.pdf";
 		break;
 	}
 	$pdf->Output("./modules/report/pdf/".$filename,'F');
@@ -1303,4 +1311,5 @@ function PM_sortChildTask($tasks, $parent, $task_level, $tasks_opened, $tasks_cl
 	}
 return $a_task;
 }
+
 ?>

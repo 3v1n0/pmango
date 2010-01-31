@@ -266,7 +266,7 @@ function showFullProject() {
 					
 					$pdf = PM_headerPdf($name[0]['project_name']);
 					PM_makeLogPdf($pdf, $project_id, $user_id, $hide_inactive, $hide_complete, $start_date, $end_date);
-					$filename=PM_footerPdf($pdf, $name[0]['project_name'], 3);
+					$filename=PM_footerPdf($pdf, $name[0]['project_name'], PMPDF_LOG);
 				?>
 				<a href="<?echo $filename;?>"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a><?
 				}?>
