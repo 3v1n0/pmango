@@ -243,161 +243,143 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 
 </script>
 <form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
-	<table id='tab_settings_content' style="display: none;" border='0' cellpadding='1' cellspacing='3' align="center">
-		<tr>
-			<td align='left' valign="top" style="border-right: solid transparent 20px;">
-				<table border="0" cellspacing="0">
-					<tr>
-						<td class="tab_setting_title"><?php echo $AppUI->_('Show');?>:</td>
-						<td align="left">
-							<input type='checkbox' id="show_names" name='show_names' <? echo $show_names ? 'checked="checked" ' : '' ?>/>
-							<label for="show_names"><?php echo $AppUI->_('Task Names'); ?></label>
-						</td>
-					</tr>
-					<tr>
-						<td class="tab_setting_title">&nbsp;</td>
-						<td align="left">
-							<input type='checkbox' id="show_alerts" name='show_alerts' <? echo $show_alerts ? 'checked="checked" ' : '' ?>/>
-							<label for="show_alerts"><?php echo $AppUI->_('Alerts'); ?></label>
-						</td>
-					</tr>
-					<tr>
-						<td class="tab_setting_title">&nbsp;</td>
-						<td align="left">
-							<input type='checkbox' id="show_progress" name='show_progress' <? echo $show_progress ? 'checked="checked" ' : '' ?>/>
-							<label for="show_progress"><?php echo $AppUI->_('Progress'); ?></label>
-						</td>
-					</tr>
-				</table>
-			</td>
-			<td align='left' valign="top" style="border-right: solid transparent 20px;">
-				<table border="0" cellspacing="0">
-					<tr>
-						<td class="tab_setting_title"><?php echo $AppUI->_('Planned Info'); ?>:</td>
-						<td align="left">
-							<input type='checkbox' id="show_p_data" name='show_p_data' <? echo $show_p_data ? 'checked="checked" ' : '' ?>/>
-							<label for="show_p_data">
-								<abbr title="<?php echo $AppUI->_('Duration, effort and cost'); ?>">
-									<?php echo $AppUI->_('Data'); ?>
-								</abbr>
-							</label>
-						</td>
-					</tr>
-					<tr>
-						<td class="tab_setting_title">&nbsp;</td>
-						<td align="left">
-							<input type='checkbox' id="show_p_res" name='show_p_res' onclick="resourceSelectSwap(false);" <? echo $show_p_res ? 'checked="checked" ' : '' ?>/>
-							<label for="show_p_res">
-								<abbr title="<?php echo $AppUI->_('Personal Effort, Person and Role'); ?>">
-									<?php echo $AppUI->_('Resources'); ?>
-								</abbr>
-							</label>
-						</td>
-					</tr>
-					<tr>
-						<td class="tab_setting_title">&nbsp;</td>
-						<td align="left">
-							<input type='checkbox' id="show_p_time" name='show_p_time' <? echo $show_p_time ? 'checked="checked" ' : '' ?>/>
-							<label for="show_p_time">
-								<abbr title="<?php echo $AppUI->_('Start and End dates'); ?>">
-									<?php echo $AppUI->_('Timeframe'); ?>
-								</abbr>
-							</label>
-						</td>
-					</tr>
-				</table>
-			</td>
-			<td align='left' valign="top" style="border-right: solid transparent 20px;">
-				<table border="0" cellspacing="0">
-					<tr>
-						<td class="tab_setting_title"><?php echo $AppUI->_('Actual Info'); ?>:</td>
-						<td align="left">
-							<input type='checkbox' id="show_a_data" name='show_a_data' <? echo $show_a_data ? 'checked="checked" ' : '' ?>/>
-							<label for="show_a_data">
-								<abbr title="<?php echo $AppUI->_('Duration, effort and cost'); ?>">
-									<?php echo $AppUI->_('Data'); ?>
-								</abbr>
-							</label>
-						</td>
-					</tr>
-					<tr>
-						<td class="tab_setting_title">&nbsp;</td>
-						<td align="left">
-							<input type='checkbox' id="show_a_res" name='show_a_res' onclick="resourceSelectSwap(true);" <? echo $show_a_res ? 'checked="checked" ' : '' ?>/>
-							<label for="show_a_res">
-								<abbr title="<?php echo $AppUI->_('Personal Effort, Person and Role'); ?>">
-									<?php echo $AppUI->_('Resources'); ?>
-								</abbr>
-							</label>
-						</td>
-					</tr>
-					<tr>
-						<td class="tab_setting_title">&nbsp;</td>
-						<td align="left">
-							<input type='checkbox' id="show_a_time" name='show_a_time' <? echo $show_a_time ? 'checked="checked" ' : '' ?>/>
-							<label for="show_a_time">
-								<abbr title="<?php echo $AppUI->_('Start and End dates'); ?>">
-									<?php echo $AppUI->_('Timeframe'); ?>
-								</abbr>
-							</label>
-						</td>
-					</tr>
-				</table>
-			</td>
-			<td align='left' valign="top" style="border-right: solid transparent 20px;">
-				<table border="0" cellspacing="0">
-					<tr>
-						<td class="tab_setting_title"><?php echo $AppUI->_('Explode tasks'); ?>:</td>
-						<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
+	<div id='tab_settings_content' style="display: none">
+		<table border='0' cellpadding='1' cellspacing='3' align="center">
+			<tr>
+				<td class="tab_setting_group">
+					<table border="0" cellspacing="0">
+						<tr>
+							<td class="tab_setting_title" rowspan="4"><?php echo $AppUI->_('Show');?>:</td>
+							<td class="tab_setting_item">
+								<input type='checkbox' id="show_names" name='show_names' <? echo $show_names ? 'checked="checked" ' : '' ?>/>
+								<label for="show_names"><?php echo $AppUI->_('Task Names'); ?></label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='checkbox' id="show_alerts" name='show_alerts' <? echo $show_alerts ? 'checked="checked" ' : '' ?>/>
+								<label for="show_alerts"><?php echo $AppUI->_('Alerts'); ?></label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='checkbox' id="show_progress" name='show_progress' <? echo $show_progress ? 'checked="checked" ' : '' ?>/>
+								<label for="show_progress"><?php echo $AppUI->_('Progress'); ?></label>
+							</td>
+						</tr>
+					</table>
+				</td>
+				<td class="tab_setting_group">
+					<table border="0" cellspacing="0">
+						<tr>
+							<td class="tab_setting_title" rowspan="3"><?php echo $AppUI->_('Planned Info'); ?>:</td>
+							<td class="tab_setting_item">
+								<input type='checkbox' id="show_p_data" name='show_p_data' <? echo $show_p_data ? 'checked="checked" ' : '' ?>/>
+								<label for="show_p_data">
+									<abbr title="<?php echo $AppUI->_('Duration, effort and cost'); ?>">
+										<?php echo $AppUI->_('Data'); ?>
+									</abbr>
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='checkbox' id="show_p_res" name='show_p_res' onclick="resourceSelectSwap(false);" <? echo $show_p_res ? 'checked="checked" ' : '' ?>/>
+								<label for="show_p_res">
+									<abbr title="<?php echo $AppUI->_('Personal Effort, Person and Role'); ?>">
+										<?php echo $AppUI->_('Resources'); ?>
+									</abbr>
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='checkbox' id="show_p_time" name='show_p_time' <? echo $show_p_time ? 'checked="checked" ' : '' ?>/>
+								<label for="show_p_time">
+									<abbr title="<?php echo $AppUI->_('Start and End dates'); ?>">
+										<?php echo $AppUI->_('Timeframe'); ?>
+									</abbr>
+								</label>
+							</td>
+						</tr>
+					</table>
+				</td>
+				<td class="tab_setting_group">
+					<table border="0" cellspacing="0">
+						<tr>
+							<td class="tab_setting_title" rowspan="3"><?php echo $AppUI->_('Actual Info'); ?>:</td>
+							<td class="tab_setting_item">
+								<input type='checkbox' id="show_a_data" name='show_a_data' <? echo $show_a_data ? 'checked="checked" ' : '' ?>/>
+								<label for="show_a_data">
+									<abbr title="<?php echo $AppUI->_('Duration, effort and cost'); ?>">
+										<?php echo $AppUI->_('Data'); ?>
+									</abbr>
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='checkbox' id="show_a_res" name='show_a_res' onclick="resourceSelectSwap(true);" <? echo $show_a_res ? 'checked="checked" ' : '' ?>/>
+								<label for="show_a_res">
+									<abbr title="<?php echo $AppUI->_('Personal Effort, Person and Role'); ?>">
+										<?php echo $AppUI->_('Resources'); ?>
+									</abbr>
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='checkbox' id="show_a_time" name='show_a_time' <? echo $show_a_time ? 'checked="checked" ' : '' ?>/>
+								<label for="show_a_time">
+									<abbr title="<?php echo $AppUI->_('Start and End dates'); ?>">
+										<?php echo $AppUI->_('Timeframe'); ?>
+									</abbr>
+								</label>
+							</td>
+						</tr>
+					</table>
+				</td>
+				<td class="tab_setting_group">
+					<table border="0" cellspacing="0">
+						<tr>
+							<td class="tab_setting_title"><?php echo $AppUI->_('Explode Tasks'); ?>:</td>
+							<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
 <?php
-								$maxLevel=CTask::getLevel($project_id);
-								$explodeTasks = $AppUI->getState('ExplodeTasks', '1');
-			
-						 		for($i=1; $i <=$maxLevel;$i++){
-										$arr2[$i-1] = "Level ".$i;
-							    		$arr[$i-1] = $i;}
-			
-								for($i = 0; $i < count($arr); $i++){
-							    	$selected = ($arr[$i] == $explodeTasks) ? 'selected="selected"' : '';
-							     	echo "<option value=\"{$arr[$i]}\" {$selected}>{$arr2[$i]}</option>\n";
-							 	}
-?>
-							</select>
-						</td>
-					</tr>
-<!--					
-					<tr>
-						<td class="tab_setting_title">&nbsp;</td>
-						<td align="left">
-							&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='doSubmit();'>
-						</td>
-					</tr>
-					<tr>
-						<td class="tab_setting_title">&nbsp;</td>
-						<td align="left">
-							&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
-						</td>
-					</tr>
--->
-				</table>
-			</td>
+									$maxLevel=CTask::getLevel($project_id);
+									$explodeTasks = $AppUI->getState('ExplodeTasks', '1');
 				
-			<td align='left' valign="bottom" style="border-right: solid transparent 20px;">
-				<table border="0" cellspacing="0">
-					<tr>
-						<td align="left">
-							&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>"  onclick='doSubmit();'>
-						</td>
-					</tr>
-					<tr>
-						<td align="left">
-							&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
-						</td>
-					</tr>
-				</table>
-			</td>
-		</tr>
-	</table>
+							 		for($i=1; $i <=$maxLevel;$i++){
+											$arr2[$i-1] = "Level ".$i;
+								    		$arr[$i-1] = $i;}
+				
+									for($i = 0; $i < count($arr); $i++){
+								    	$selected = ($arr[$i] == $explodeTasks) ? 'selected="selected"' : '';
+								     	echo "<option value=\"{$arr[$i]}\" {$selected}>{$arr2[$i]}</option>\n";
+								 	}
+?>
+								</select>
+							</td>
+						</tr>
+					</table>
+				</td>
+					
+				<td align='left' valign="bottom" class="tab_setting_group">
+					<table border="0" cellspacing="0">
+						<tr>
+							<td align="left">
+								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>"  onclick='doSubmit();'>
+							</td>
+						</tr>
+						<tr>
+							<td align="left">
+								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</div>
 </form>
 
 <br />

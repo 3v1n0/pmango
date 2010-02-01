@@ -530,7 +530,20 @@ table.tbl td.event td {
 	background-color: #fff0b0;
 }
 
-/* td info */
-.tab_setting_title {
+/* settings' table cells */
+td.tab_setting_title {
 	font-weight: bold;
+	text-align: left;
+	vertical-align: top;
+}
+
+td.tab_setting_group {
+	border-right: solid transparent 20px;
+	text-align: left;
+	vertical-align: top;
+}
+
+td.tab_setting_item {
+	white-space: nowrap;
+	text-align: left;
 }

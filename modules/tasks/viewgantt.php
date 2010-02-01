@@ -330,213 +330,205 @@ loadGraph('<?php echo $graph_img_src; ?>');
 </script>
 
 <form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
-<input type="hidden" name="display_option" value="<?php echo $display_option;?>" />
-
-<table id='tab_settings_content' border="0" cellpadding="4" cellspacing="0" align="center" style="display: none">
-
-<tr>
-	<td align="left" valign="top" width="20">
+	<input type="hidden" name="display_option" value="<?php echo $display_option;?>" />
+	
+	<div id="tab_settings_content" style="display: none;">
+		<table border="0" cellpadding="4" cellspacing="0" align="center">
+			<tr>
+				<td align="left" valign="top" width="20">
 <?php
-	$new_start->addMonths( -$scroll_date );
-	$new_end->addMonths( -$scroll_date );
+				$new_start->addMonths( -$scroll_date );
+				$new_end->addMonths( -$scroll_date );
 ?>
-	</td>
-
-	<td align='left' valign="top" style="border-right: solid transparent 20px;">
-		<table border="0" cellspacing="0">
-			<tr>
-				<td class="tab_setting_title"><?php echo $AppUI->_('Draw');?>:</td>
-				<td>
-					<input type='checkbox' id='show_names' name='show_names' <? echo $show_names ? 'checked="checked"' : '' ?> />
-					<label for="show_names"><?php echo $AppUI->_('Task Names'); ?></label>
 				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">&nbsp;</td>
-				<td align="left">
-					<input type='checkbox' id='show_deps' name='show_dependencies' <? echo $show_deps ? 'checked="checked"' : '' ?> />
-					<label for="show_deps"><?php echo $AppUI->_('Dependencies'); ?></label>
+			
+				<td class="tab_setting_group">
+					<table border="0" cellspacing="0">
+						<tr>
+							<td class="tab_setting_title" rowspan="4"><?php echo $AppUI->_('Draw');?>:</td>
+							<td class="tab_setting_item">
+								<input type='checkbox' id='show_names' name='show_names' <? echo $show_names ? 'checked="checked"' : '' ?> />
+								<label for="show_names"><?php echo $AppUI->_('Task Names'); ?></label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='checkbox' id='show_deps' name='show_dependencies' <? echo $show_deps ? 'checked="checked"' : '' ?> />
+								<label for="show_deps"><?php echo $AppUI->_('Dependencies'); ?></label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='checkbox' id='show_bw' name='show_bw'" <? echo $show_bw ? 'checked="checked"' : '' ?> />
+								<label for="show_bw"><?php echo $AppUI->_('Printable BW colors'); ?></label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='checkbox' id='show_res' name='show_res'" <? echo $show_res ? 'checked="checked"' : '' ?> />
+								<label for="show_res"><?php echo $AppUI->_('Resources'); ?></label>
+							</td>
+						</tr>
+					</table>
 				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">&nbsp;</td>
-				<td>
-					<input type='checkbox' id='show_bw' name='show_bw'" <? echo $show_bw ? 'checked="checked"' : '' ?> />
-					<label for="show_bw"><?php echo $AppUI->_('Printable BW colors'); ?></label>
+			
+				<td class="tab_setting_group">
+					<table border="0" cellspacing="0">
+						<tr>
+							<td class="tab_setting_title" rowspan="4"><?php echo $AppUI->_('Show');?>:</td>
+							<td class="tab_setting_item">
+								<input type='radio' id='whole_project' name='time_interval' onclick="showFullProject();" <? echo $display_option == "all" ? 'checked="checked"' : '' ?> />
+								<label for="whole_project"><?php echo $AppUI->_('Whole Project'); ?></label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='radio' id='from_start' name='time_interval' onclick='showFromStart();' <? echo $display_option == "from_start" ? 'checked="checked"' : '' ?> />
+								<label for="from_start"><?php echo $AppUI->_('From Start'); ?></label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='radio' id='to_end' name='time_interval' onclick='showToEnd();' <? echo $display_option == "to_end" ? 'checked="checked"' : '' ?> />
+								<label for="to_end"><?php echo $AppUI->_('To End'); ?></label>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_item">
+								<input type='radio' id='custom' name='time_interval' disabled="disabled" <? echo $display_option == "custom" ? 'checked="checked"' : '' ?> />
+								<label for="custom"><?php echo $AppUI->_('Custom'); ?></label>
+							</td>
+						</tr>
+					</table>
 				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">&nbsp;</td>
-				<td>
-					<input type='checkbox' id='show_res' name='show_res'" <? echo $show_res ? 'checked="checked"' : '' ?> />
-					<label for="show_res"><?php echo $AppUI->_('Resources'); ?></label>
-				</td>
-			</tr>
-		</table>
-	</td>
-
-	<td align='left' valign="top" style="border-right: solid transparent 20px;">
-		<table border="0" cellspacing="0">
-			<tr>
-				<td class="tab_setting_title"><?php echo $AppUI->_('Show');?>:</td>
-				<td align="left">
-					<input type='radio' id='whole_project' name='time_interval' onclick="showFullProject();" <? echo $display_option == "all" ? 'checked="checked"' : '' ?> />
-					<label for="whole_project"><?php echo $AppUI->_('Whole Project'); ?></label>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td>
-					<input type='radio' id='from_start' name='time_interval' onclick='showFromStart();' <? echo $display_option == "from_start" ? 'checked="checked"' : '' ?> />
-					<label for="from_start"><?php echo $AppUI->_('From Start'); ?></label>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td>
-					<input type='radio' id='to_end' name='time_interval' onclick='showToEnd();' <? echo $display_option == "to_end" ? 'checked="checked"' : '' ?> />
-					<label for="to_end"><?php echo $AppUI->_('To End'); ?></label>
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td>
-					<input type='radio' id='custom' name='time_interval' disabled="disabled" <? echo $display_option == "custom" ? 'checked="checked"' : '' ?> />
-					<label for="custom"><?php echo $AppUI->_('Custom'); ?></label>
-				</td>
-			</tr>
-		</table>
-	</td>
-
-	<td align='left' valign="top" style="border-right: solid transparent 20px">
-		<table border="0" cellspacing="0">
-			<tr>
-				<td class="tab_setting_title">
-					<?php echo $AppUI->_('From');?>:
-				</td>
-				<td>
-					<input type="hidden" name="sdate" value="<?php echo $start_date->format( FMT_TIMESTAMP_DATE );?>" />
-					<input type="text" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" disabled="disabled" />
-					<a href="#" onclick="popCalendar('sdate');"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
-				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">
-					<?php echo $AppUI->_( 'To' );?>:
-				</td>
-				<td align="left" nowrap="nowrap">
-				    <input type="hidden" name="edate" value="<?php echo $end_date->format( FMT_TIMESTAMP_DATE );?>" />
-					<input type="text" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" disabled="disabled" />
-					<a href="#" onclick="popCalendar('edate');"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
-				<!--<td valign="top">
-					<input type="checkbox" name="showLabels" <?php //echo (($showLabels==1) ? "checked=true" : "");?>><?php //echo $AppUI->_( 'Show captions' );?>
-					</td>
-					<td valign="top">
-						<input type="checkbox" name="showWork" <?php //echo (($showWork==1) ? "checked=true" : "");?>><?php //echo $AppUI->_( 'Show work instead of duration' );?>
-					</td>-->
-				</td>
-			</tr>
-			<tr>				<td class="tab_setting_title">
-					<?php echo $AppUI->_('Explode tasks').": ";?>
-				</td>
-				<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
+			
+				<td align='left' valign="top" style="border-right: solid transparent 20px">
+					<table border="0" cellspacing="0">
+						<tr>
+							<td class="tab_setting_title">
+								<?php echo $AppUI->_('From');?>:
+							</td>
+							<td class="tab_setting_item">
+								<input type="hidden" name="sdate" value="<?php echo $start_date->format( FMT_TIMESTAMP_DATE );?>" />
+								<input type="text" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" disabled="disabled" />
+								<a href="#" onclick="popCalendar('sdate');"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_title">
+								<?php echo $AppUI->_( 'To' );?>:
+							</td>
+							<td class="tab_setting_item">
+							    <input type="hidden" name="edate" value="<?php echo $end_date->format( FMT_TIMESTAMP_DATE );?>" />
+								<input type="text" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" disabled="disabled" />
+								<a href="#" onclick="popCalendar('edate');"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
+							</td>
+						</tr>
+						<tr>							<td class="tab_setting_title">
+								<?php echo $AppUI->_('Explode Tasks').": ";?>
+							</td>
+							<td class="tab_setting_item">
+								&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
 <?php
-					$maxLevel=CTask::getLevel($project_id);
-					$explodeTasks = $AppUI->getState('ExplodeTasks', '1');
-
-			 		for($i=1; $i <=$maxLevel;$i++){
-							$arr2[$i-1] = "Level ".$i;
-				    		$arr[$i-1] = $i;}
-
-					for($i = 0; $i < count($arr); $i++){
-				    	$selected = ($arr[$i] == $explodeTasks) ? 'selected="selected"' : '';
-				     	echo "<option value=\"{$arr[$i]}\" {$selected}>{$arr2[$i]}</option>\n";
-				 	}
+								$maxLevel=CTask::getLevel($project_id);
+								$explodeTasks = $AppUI->getState('ExplodeTasks', '1');
+			
+						 		for($i=1; $i <=$maxLevel;$i++){
+										$arr2[$i-1] = "Level ".$i;
+							    		$arr[$i-1] = $i;}
+			
+								for($i = 0; $i < count($arr); $i++){
+							    	$selected = ($arr[$i] == $explodeTasks) ? 'selected="selected"' : '';
+							     	echo "<option value=\"{$arr[$i]}\" {$selected}>{$arr2[$i]}</option>\n";
+							 	}
 ?>
-					</select>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td class="tab_setting_title">
+								<?php echo $AppUI->_('Size').": ";?>
+							</td>
+							<td class="tab_setting_item">&nbsp;
+								<select name="image_size" class="text" onchange=""> <!-- add custom inputs onchange -->
+									<option value="1" selected="selected">Default</option>
+									<option value="2" >Custom</option>
+									<option value="3" >Fit in Window</option>
+								</select>
+							</td>
+						</tr>
+					</table>
 				</td>
-			</tr>
-			<tr>
-				<td class="tab_setting_title">
-					<?php echo $AppUI->_('Size').": ";?>
-				</td>
-				<td>&nbsp;
-					<select name="image_size" class="text" onchange=""> <!-- add custom inputs onchange -->
-						<option value="1" selected="selected">Default</option>
-						<option value="2" >Custom</option>
-						<option value="3" >Fit in Window</option>
-					</select>
+			
+				<td align='left' valign="bottom" class="tab_setting_group">
+					<table border="0" cellspacing="0">
+						<tr>
+							<td align="left">
+								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>"  onclick='doSubmit();'>
+							</td>
+						</tr>
+						<tr>
+							<td align="left">
+								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+							</td>
+						</tr>
+					</table>
 				</td>
 			</tr>
 		</table>
-	</td>
-
-	<td align='left' valign="bottom" style="border-right: solid transparent 20px;">
-		<table border="0" cellspacing="0">
-			<tr>
-				<td align="left">
-					&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Draw' );?>"  onclick='doSubmit();'>
-				</td>
-			</tr>
-			<tr>
-				<td align="left">
-					&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
-				</td>
-			</tr>
-		</table>
-	</td>
-</tr>
-</table>
+	</div>
 </form>
 
-<form id='tab_content' name='pdf_options' method='POST' action='<?php echo $query_string; ?>'>
-	<table id='' width='100%' border='0' cellpadding='1' cellspacing='0'>
-		<tr align="right">
-			<td align="right">
-
-			</td>
-		</tr>
-		<tr>
-			<td align="right">
-			<?if ($_POST['make_pdf']=="true")	{
-				include('modules/report/makePDF.php');
-
-				$task_level=$explodeTasks;
-				$q  = new DBQuery;
-				$q->addQuery('projects.project_name');
-				$q->addTable('projects');
-				$q->addWhere("project_id = $project_id ");
-				$name = $q->loadList();
-
-				$q  = new DBQuery;
-				$q->addTable('groups');
-				$q->addTable('projects');
-				$q->addQuery('groups.group_name');
-				$q->addWhere("projects.project_group = groups.group_id and projects.project_id = '$project_id'");
-				$group = $q->loadList();
-
-				foreach ($group as $g){
-					$group_name=$g['group_name'];
-				}
-
-				$pdf = PM_headerPdf($name[0]['project_name'],'P',1,$group_name);
-				PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_opened, $roles, $tview, $start_date, $end_date, $showIncomplete); //TODO show mine!
-				if ($tview) $filename=PM_footerPdf($pdf, $name[0]['project_name'], 2);
-				else $filename=PM_footerPdf($pdf, $name[0]['project_name'], 1);
-				?>
-				<a href="<?echo $filename;?>"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="bottom"></a><?
-			}?>
-
-
-				<input type="hidden" name="make_pdf" value="false" />
-				<input type="hidden" name="addreport" value="-1" />
-
-				<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
-				<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
-				<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'>
-			</td>
-		</tr>
-	</table>
+<form name='pdf_options' method='post' action='<?php echo $query_string; ?>'>
+	<div id='tab_content'>
+		<table id='' width='100%' border='0' cellpadding='1' cellspacing='0'>
+			<tr align="right">
+				<td align="right">
+	
+				</td>
+			</tr>
+			<tr>
+				<td align="right">
+				<?if ($_POST['make_pdf']=="true")	{
+					include('modules/report/makePDF.php');
+	
+					$task_level=$explodeTasks;
+					$q  = new DBQuery;
+					$q->addQuery('projects.project_name');
+					$q->addTable('projects');
+					$q->addWhere("project_id = $project_id ");
+					$name = $q->loadList();
+	
+					$q  = new DBQuery;
+					$q->addTable('groups');
+					$q->addTable('projects');
+					$q->addQuery('groups.group_name');
+					$q->addWhere("projects.project_group = groups.group_id and projects.project_id = '$project_id'");
+					$group = $q->loadList();
+	
+					foreach ($group as $g){
+						$group_name=$g['group_name'];
+					}
+	
+					$pdf = PM_headerPdf($name[0]['project_name'],'P',1,$group_name);
+					PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_opened, $roles, $tview, $start_date, $end_date, $showIncomplete); //TODO show mine!
+					if ($tview) $filename=PM_footerPdf($pdf, $name[0]['project_name'], 2);
+					else $filename=PM_footerPdf($pdf, $name[0]['project_name'], 1);
+					?>
+					<a href="<?echo $filename;?>"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="bottom"></a><?
+				}?>
+	
+	
+					<input type="hidden" name="make_pdf" value="false" />
+					<input type="hidden" name="addreport" value="-1" />
+	
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'>
+				</td>
+			</tr>
+		</table>
+	</div>
 </form>
 
 <br />

@@ -3,7 +3,7 @@
 
  PMango Project
 
- Title:      task view.
+ Title:      javascript project utilities.
 
  File:       view.js
  Location:   pmango/modules/projects
@@ -14,15 +14,19 @@
  This file is part of the PMango project
  Further information at: http://penelope.di.unipi.it
 
- Version history. 
+ Version history.
+ - 2010.02.01
+   0.3, use jQuery's slideToggle for switching item view
+ - 2010.01.31
+   0.2, jQuery toggle usage for projectViewSwitch
  - 2009.11.11 Marco Trevisan
-   First version, added some utility functions
+   0.1, added some utility functions
    
 ---------------------------------------------------------------------------
 
  PMango - A web application for project planning and control.
 
- Copyright (C) 2009 Marco Trevisan
+ Copyright (C) 2009-2010 Marco Trevisan (Treviño) <mail@3v1n0.net>
  All rights reserved.
 
  PMango reuses part of the code of dotProject 2.0.1: dotProject code is 
@@ -88,9 +92,17 @@ function projectViewSwitch() {
 	});}
 
 function displayItemSwitch(id1, id2) {
+	
+	$("#"+id1).slideToggle("normal");
+	$("#"+id2).slideToggle("normal");
+
+	/*
+	
 	switchItemDisplay(id1);
 	switchItemDisplay(id2);
-	/*
+	return;
+	
+	// Alternative:
 	var item1 = document.getElementById(id1);
 	var item2 = document.getElementById(id2);
 
@@ -107,6 +119,7 @@ function displayItemSwitch(id1, id2) {
 
 		if (id2 && item2)
 			item2.style.display = 'none';
-	}*/
+	}
+	*/
 }
 
