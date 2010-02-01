@@ -86,8 +86,8 @@ $sql="SELECT projects.project_finish_date FROM projects WHERE project_id ='$proj
 $db_finish_date = db_loadColumn($sql);
 $tab = dPgetParam($_REQUEST, 'tab', 0);
 
-if (isset($_POST['show_sdate']))	$AppUI->setState('StartDate', dPgetParam($_POST, 'show_sdate', $db_start_date[0]));
-if (isset($_POST['show_edate']))	$AppUI->setState('EndDate', dPgetParam($_POST, 'show_edate', $db_finish_date[0]));
+if (isset($_POST['sdate']))	$AppUI->setState('StartDate', dPgetParam($_POST, 'sdate', $db_start_date[0]));
+if (isset($_POST['edate']))	$AppUI->setState('EndDate', dPgetParam($_POST, 'edate', $db_finish_date[0]));
 
 $StartDate = $AppUI->getState('StartDate', $db_start_date[0]);
 $EndDate = $AppUI->getState('EndDate', $db_finish_date[0]);
@@ -190,7 +190,6 @@ function setCalendar( idate, fdate ) {
 function showFullProject() {
 	document.frmFilter.show_sdate.value = "<?php echo $whole_start->format($df);?>";
 	document.frmFilter.show_edate.value = "<?php echo $whole_finish->format($df);?>";
-
 }
 </script>
 
