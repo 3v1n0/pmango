@@ -464,8 +464,9 @@ if ($canViewTask) {
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Planned view)' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Actual view)');
 	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Inactive)' );
-	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtodo", 'Tasks TODO' );	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewwbs", 'WBS Chart' );
+	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtodo", 'Tasks TODO' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewgantt", 'Gantt Chart' );
+	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewwbs", 'WBS Chart' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtasknetwork", 'Tasks Network' );
  	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_logs", 'Task Logs' );
  	
