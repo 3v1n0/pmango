@@ -182,17 +182,30 @@ class PMGanttBar extends GanttPlotObject {
 		$xt = round($aScale->TranslateDate($limst));
 		$xb = round($aScale->TranslateDate($limen));
 
-		static $ypre, $xtpre, $xbpre;
+		static $ypre, $xtpre, $xbpre, $drawn;
 		if (strlen($this->iLabel)) {
 			$yt = round($aScale->TranslateVertPos($this->iVPos)-$vs-($aScale->GetVertSpacing()/2-$vs/2));
 			$yb = round($aScale->TranslateVertPos($this->iVPos)-($aScale->GetVertSpacing()/2-$vs/2));
 			$ypre = $yb;
 			$xtpre = $xt;
 			$xbpre = $xb;
+			$drawn = false;
 		} else {
 			$yt = $ypre;
 			$yb = $ypre+$vs;
+		}
+		$middle = round($yt+($yb-$yt)/2);
+		$this->StrokeActInfo($aImg,$aScale,$middle);
 
+		// Check if the bar is totally outside the current scale range
+		if( $en <  $aScale->iStartDate || $st > $aScale->iEndDate )
+		return;
+		
+		if (strlen($this->iLabel)) {
+			$drawn = true;
+		}
+		
+		if ($drawn && !strlen($this->iLabel) && isset($ypre) && isset($xtpre) && isset($xbpre)) {
 			$join_len = 0;
 
 			if ($xb > $xbpre && $xt >= $xbpre) {
@@ -212,14 +225,7 @@ class PMGanttBar extends GanttPlotObject {
 				$join->Stroke($aImg);
 			}
 		}
-		$middle = round($yt+($yb-$yt)/2);
-		$this->StrokeActInfo($aImg,$aScale,$middle);
-
-		// Check if the bar is totally outside the current scale range
-		if( $en <  $aScale->iStartDate || $st > $aScale->iEndDate )
-		return;
-
-
+		
 		// Remember the positions for the bar
 		$this->SetConstrainPos($xt,$yt,$xb,$yb);
 
@@ -470,8 +476,8 @@ class PMGantt /*implements PMGraph TODO */ {
 	}
 
 	private function pullProjectData() {
-		$psql = "SELECT project_id, project_color_identifier, project_name, project_start_date, ".
-		        "project_finish_date, project_today FROM projects WHERE project_id = ".$this->pProjectID;
+		$psql = "SELECT project_id, project_color_identifier, project_name, project_start_date, project_finish_date, ".
+		        "project_today, project_active FROM projects WHERE project_id = ".$this->pProjectID;
 		$prc = db_exec($psql);
 		echo db_error();
 		$this->pProject = db_fetch_row($prc);
@@ -595,7 +601,10 @@ class PMGantt /*implements PMGraph TODO */ {
 			 $this->pProject["project_finish_date"] = $this->pStartDate;
 		}
 
-		$this->pToday = date("Y-m-d", strtotime($this->pProject['project_today']))." 12:00:00";
+		if ($this->pProject['project_active'])
+			$this->pToday = date("Y-m-d")." 12:00:00";
+		else
+			$this->pToday = date("Y-m-d", strtotime($this->pProject['project_today']))." 12:00:00";
 	}
 
 	private function initGraph() {
