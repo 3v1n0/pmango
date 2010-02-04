@@ -81,6 +81,7 @@ class TaskBoxDB {
 	private $pActualResources;
 
 	private $pUseCache;
+	private $pUseRealActualResource;
 
 	const ALERT_NONE = 0;
 	const ALERT_WARNING = 1;
@@ -97,10 +98,15 @@ class TaskBoxDB {
 		}
 
 		$this->pUseCache = true;
+		$this->pUseRealActualResource = false;
 	}
 
 	public function useCache($use) {
 		$this->pUseCache = $use ? true : false;
+	}
+	
+	public function useRealActualResource($use) {
+		$this->pUseRealActualResource = $use ? true : false;
 	}
 
 	public function getId(){
@@ -264,7 +270,7 @@ class TaskBoxDB {
 
 		$q = new DBQuery();
 
-		if (!$this->pChild) {
+		if ($this->isLeaf() || !$this->pUseRealActualResource) {
 			if (!$this->pPlannedResources || !$this->pUseCache)
 				$this->computePlannedResources();
 
