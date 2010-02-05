@@ -171,8 +171,8 @@ if (isset($_POST['show_task_options'])) {
 	$AppUI->setState('TaskListShowMine', dPgetParam($_POST, 'show_mine', 0));
 	$AppUI->setState('ExplodeTasks', dPgetParam($_POST, 'explode_tasks', '1'));
 	$AppUI->setState('PersonsRoles', dPgetParam($_POST, 'roles', 'N'));
-	$AppUI->setState('StartDate', dPgetParam($_POST, 'show_sdate', $db_start_date[0]['project_start_date']));
-	$AppUI->setState('EndDate', dPgetParam($_POST, 'show_edate', $db_start_date[0]['project_finish_date']));
+	$AppUI->setState('StartDate', dPgetParam($_POST, 'sdate', $db_start_date[0]['project_start_date']));
+	$AppUI->setState('EndDate', dPgetParam($_POST, 'edate', $db_start_date[0]['project_finish_date']));
 }
 $showIncomplete = $AppUI->getState('TaskListShowIncomplete', 0);
 $showMine = $AppUI->getState('TaskListShowMine', 0);
@@ -607,6 +607,8 @@ function setCalendar( idate, fdate ) {
 function showFullProject() {
 	document.task_list_options.show_sdate.value = "<?php echo $whole_start->format($df);?>";
 	document.task_list_options.show_edate.value = "<?php echo $whole_finish->format($df);?>";
+	document.task_list_options.sdate.value = "<?php echo $whole_start->format($df);?>";
+	document.task_list_options.edate.value = "<?php echo $whole_finish->format($df);?>";
 }
 </script>
 <script type="text/javascript" src="/js/dateControl.js"></script>
@@ -658,7 +660,7 @@ function showFullProject() {
 							</td>
 							<td>
 								<input type="hidden" name="sdate" value="<?php echo $start_date->format( FMT_TIMESTAMP_DATE );?>" />
-								<input type="text" disabled="disabled" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" onchange='document.task_list_options.show_sdate.value=this.value; validateDate(this);' />
+								<input type="text" disabled="disabled" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" onchange='document.task_list_options.sdate.value=this.value; validateDate(this);' />
 								<a href="#" onclick="popCalendar('sdate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
 							</td>
 						</tr>
@@ -668,7 +670,7 @@ function showFullProject() {
 							</td>
 							<td align="left" nowrap="nowrap">
 							    <input type="hidden" name="edate" value="<?php echo $end_date->format( FMT_TIMESTAMP_DATE );?>" />
-							    <input type="text" disabled="disabled" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" onchange='document.task_list_options.show_edate.value=this.value; validateDate(this);' />
+							    <input type="text" disabled="disabled" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" onchange='document.task_list_options.edate.value=this.value; validateDate(this);' />
 							    <a href="#" onclick="popCalendar('edate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
 							</td>
 						</tr>

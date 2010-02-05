@@ -190,6 +190,8 @@ function setCalendar( idate, fdate ) {
 function showFullProject() {
 	document.frmFilter.show_sdate.value = "<?php echo $whole_start->format($df);?>";
 	document.frmFilter.show_edate.value = "<?php echo $whole_finish->format($df);?>";
+	document.frmFilter.sdate.value = "<?php echo $whole_start->format($df);?>";
+	document.frmFilter.edate.value = "<?php echo $whole_finish->format($df);?>";
 }
 </script>
 
@@ -233,7 +235,7 @@ function showFullProject() {
 							</td>
 							<td class="tab_setting_item">
 								<input type="hidden" name="sdate" value="<?php echo $start_date->format( FMT_TIMESTAMP_DATE );?>" />
-								<input type="text" disabled="disabled" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" onchange='document.frmFilter.show_sdate.value=this.value; validateDate(this);' />
+								<input type="text" disabled="disabled" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" onchange='document.frmFilter.sdate.value=this.value; validateDate(this);' />
 								<a href="#" onclick="popCalendar('sdate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
 							</td>
 						</tr>
@@ -243,7 +245,7 @@ function showFullProject() {
 							</td>
 							<td class="tab_setting_item">
 							    <input type="hidden" name="edate" value="<?php echo $end_date->format( FMT_TIMESTAMP_DATE );?>" />
-							    <input type="text" disabled="disabled" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" onchange='document.frmFilter.show_edate.value=this.value; validateDate(this);' />
+							    <input type="text" disabled="disabled" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" onchange='document.frmFilter.edate.value=this.value; validateDate(this);' />
 							    <a href="#" onclick="popCalendar('edate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
 							</td>
 						</tr>
