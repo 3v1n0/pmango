@@ -201,15 +201,19 @@ function delIt() {
 
 <tr>
 	<td onclick="projectViewSwitch();" style="border: outset #d1d1cd 1px;background-color:#<?php echo $obj->project_color_identifier;?>" onmouseover="this.style.cursor='pointer';" colspan="2">
-	<?php 
-		echo '<img id="project_expander_img" src="images/icons/expand.gif" border="0" />&nbsp;';
+	<?php
+		if (empty($AppUI->properties) && empty($_POST['properties']) && empty($_REQUEST['make_prop_pdf']))
+			$project_collapsed = true;
+		
+		echo '<img id="project_expander_img" src="images/icons/'.($project_collapsed ? 'expand' : 'collapse').'.gif" border="0" />&nbsp;';
 		echo '<font color="' . bestColor( $obj->project_color_identifier ) . '"><strong>'
 			. $obj->project_name .'<strong></font>';
 	?>
 	</td>
 </tr>
 <?php
-	if (empty($AppUI->properties) && empty($_POST['properties']) && empty($_REQUEST['make_prop_pdf']))
+	
+	if ($project_collapsed)
 		$display = "display: none;";
 ?>
 <tr id="project_infos" style="<? echo $display ?>">
@@ -365,90 +369,99 @@ function delIt() {
 		</table>
 		<hr align="center" style="border: outset #d1d1cd 1px">
 		<strong><?php echo $AppUI->_('Properties');?></strong><br>
-		<table cellspacing="1" cellpadding="2" border="0" width="100%">
-				<form name="frmProp" action="./index.php?m=projects" method="post">
-				<input type="hidden" name="dosql" value="do_properties" />
-				<input type="hidden" name="project_id" value="<?php echo $project_id;?>" />
-				<tr>
-					<td align="right" nowrap><?php echo $AppUI->_('Well Formed');?>:
-					<td align="left" nowrap> <input id="wf" name="wf" type="checkbox" value="1"></td>
-					<td class="hilite" width="100%" rowspan="4" colspan="2" valign="top" style="border: outset #d1d1cd 2px">
-						<?php
-							
-							if($_POST['properties']){
-							 	$string=$_POST['properties'];
-								$string=urldecode($string);
-								echo str_replace("@","'",$string);
-							}
-							else{
-						 		echo $string=nl2br($AppUI->getProperties());
-								if($string!=''){
-								$string=str_replace("'","@",$string);
+		<table width="100%">
+			<tr>
+				<td>
+					<form name="frmProp" action="./index.php?m=projects" method="post">
+						<input type="hidden" name="dosql" value="do_properties" />
+						<input type="hidden" name="project_id" value="<?php echo $project_id;?>" />
+						
+						<table cellspacing="1" cellpadding="2" border="0">
+							<tr>
+								<td><input id="wf" name="wf" type="checkbox" value="1"></td>
+								<td nowrap="nowrap"><label for="wf"><?php echo $AppUI->_('Well Formed');?></label></td>
+							</tr>
+							<tr>
+								<td><input id="ce" name="ce" type="checkbox" value="1"></td>
+								<td nowrap="nowrap"><label for="ce"><?php echo $AppUI->_('Cost Effective');?></label></td>
+							</tr>
+							<tr>
+								<td><input id="ee" name="ee" type="checkbox" value="1"></td>
+								<td nowrap="nowrap"><label for="ee"><?php echo $AppUI->_('Effort Effective');?></label></td>
+							</tr>
+							<tr>
+								<td><input id="te" name="te" type="checkbox" value="1"></td>
+								<td nowrap="nowrap"><label for="te"><?php echo $AppUI->_('Time Effective');?></label></td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td align="center"><input type="submit" class="button" value="<?php echo $AppUI->_( 'compute ' );?>"></td>
+							</tr>
+						</table>
+					</form>
+				</td>
+				<td width="100%" valign="top">
+					<form name="prop_report" action="<?echo './index.php?m=projects&a=view&project_id='.$project_id;?>" method="post">				
+						<table cellspacing="1" cellpadding="2" border="0" width="100%" height="100%" >
+							<tr>
+								<td class="hilite" style="border: outset #d1d1cd 2px" height="100px" valign="top" colspan="2">
+							<?php
+								
+								if($_POST['properties']){
+								 	$string=$_POST['properties'];
+									$string=urldecode($string);
+									echo str_replace("@","'",$string);
 								}
-							}
-					
-						
-						?>&nbsp;
-					</td>
-				</tr>
-				<tr>
-					<td align="right" nowrap><?php echo $AppUI->_('Cost Effective');?>:
-					<td align="left" nowrap> <input id="ce" name="ce" type="checkbox" value="1"></td>
-				</tr>
-				<tr>
-					<td align="right" nowrap><?php echo $AppUI->_('Effort Effective');?>:
-					<td align="left" nowrap> <input id="ee" name="ee" type="checkbox" value="1"></td>
-				</tr>
-				<tr>
-					<td align="right" nowrap><?php echo $AppUI->_('Time Effective');?>:
-					<td align="left" nowrap><input id="te" name="te" type="checkbox" value="1"></td>
-				</tr>
-				<tr>
-					<td align="left" nowrap>
-						<input type="submit" class="button" value="<?php echo $AppUI->_( 'compute ' );?>">
-					</td>
-					<td align="left">
-					</td>
-			</form>
-			<form name="prop_report" action=<?echo './index.php?m=projects&a=view&project_id='.$project_id;?> method="post">
-					<td nowrap="nowrap" align="right" width="100%">
-					
-					<?if ($_POST['make_prop_pdf']=="true")	{
-						include('modules/report/makePDF.php');
-	
-						$task_level=$explodeTasks;
-						$q  = new DBQuery;
-						$q->addQuery('projects.project_name');
-						$q->addTable('projects');
-						$q->addWhere("project_id = $project_id ");
-						$name = $q->loadList();
-						$pdf = PM_headerPdf($name[0]['project_name']);
-						PM_makePropPdf($pdf, str_replace("@","'",$string),$project_id,'P');
-						
-						$filename=PM_footerPdf($pdf, $name[0]['project_name'], PMPDF_PROPERTIES);
-						?>
-						<a href="<?echo $filename;?>" TARGET="_new"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a><?
-				}?>
-						<input type="hidden" name="properties" value="<?php echo strip_tags($string,"<br>");?>" />
-						<input type="hidden" name="make_prop_pdf" value="false" />
-						<input type="button" class="button" value="<?php echo $AppUI->_( 'Make PDF' );?>" onclick='document.prop_report.make_prop_pdf.value="true"; document.prop_report.submit();'>
-						
-					</td>
-					<td>
-						<? 
-						$string=urlencode($string);
-						?>
-						
-							<input type="hidden" name="properties" value="<?php echo strip_tags($string,"<br>");?>" />
-							<input type="hidden" name="summary" value="<?php echo $message;?>" />
-							<input type="submit" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>">
-						
-					</td>
-			</form>
-				</tr>
+								else{
+							 		echo $string=nl2br($AppUI->getProperties());
+									if($string!=''){
+									$string=str_replace("'","@",$string);
+									}
+								}
+							?>&nbsp;
+								</td>
+							</tr>
+							<tr>
+								<td align="right" width="100%">
+								<?if ($_POST['make_prop_pdf']=="true")	{
+									include('modules/report/makePDF.php');
+				
+									$task_level=$explodeTasks;
+									$q  = new DBQuery;
+									$q->addQuery('projects.project_name');
+									$q->addTable('projects');
+									$q->addWhere("project_id = $project_id ");
+									$name = $q->loadList();
+									$pdf = PM_headerPdf($name[0]['project_name']);
+									PM_makePropPdf($pdf, str_replace("@","'",$string),$project_id,'P');
+									
+									$filename=PM_footerPdf($pdf, $name[0]['project_name'], PMPDF_PROPERTIES);
+									?>
+									<a href="<?echo $filename;?>" TARGET="_new"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a>
+						<? 	}?>
+									<input type="hidden" name="properties" value="<?php echo strip_tags($string,"<br>");?>" />
+									<input type="hidden" name="make_prop_pdf" value="false" />
+									<input type="button" class="button" value="<?php echo $AppUI->_( 'Make PDF' );?>" onclick='document.prop_report.make_prop_pdf.value="true"; document.prop_report.submit();'>
+									
+								</td>
+								<td width="0%">
+									<? 
+									$string=urlencode($string);
+									?>
+									
+										<input type="hidden" name="properties" value="<?php echo strip_tags($string,"<br>");?>" />
+										<input type="hidden" name="summary" value="<?php echo $message;?>" />
+										<input type="submit" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>">
+									
+								</td>
+							</tr>
+						</table>
+					</form>
+				</td>
+			</tr>
 		</table>
-	</td>
-</tr>
+		</td>
+	</tr>
 </table>
 <br>
 <?php
