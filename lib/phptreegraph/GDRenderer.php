@@ -167,6 +167,7 @@ class GDRenderer extends Tree
 		while($this->hasNext())
 		{
 			$node = $this->next();
+			
 			if(!is_null($node->image) && imagesx($node->image) > 0)
 			{
 				imagecopyresampled($this->img, $node->image, $node->x, $node->y, 0, 0, $node->w, $node->h, imagesx($node->image), imagesy($node->image));
@@ -179,7 +180,7 @@ class GDRenderer extends Tree
 			{
 				for ($i = 0; $i < $this->borderWidth; $i++)
 				{
-					imagerectangle($this->img, $node->x + $i, $node->y + $i, $node->x + $node->w - $i, $node->y + $node->h - $i, $borderCol);
+					imagerectangle($this->img, $node->x + $i - 1, $node->y - 1, $node->x + $node->w - $i, $node->y + $node->h - $i, $borderCol);
 				}
 			}
 			switch($this->linktype)
