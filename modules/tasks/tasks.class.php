@@ -1061,12 +1061,16 @@ class CTask extends CDpObject {
 			else
 				return "";
 
-		$sql = "SELECT task_parent, task_wbs_index FROM tasks WHERE $tid = task_id";
+		$sql = "SELECT task_parent, task_project, task_wbs_index FROM tasks WHERE $tid = task_id";
 		$r = db_loadList($sql);
 
 		$currentTask = $tid;
 
-		$max_wbs = CTask::getWBSIndexFromParent($r[0]['task_parent'])-1;
+		if ($tid == $r[0]['task_parent'])
+			$max_wbs = CTask::getWBSIndexFromParent("^", $r[0]['task_project'])-1;
+		else
+			$max_wbs = CTask::getWBSIndexFromParent($r[0]['task_parent'])-1;
+
 		$max_wbs_len = strlen($max_wbs);
 		$wbs = str_pad($r[0]['task_wbs_index'], $max_wbs_len, "0", STR_PAD_LEFT);
 
