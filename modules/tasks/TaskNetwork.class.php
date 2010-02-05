@@ -309,7 +309,6 @@ class TaskNetwork {
 		for($i=0;$i<sizeof($this->index);$i++){
 			$rows[$i] = $this->mergeArrayRight($this->index[$i]);
 		}
-
 		$final = $this->mergeArrayUnder($rows);
 		
 		$this->index = $final->index; 
@@ -739,8 +738,8 @@ class TaskNetwork {
 					
 				if(abs($tbx1BlankDown-$tbx2BlankUp)>50){
 					if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
-						$points[3]["x"]= $tbx1BlankLast	;$points[3]["y"]=$tbx1BlankDown;
-						$points[4]["x"]= $tbx1BlankLast	;$points[4]["y"]=$tbx2BlankUp;
+						$points[3]["x"]= ($vertical and !($tbx2))?$tbx2BlankLast:$tbx1BlankLast	;$points[3]["y"]=$tbx1BlankDown;
+						$points[4]["x"]= ($vertical and !($tbx2))?$tbx2BlankLast:$tbx1BlankLast	;$points[4]["y"]=$tbx2BlankUp;
 					}
 					else{//tbx1 e tbx2 sono a sinistra
 						$points[3]["x"]= $tbx1BlankFirst ;$points[3]["y"]=$tbx1BlankDown;
@@ -775,10 +774,10 @@ class TaskNetwork {
 				}
 				$points[3]["x"]= $tbx1BlankRight	;$points[3]["y"]=$tbx1BlankUp;
 					
-				if(abs($tbx1BlankUp-$tbx2BlankDown)>50){
+				if(abs($tbx1BlankUp-$tbx2BlankDown)>50){//se le tbx non sono su righe adiacenti
 					if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
-						$points[4]["x"]= $tbx1BlankLast	;$points[4]["y"]=$tbx1BlankUp;
-						$points[5]["x"]= $tbx1BlankLast	;$points[5]["y"]=$tbx2BlankDown;
+						$points[4]["x"]= ($vertical and !($tbx2))?$tbx2BlankLast:$tbx1BlankLast	;$points[4]["y"]=$tbx1BlankUp;
+						$points[5]["x"]= ($vertical and !($tbx2))?$tbx2BlankLast:$tbx1BlankLast	;$points[5]["y"]=$tbx2BlankDown;
 					}
 					else{//tbx1 e tbx2 sono a sinistra
 						$points[4]["x"]= $tbx1BlankFirst ;$points[4]["y"]=$tbx1BlankUp;
@@ -958,10 +957,10 @@ class TaskNetwork {
 	 
 		
 		$cPath = $output[sizeof($output)-1]; // prendo il critical path
-		$tbxidpath = explode(",",$cPath["id"]);
-		
+		$tbxidpath = explode(",",substr($cPath["id"],strpos($cPath["id"],",")+1));
+
 	//controlla se dipendenze sono nascoste	
-		$tbxfrom = $tbxidpath[1];
+		$tbxfrom = $tbxidpath[0];
 		$coordfrom = $this->getTbxIndex($tbxfrom);
 		$control = true;
 		if(!isset($coordfrom)){
@@ -983,8 +982,8 @@ class TaskNetwork {
 
 		$this->connect($this,null,$coordfrom,true,false,false,$upper,25,$vertical,"black",false,$allArrow);//connetto la start al primo task
 	
-		for($i=2;$i<sizeof($tbxidpath)-1;$i++){
-			$tbxto =  $tbxarray[$i];
+		for($i=1;$i<sizeof($tbxidpath);$i++){
+			$tbxto =  $tbxidpath[$i];
 			
 			$coordfrom = $this->getTbxIndex($tbxfrom);
 			if(!isset($coordfrom)){
@@ -1025,9 +1024,9 @@ class TaskNetwork {
 		
 			
 			
-			$this->connect($this,$coordfrom,$coordto,true,false,$under,$upper,25,$vertical,"black",($timeGaps)?(($upper or $under)?false:true):false,$allArrow);
+			$this->connect($this,$coordfrom,$coordto,true,false,$under,$upper,25-(($i-2)*5),$vertical,"black",($timeGaps)?(($upper or $under)?false:true):false,$allArrow);
 			
-			$coordfrom = $coordto;
+			$tbxfrom = $tbxto;
 		}
 		
 		$tbxfrom = $tbxidpath[sizeof($tbxidpath)-1];
@@ -1050,7 +1049,7 @@ class TaskNetwork {
 			}
 		}
 		
-		$this->connect($this,$coordfrom,null,true,false,$under,false,25,$vertical,"black",false,$allArrow);
+		$this->connect($this,$coordfrom,null,true,false,$under,false,15,$vertical,"black",false,$allArrow);
 		
 	}
 	
@@ -1143,6 +1142,7 @@ class TaskNetwork {
 			$imgTN2x = $TN2->x;
 			$imgTN2y = $TN2->y;
 			$indexTN2 = $TN2->index[0];
+			
 
 
 			$outx = max($imgTNx,$imgTN2x);
@@ -1153,15 +1153,16 @@ class TaskNetwork {
 			$bianco = ImageColorAllocate($out,255,255,255);
 
 
-			$tbxl= $TN2->index[0][0]->getWidth();
-			$tbxlv =intval(substr($TN2->index[0][0]->getName(),0,1))-1;
+			$tbxl= $indexTN2[0]->getWidth();
+			$tbxlv =intval(substr($indexTN2[0]->getId(),0,1))-1;
+			$idObj= new TaskBoxDB($indexTN2[0]->getId());
+			$tbxlv = intval(substr($idObj->getWBS(),0,1))-1; 
 			$gap=$tbxl + 200;
 			
 			//copio la prima immagine nell'output centrata
 			imagecopy($out,$imgTN,(!$vertical)?(($outx/2)-($imgTNx/2)):0,0,0,0,$imgTNx,$imgTNy);
 			//e poi la seconda centrata
 			imagecopy($out,$imgTN2,(!$vertical)?(($outx/2)-($imgTN2x/2)):($tbxlv*$gap),$outy-$imgTN2y,0,0,$imgTN2x,$imgTN2y);
-
 
 			imagedestroy($imgTN);
 			imagedestroy($imgTN2);
