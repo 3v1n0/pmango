@@ -39,6 +39,7 @@ class Tree
 	private $largestLevel = array();
 	private $previousLevelNode = array();
 	private $nodes = array();
+	private $nodesmaxID = 0;
 	private $root;
 	private $LevelSeparation;
 	private $SiblingSeparation;
@@ -84,6 +85,7 @@ class Tree
 		$w = ($w == 0) ? $this->defaultWidth : $w;
 		$h = ($h == 0) ? $this->defaultHeight : $h;
 		$node = new Node($id, $pid, $w, $h, $message, $image, $wpadding, $hpadding);
+
 		if(isset($this->nodes[$pid]))
 		{
 			$pnode = $this->nodes[$pid];
@@ -97,11 +99,11 @@ class Tree
 			$this->root->childs[] = $node;
 		}
 		$this->nodes[$id] = $node;
+		$this->nodesmaxID = max($this->nodesmaxID, $id);
 	}
 
 	private function firstwalk($node, $level)
 	{
-		
 		$this->setLevelHeight($node, $level);
         $this->setLevelWidth($node, $level);
         $this->setNeighbors($node, $level);
@@ -332,15 +334,16 @@ class Tree
 		{
 			$this->render();
 		}
-		if(isset($this->nodes[$this->position+1]))
-		{
-			$this->position++;
-			return $this->nodes[$this->position];
-		}
-		else
-		{
+		
+		if ($this->position >= $this->nodesmaxID)
 			return false;
+		
+		do {
+			$this->position++;
 		}
+		while(!isset($this->nodes[$this->position]) && $this->position <= $this->nodesmaxID);
+		
+		return $this->nodes[$this->position];
 	}
 
 
@@ -349,11 +352,10 @@ class Tree
 	 */
 	public function hasNext()
 	{
-		if(!isset($this->nodes[$this->position+1]) )
-		{
+		if ($this->position < $this->nodesmaxID)
+			return true;
+		else
 			return false;
-		}
-		return true;
 	}
 
 	public function getNodeAt($i)
