@@ -15,6 +15,8 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
+ - 2010.02.01 Marco Trevisan
+   Third version, added a method to unset a session variable
  - 2006.07.18 Lorenzo
    Second version, modified to create new interface.
  - 2006.07.18 Lorenzo
@@ -97,7 +99,7 @@ class CAppUI {
 /** @var string */
 	var $user_last_name=null;
 /** @var string */
-	var $user_groups=null;// l'indice è il gruppo e il valore è il set di cap.
+	var $user_groups=null;// l'indice Ã¨ il gruppo e il valore Ã¨ il set di cap.
 /** @var int */
 	var $user_day_hours=null;
 /** @var string */
@@ -699,17 +701,28 @@ class CAppUI {
 * @param string The label or key of the state variable
 * @param mixed Value to assign to the label/key
 */
-	function setState( $label, $value = null) {
+	function setState($label, $value = null) {
 		if (isset($value))
 			$this->state[$label] = $value;
+	}
+/**
+* Unset the value of a temporary state variable.
+*
+* The state is only held for the duration of a session.  It is not stored in the database.
+* Also do not set the value if it is unset.
+* @param string The label or key of the state variable
+*/
+	function unsetState($label) {
+		if (isset($value))
+			unset($this->state[$label]);
 	}
 /**
 * Get the value of a temporary state variable.
 * If a default value is supplied and no value is found, set the default.
 * @return mixed
 */
-	function getState( $label, $default_value = null ) {
-		if (array_key_exists( $label, $this->state)) {
+	function getState($label, $default_value = null ) {
+		if (array_key_exists($label, $this->state)) {
 			return $this->state[$label];
 		} else if (isset($default_value)) {
 			$this->setState($label, $default_value);
@@ -803,7 +816,7 @@ class CAppUI {
 		$q->addQuery('us.group_id, ga.value');//manca da inserire i groups e i set cap
 		$q->addJoin('gacl_aro_groups', 'ga', 'ga.id = us.setcap_id');
 		$q->addWhere("us.setcap_id <> 0 && us.user_id = $user_id");
-		$this->user_groups = $q->loadHashList();// c'è inserito anche ALL GROUPS
+		$this->user_groups = $q->loadHashList();// c'Ã¨ inserito anche ALL GROUPS
 		foreach ($this->user_groups as $g => $sc)
 			$this->user_groups[$g]="'".$sc."'";
 // load the user preferences
@@ -819,7 +832,7 @@ class CAppUI {
 		$q->addQuery('us.group_id, ga.value');//manca da inserire i groups e i set cap
 		$q->addJoin('gacl_aro_groups', 'ga', 'ga.id = us.setcap_id');
 		$q->addWhere("us.setcap_id <> 0 && us.user_id = $this->user_id");
-		$this->user_groups = $q->loadHashList();// c'è inserito anche ALL GROUPS
+		$this->user_groups = $q->loadHashList();// c'Ã¨ inserito anche ALL GROUPS
 		foreach ($this->user_groups as $g => $sc)
 			$this->user_groups[$g]="'".$sc."'";
 	}
