@@ -1071,8 +1071,7 @@ class CTask extends CDpObject {
 		else
 			$max_wbs = CTask::getWBSIndexFromParent($r[0]['task_parent'])-1;
 
-		$max_wbs_len = strlen($max_wbs);
-		$wbs = str_pad($r[0]['task_wbs_index'], $max_wbs_len, "0", STR_PAD_LEFT);
+		$wbs = str_pad($r[0]['task_wbs_index'], strlen($max_wbs), "0", STR_PAD_LEFT);
 
 		if ($r[0]['task_parent'] == $tid) {
 			if (!$isRootChildren)
@@ -1084,15 +1083,18 @@ class CTask extends CDpObject {
 		while ($currentTask != $r[0]['task_parent']) {
 			$currentTask = $r[0]['task_parent'];
 			if (!is_null($currentTask)) {
-				$sql = "SELECT task_wbs_index, task_parent FROM tasks WHERE $currentTask = task_id";
+				$sql = "SELECT task_wbs_index, task_parent, task_project FROM tasks WHERE $currentTask = task_id";
 				$r = db_loadList($sql);
 				$task_index = $r[0]['task_wbs_index'];
 				if (empty($task_index))
 					break;
 				
-				$max_wbs = CTask::getWBSIndexFromParent($r[0]['task_parent'])-1;
-				$max_wbs_len = strlen($max_wbs);
-				$wbs = $task_index.".".str_pad($wbs, $max_wbs_len, "0", STR_PAD_LEFT);
+				if ($currentTask == $r[0]['task_parent'])
+					$max_wbs = CTask::getWBSIndexFromParent("^", $r[0]['task_project'])-1;
+				else
+					$max_wbs = CTask::getWBSIndexFromParent($r[0]['task_parent'])-1;
+
+				$wbs = str_pad($task_index, strlen($max_wbs), "0", STR_PAD_LEFT).".".$wbs;
 			}
 		}
 		return $wbs;
