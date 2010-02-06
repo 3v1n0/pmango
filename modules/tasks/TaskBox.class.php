@@ -17,6 +17,8 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
+ - 2010.02.05
+   0.7, support for minimal width setting
  - 2010.01.27
    0.6, resource wrapping support.
  - 2010.01.14
@@ -300,7 +302,7 @@ class TaskBox {
 		$widthTester =  str_repeat("3", $this->cMinTitleLen);
 			
 		if ($this->pMinWidth == 0 && $this->pMinTitleLen > $this->cMinTitleLen) {
-				$widthTester = str_repeat("3", $this->pMinTitleLen);
+			$widthTester = str_repeat("3.", $this->pMinTitleLen);
 		}
 
 		$tmp = new TextBlock("+ ".$widthTester, $this->pFontBold, $this->pFontSize);
