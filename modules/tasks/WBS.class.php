@@ -88,6 +88,7 @@ class WBS /*implements PMGraph TODO */ {
 	private $pTasksTable;
 	private $pTree;
 	private $pNodeID;
+	private $pMaxTaskWBS;
 	
 	public function WBS($project, $level_space = 35, $node_space = 10, $subtree_space = 30) {
 		$this->pProject = $project;
@@ -109,6 +110,7 @@ class WBS /*implements PMGraph TODO */ {
 		$this->pTasksTable = array();
 		$this->pTree = new GDRenderer($level_space, $node_space, $subtree_space);
 		$this->pNodeID = 1;
+		$this->pMaxTaskWBS = 0;
 	}
 
 	public function setProject($p) {
@@ -272,6 +274,8 @@ class WBS /*implements PMGraph TODO */ {
 				$this->pTasks[$wbs]['tbxdb'] = $tbxdb;
 				$this->pTasks[$wbs]['id'] = $this->pNodeID;
 				$this->pTasksTable[$task['task_id']] = $this->pNodeID;
+				
+				$this->pMaxTaskWBS = max($this->pMaxTaskWBS, strlen($wbs)-substr_count($wbs, '.'));
 		
 				$this->pNodeID++;
 			}
@@ -298,6 +302,7 @@ class WBS /*implements PMGraph TODO */ {
 				
 			$tbxdb = $task['tbxdb'];
 			$tbx = new TaskBox($tbxdb->getWBS());
+			$tbx->setMinTitleLen($this->pMaxTaskWBS);
 			
 			if ($this->pShowNames)
 				$tbx->setName($tbxdb->getTaskName());
