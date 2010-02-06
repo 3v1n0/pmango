@@ -230,7 +230,7 @@ class WBS /*implements PMGraph TODO */ {
 	private function pullTasks() {
 		$query = "SELECT task_id, task_parent FROM tasks t ".
 		         "WHERE t.task_project = ".$this->pProject." ".
-		         "ORDER BY task_id, task_parent, task_wbs_index";
+		         "ORDER BY task_id, task_parent, CAST(task_wbs_index as UNSIGNED)";
 		
 		$result = db_exec($query);
 		$error = db_error();
@@ -266,6 +266,7 @@ class WBS /*implements PMGraph TODO */ {
 				$tbxdb = new taskBoxDB($task['task_id']);
 				
 				$wbs = $tbxdb->getWBS();
+				if (isset($this->pTasks[$wbs])) continue;
 				$this->pTasks[$wbs]['task_id'] = $task['task_id'];
 				$this->pTasks[$wbs]['task_parent'] = $task['task_parent'];
 				$this->pTasks[$wbs]['tbxdb'] = $tbxdb;
