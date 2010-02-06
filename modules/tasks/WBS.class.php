@@ -17,6 +17,8 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
+ - 2010.02.05
+   0.9.1, computing the max wbs level for sizing the task boxes
  - 2010.01.26
    0.9, created a WBS class for simpler usage
    0.7, taskbox expansion sign support, improved performances
@@ -243,12 +245,12 @@ class WBS /*implements PMGraph TODO */ {
 		
 		if (!empty($this->pTasks))
 			$this->pTasks = array();
-		
+
 		for ($i = 0; $i < db_num_rows($result); $i++) {
 			$task = db_fetch_assoc($result);
 			
 			$add = false;
-		    
+			
 			if ($task["task_id"] == $task["task_parent"])
 				$add = true;
 		
@@ -296,7 +298,6 @@ class WBS /*implements PMGraph TODO */ {
 			$parent = 1;
 			if ($task['task_parent'] != $task['task_id'] && $task['task_parent'] > 1) {
 				$parent = $this->pTasksTable[$task['task_parent']];
-				
 				if (!$parent) continue;
 			}
 				
