@@ -69,16 +69,19 @@ $q->addOrder('user_first_name, user_last_name');
 $users = arrayMerge( array( '-1' => $AppUI->_('All Users') ), $q->loadHashList() );
 $users = arrayMerge( array( '-2' => $AppUI->_('Group by User') ), $users );
 
-if (isset($_POST['show_log_options'])) {
-	$AppUI->setState( 'ProjectsTaskLogsHideArchived', dPgetParam($_POST, 'hide_inactive', 0) );
-	$AppUI->setState( 'ProjectsTaskLogsUserFilter', $_POST['user_id'] );
-	$AppUI->setState( 'ProjectsTaskLogsHideComplete', dPgetParam($_POST, 'hide_complete', 0) );
+if (!empty($_POST)) {
+	$logs_options['hide_inactive'] = dPgetBoolParam($_POST, 'hide_inactive');
+	$logs_options['hide_complete'] = dPgetBoolParam($_POST, 'hide_complete');
+	$logs_options['user_filter'] = dPgetParam($_POST, 'user_id', -1);
+	$AppUI->setState('ProjectsTaskLogsOptions', $logs_options);
 }
 
-$hide_inactive = $AppUI->getState( 'ProjectsTaskLogsHideArchived', 0 );
-$hide_complete = $AppUI->getState( 'ProjectsTaskLogsHideComplete' );
-$user_id = $AppUI->getState( 'ProjectsTaskLogsUserFilter' ) ? $AppUI->getState( 'ProjectsTaskLogsUserFilter' ) : -1;
+if (!isset($logs_options))
+	$logs_options = $AppUI->getState('ProjectsTaskLogsOptions');
 
+$hide_inactive = $logs_options ? $logs_options['hide_inactive'] : false;
+$hide_complete = $logs_options ? $logs_options['hide_complete'] : false;
+$user_id = $logs_options ? $logs_options['user_filter'] : -1;
 
 $sql="SELECT projects.project_start_date FROM projects WHERE project_id ='$project_id'";
 $db_start_date = db_loadColumn($sql);
@@ -208,13 +211,13 @@ function showFullProject() {
 						<tr>
 							<td class="tab_setting_title" rowspan="2"><?php echo $AppUI->_('Hide');?>:</td>
 							<td class="tab_setting_item">
-								<input type='checkbox' id="hide_inactive" name='hide_inactive' <?php echo $hide_inactive ? '' : 'checked="checked"';?> />
+								<input type='checkbox' id="hide_inactive" name='hide_inactive' <?php echo $hide_inactive ? 'checked="checked"' : '';?> />
 								<label for="hide_inactive"><?php echo $AppUI->_('Inactive tasks'); ?></label>
 							</td>
 						</tr>
 						<tr>
 							<td class="tab_setting_item">
-								<input type='checkbox' id='hide_complete' name='hide_complete' <?php echo $hide_complete ? '' : 'checked="checked"';?> />
+								<input type='checkbox' id='hide_complete' name='hide_complete' <?php echo $hide_complete ? 'checked="checked"' : '';?> />
 								<label for="hide_complete"><?php echo $AppUI->_('Completed tasks'); ?></label>
 							</td>
 						</tr>
