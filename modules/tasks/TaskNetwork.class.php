@@ -127,6 +127,8 @@ class TaskNetwork {
 	private $pShowPlannedTimeframe;
 	private $pShowActualTimeframe;
 	private $pShowAlerts;
+	
+	private $pError;
 
 	function TaskNetwork($project){
 		$this->project = $project;
@@ -150,6 +152,7 @@ class TaskNetwork {
 		$this->img = ImageCreate(1,1); //immagine vuota iniziale della TN
 		$this->x = 1; 					//larghezza della TN
 		$this->y = 1;					//altezza della TN
+		$this->pError = false;
 	}
 
 	
@@ -418,20 +421,27 @@ class TaskNetwork {
 		}
 
 	public function draw($format = "png", $file = null) {
-		switch ($format) {
-			case "png":
-				if (!$file) header("Content-type: image/png");
-				imagepng($this->getImage(), $file);
-				break;
-			case "jpg":
-			case "jpeg":
-				if (!$file) header("Content-type: image/jpeg");
-				imagejpeg($this->getImage(), $file);
-				break;
-			case "gif":
-				if (!$file) header("Content-type: image/gif");
-				imagegif($this->getImage(), $file);
-				break;
+//TODO fare visualizzare l'errore quando occorre
+		if($this->pError){
+			echo "Errore: Il cp non puo essere visualizzato perchè fa riferimento a Task Box non presenti nella TN.<br>";
+			echo "Selezionare un livello di vista inferiore per visualizzare il critical path.";
+		}
+		else{
+			switch ($format) {
+				case "png":
+					if (!$file) header("Content-type: image/png");
+					imagepng($this->getImage(), $file);
+					break;
+				case "jpg":
+				case "jpeg":
+					if (!$file) header("Content-type: image/jpeg");
+					imagejpeg($this->getImage(), $file);
+					break;
+				case "gif":
+					if (!$file) header("Content-type: image/gif");
+					imagegif($this->getImage(), $file);
+					break;
+			}
 		}
 	}
 
@@ -593,7 +603,7 @@ class TaskNetwork {
 			
 		}		
 	}
-	
+	// fare un metodo unico per tutte le connessioni non è molto funzionale, meglio riscrivere il codice per ogni tipologia di connessioni
 	private function connect(TaskNetwork $TaskNetwork, $ID1,$ID2,$criticalPath=false, $dash = false,$under= false,$upper=false, $dist=0,$vertical=false,$color="black",$timeGap = false,$allArrow= false){
 		$type;$colore;$text=true;
 		if(!$criticalPath){
@@ -967,6 +977,7 @@ class TaskNetwork {
 			while ($control){
 				$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
 				$result = TaskNetwork::doQuery($q);
+				if($result[0][0] == $tbxfrom){$this->pError = true;exit();}
 				$coordfrom = $this->getTbxIndex($result[0][0]);
 				if(isset($coordfrom)){
 					$upper = true;	
@@ -991,6 +1002,7 @@ class TaskNetwork {
 				while ($control){
 					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
 					$result = TaskNetwork::doQuery($q);
+					if($result[0][0] == $tbxfrom){$this->pError = true;exit();}
 					$coordfrom = $this->getTbxIndex($result[0][0]);
 					if(isset($coordfrom)){
 						$under = true;	
@@ -1009,6 +1021,7 @@ class TaskNetwork {
 				while ($control){
 					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxto;
 					$result = TaskNetwork::doQuery($q);
+					if($result[0][0] == $tbxto){$this->pError = true;exit();}
 					$coordto = $this->getTbxIndex($result[0][0]);
 					if(isset($coordto)){
 						$upper = true;	
@@ -1036,6 +1049,7 @@ class TaskNetwork {
 			while ($control){
 				$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
 				$result = TaskNetwork::doQuery($q);
+				if($result[0][0] == $tbxfrom){$this->pError = true;exit();}
 				$coordfrom = $this->getTbxIndex($result[0][0]);
 				if(isset($coordfrom)){
 					$under = true;	
