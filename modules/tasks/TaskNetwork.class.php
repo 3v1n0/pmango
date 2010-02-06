@@ -670,7 +670,7 @@ class TaskNetwork {
 		}
 
 		/////////////////////////////////
-		if(abs($tbx1ry-$tbx2ly)<20){//le tbx sono sulla stessa riga
+		if(abs($tbx1ry-$tbx2ly)<40){//le tbx sono sulla stessa riga
 			$points;
 			if(abs($tbx2lx-$tbx1rx)<300){ //adiacenti
 
