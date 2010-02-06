@@ -86,6 +86,11 @@ class TaskBox {
 	private $pMinWidth;
 	private $pMaxWidth;
 	private $pMaxLineHeight;
+	private $pMinTitleLen;
+	
+	//--
+	private $cMinTitleLen = 3;
+	private $cMaxWidthMultiplier = 3;
 
 	const ALERT_NONE = 0;
 	const ALERT_WARNING = 1;
@@ -106,7 +111,9 @@ class TaskBox {
 		$this->pImgBlock = null;
 		$this->pGDImage = null;
 		$this->pChanged = true;
+		$this->pMinWidth = 0;
 		$this->pAlertSize = 0;
+		$this->pMinTitleLen = 0;
 	}
 
 	public function setName($n) {
@@ -259,6 +266,14 @@ class TaskBox {
 		$this->pFontSize = intval($b) > 0 ? $b : 10;
 		$this->pChanged = true;
 	}
+	
+	public function setMinWidth($w) {
+		$this->pMinWidth = intval($w) > 0 ? $w : 0;
+	}
+	
+	public function setMinTitleLen($l) {
+		$this->pMinTitleLen = intval($l) > 0 ? $l : 0;
+	}
 
 	private function computeFontSize() { //TODO
 		//Depends on setSize() ...
@@ -279,11 +294,23 @@ class TaskBox {
 			exit("You must provide valid font files and path!\n");
 
 		$this->pBorderSize = 1;
+	}
+	
+	private function computeMinSize() {
+		$widthTester =  str_repeat("3", $this->cMinTitleLen);
+			
+		if ($this->pMinWidth == 0 && $this->pMinTitleLen > $this->cMinTitleLen) {
+				$widthTester = str_repeat("3", $this->pMinTitleLen);
+		}
 
-		$tmp = new TextBlock("+ 3.3.3", $this->pFontBold, $this->pFontSize);
+		$tmp = new TextBlock("+ ".$widthTester, $this->pFontBold, $this->pFontSize);
 		$tmp = new BorderedBlock($tmp, 0, $this->pFontSize);
-		$this->pMinWidth = $tmp->getWidth();
-		$this->pMaxWidth = $this->pMinWidth * 3;
+		
+		if ($this->pMinWidth == 0) {
+			$this->pMinWidth = $tmp->getWidth();
+			$this->pMaxWidth = $this->pMinWidth * $this->cMaxWidthMultiplier;
+		}
+		
 		$this->pMinHeight = $tmp->getHeight() + intval(($tmp->getHeight()/100) * 50);
 	}
 
@@ -306,6 +333,7 @@ class TaskBox {
 			return;
 
 		$this->init();
+		$this->computeMinSize();
 
 		$mainVBox = new VerticalBoxBlock(0);
 		$mainVBox->setSpace(-1);
@@ -317,7 +345,7 @@ class TaskBox {
 
 		$hbox = new HorizontalBoxBlock($this->pBorderSize);
 		$hbox->setMerge(true);
-		$hbox->setSpace($this->pFontSize);
+		$hbox->setSpace($this->isMinimal() ? $this->pFontSize/2 : $this->pFontSize);
 		$hbox->addBlock($header);
 		$hbox->setMinHeight($this->pMinHeight);
 
