@@ -80,26 +80,25 @@ $tab = dPgetParam($_REQUEST, 'tab', 0);
 if (isset($_POST['sdate']))	;
 if (isset($_POST['edate']))	;
 
-
 if (!empty($_POST) && !dPgetBoolParam($_POST, 'make_pdf')) {
-	$pre = $AppUI->getState('TaskLogs');
-	$pre_date = $AppUI->getState('TasksDate');
+	$pre = getProjectState('TaskLogs');
+	$pre_date = getProjectState('TasksDate');
 	
-	$AppUI->setSubState('TasksDate', 'Start', dPgetParam($_POST, 'sdate', $db_start_date[0]));
-	$AppUI->setSubState('TasksDate', 'End', dPgetParam($_POST, 'edate', $db_finish_date[0]));
-	$AppUI->setSubState('TaskLogs', 'hide_inactive', dPgetBoolParam($_POST, 'hide_inactive'));
-	$AppUI->setSubState('TaskLogs', 'hide_complete', dPgetBoolParam($_POST, 'hide_complete'));
-	$AppUI->setSubState('TaskLogs', 'user_filter', dPgetParam($_POST, 'user_id', -1));
+	setProjectSubState('TaskDates', 'Start', dPgetParam($_POST, 'sdate', $db_start_date[0]));
+	setProjectSubState('TaskDates', 'End', dPgetParam($_POST, 'edate', $db_finish_date[0]));
+	setProjectSubState('TaskLogs', 'hide_inactive', dPgetBoolParam($_POST, 'hide_inactive'));
+	setProjectSubState('TaskLogs', 'hide_complete', dPgetBoolParam($_POST, 'hide_complete'));
+	setProjectSubState('TaskLogs', 'user_filter', dPgetParam($_POST, 'user_id', -1));
 	
-	if ($AppUI->getState('TaskLogs') != $pre || $AppUI->getState('TasksDate') != $pre_date)
+	if (getProjectState('TaskLogs') != $pre || getProjectState('TasksDate') != $pre_date)
 		deletePDF($project_id, PMPDF_LOG);
 }
 
-$StartDate = $AppUI->getSubState('TasksDate', 'Start', $db_start_date[0]);
-$EndDate = $AppUI->getSubState('TasksDate', 'End', $db_finish_date[0]);
-$hide_inactive = $AppUI->getSubState('TaskLogs', 'hide_inactive', false);
-$hide_complete = $AppUI->getSubState('TaskLogs', 'hide_complete', false);
-$user_id = $AppUI->getSubState('TaskLogs', 'user_filter', -1);
+$StartDate = getProjectSubState('TaskDates', 'Start', $db_start_date[0]);
+$EndDate = getProjectSubState('TaskDates', 'End', $db_finish_date[0]);
+$hide_inactive = getProjectSubState('TaskLogs', 'hide_inactive', false);
+$hide_complete = getProjectSubState('TaskLogs', 'hide_complete', false);
+$user_id = getProjectSubState('TaskLogs', 'user_filter', -1);
 
 $q->clear();
 $q->addQuery('project_group,project_current');
@@ -300,7 +299,7 @@ function showFullProject() {
 					generateLogPDF($project_id, $user_id, $hide_inactive, $hide_complete, $start_date, $end_date);
 				}
 
-				$pdf = $AppUI->getSubState('PDFReports', PMPDF_LOG);
+				$pdf = getProjectSubState('PDFReports', PMPDF_LOG);
 				
 				if ($pdf) {
 ?>

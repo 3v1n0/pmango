@@ -55,6 +55,8 @@ define("CELLH",3);
 define("SPACE",1);
 define("BORD",1);
 
+define("PMPDF_DIRECTORY", "./modules/report/pdf/");
+
 define("PMPDF_REPORT", 0);
 define("PMPDF_PLANNED", 1);
 define("PMPDF_ACTUAL", 2);
@@ -436,7 +438,7 @@ function PM_filenamePdf($project_name, $pdf_type = PMPDF_REPORT) {
 		break;
 	}
 	
-	return "./modules/report/pdf/".$AppUI->user_id."-".$filename.".pdf";
+	return PMPDF_DIRECTORY.$AppUI->user_id."-".$filename.".pdf";
 }
 
 function PM_footerPdf($pdf, $project_name, $pdf_type = 0){

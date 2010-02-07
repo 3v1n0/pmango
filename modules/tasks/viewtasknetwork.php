@@ -62,9 +62,9 @@ if (!empty($_POST)) {
 
 	if ($task_level != $new_task_level) {
 		$task_level = $new_task_level;
-		$AppUI->setSubState('Tasks', 'Explode', $task_level);
-		$AppUI->setSubState('Tasks', 'opened', array());
-		$AppUI->setSubState('Tasks', 'closed', array());
+		setProjectSubState('Tasks', 'Explode', $task_level);
+		setProjectSubState('Tasks', 'opened', array());
+		setProjectSubState('Tasks', 'closed', array());
 	}
 }
 
@@ -412,7 +412,7 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 							<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
 <?php
 									$maxLevel = CTask::getLevel($project_id);
-									$explodeTasks = $AppUI->getSubState('Tasks', 'Explode', 1);
+									$explodeTasks = getProjectSubState('Tasks', 'Explode', 1);
 				
 							 		for($i=1; $i <=$maxLevel;$i++){
 											$arr2[$i-1] = "Level ".$i;

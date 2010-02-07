@@ -99,6 +99,7 @@ require_once "$baseDir/includes/main_functions.php";
 require_once "$baseDir/classes/ui.class.php";
 require_once "$baseDir/classes/permissions.class.php";
 require_once "$baseDir/includes/session.php";
+require_once "$baseDir/functions/project_state.php";
 
 // don't output anything. Usefull for fileviewer.php, gantt.php, etc.
 $suppressHeaders = dPgetParam( $_GET, 'suppressHeaders', false );
@@ -115,7 +116,7 @@ header ("Pragma: no-cache");	// HTTP/1.0
 // check if session has previously been initialised
 if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
     if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
-    {
+    {  
         $AppUI =& $_SESSION['AppUI'];
 		$user_id = $AppUI->user_id;
         addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
@@ -387,7 +388,6 @@ else
   echo $AppUI->_("Missing file. Possible Module \"$m\" missing!");
 }
 if(!$suppressHeaders) {
-	echo '<iframe name="thread" src="about:blank" width="0" height="0" frameborder="0"></iframe>';
 	require "$baseDir/style/$uistyle/footer.php";
 }
 ob_end_flush();
