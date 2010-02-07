@@ -115,13 +115,14 @@ header ("Pragma: no-cache");	// HTTP/1.0
 
 // check if session has previously been initialised
 if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
+	
     if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
     {  
         $AppUI =& $_SESSION['AppUI'];
-		$user_id = $AppUI->user_id;
+        $old_user_id = $AppUI->user_id;
         addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
     }
-
+    
 	$_SESSION['AppUI'] = new CAppUI;
 }
 $AppUI =& $_SESSION['AppUI'];
@@ -141,14 +142,6 @@ $AppUI->updateLastAction($last_insert_id);
 // load default preferences if not logged in
 if ($AppUI->doLogin()) {
 	$AppUI->loadPrefs( 0 );
-}
-
-//Function register logout in user_acces_log
-if (isset($user_id) && isset($_GET['logout'])){
-    $AppUI->registerLogout($user_id);
-    
-    $sql="DELETE FROM reports WHERE user_id=".$user_id;
-    db_exec( $sql ); db_error();
 }
 
 // check is the user needs a new password
@@ -171,6 +164,8 @@ if (dPgetParam( $_POST, 'lostpass', 0 )) {
 // Note the change to REQUEST instead of POST.  This is so that we can
 // support alternative authentication methods such as the PostNuke
 // and HTTP auth methods now supported.
+$just_logged_in = false;
+
 if (isset($_REQUEST['login'])) {
 
 	$username = dPgetParam( $_POST, 'username', '' );
@@ -183,12 +178,29 @@ if (isset($_REQUEST['login'])) {
 	if (!$ok) {
 		$AppUI->setMsg( 'Login Failed');
 	} else {
-	           //Register login in user_acces_log
-	           $AppUI->registerLogin();
+		//Register login in user_acces_log
+		$AppUI->registerLogin();
+		$just_logged_in = true;
 	}
     addHistory('login', $AppUI->user_id, 'login', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
-	$AppUI->redirect( "$redirect" );
 }
+
+//Function register logout in user_acces_log
+if ((isset($old_user_id) && (isset($_GET['logout'])) || $just_logged_in)) {
+	$user = !$AppUI->doLogin() ? $AppUI->user_id : $old_user_id;
+	
+	include_once "$baseDir/modules/report/generatePDF.php";
+    purgeUserPDFs($user);
+    
+    $sql="DELETE FROM reports WHERE user_id = ".$user;
+    db_exec($sql); db_error();
+    
+    if (!$just_logged_in)
+    	$AppUI->registerLogout($user);
+}
+
+if ($just_logged_in)
+	$AppUI->redirect("$redirect");
 
 // supported since PHP 4.2
 // writeDebug( var_export( $AppUI, true ), 'AppUI', __FILE__, __LINE__ );
