@@ -21,7 +21,7 @@
  PMango - A web application for project planning and control.
 
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi
- Copyright (C) 2009-2010 Marco Trevisan (Treviño) <mail@3v1n0.net>
+ Copyright (C) 2009-2010 Matteo Pratesi (Treviño) <pratesi.matteo@gmail.com>
  All rights reserved.
 
  PMango reuses part of the code of dotProject 2.0.1: dotProject code is
@@ -129,6 +129,7 @@ class TaskNetwork {
 	private $pShowAlerts;
 	
 	private $pError;
+	private $pChanged;
 
 	function TaskNetwork($project){
 		$this->project = $project;
@@ -149,64 +150,78 @@ class TaskNetwork {
 			$this->pShowAlerts = false;
 		}		
 		$this->index = array();
-		$this->img = ImageCreate(1,1); //immagine vuota iniziale della TN
-		$this->x = 1; 					//larghezza della TN
-		$this->y = 1;					//altezza della TN
+		$this->x = 1;
+		$this->y = 1;
+		$this->img = ImageCreate($this->x, $this->y);
 		$this->pError = false;
+		$this->pChanged = true;
 	}
 
 	
 //------Funzioni di classe------------
 	public function setProject($p) {
 		$this->project = abs(intval($p));
+		$this->pChanged = true;
 	}
 
 	public function setTaskLevel($tl) {
 		$this->pTaskLevel = intval($tl) > 1 ? intval($tl)-1 : 0;
+		$this->pChanged = true;
 	}
 
 	public function setOpenedTasks($tsk) {
 		$this->pOpenedTasks = is_array($tsk) ? $tsk : array();
+		$this->pChanged = true;
 	}
 
 	public function setClosedTasks($tsk) {
 		$this->pClosedTasks = is_array($tsk) ? $tsk : array();
+		$this->pChanged = true;
 	}
 	
 	public function showVertical($show) {
 		$this->pShowVertical = $show ? true : false;
+		$this->pChanged = true;
 	}
 	
 	public function showAllArrow($show) {
-		$this->pShowAllArrow = $show ? true : false;	
+		$this->pShowAllArrow = $show ? true : false;
+		$this->pChanged = true;	
 	}
 	
 	public function showDefaultDependencies($show) {
 		$this->pShowDefaultDependencies = $show ? true : false;
+		$this->pChanged = true;
 	}
 	
 	public function showDependencies($show) {
 		$this->pShowDependencies = $show ? true : false;
+		$this->pChanged = true;
 	}
 
 	public function showCriticalPath($show) {
 		$this->pShowCriticalPath = $show ? true : false;
+		$this->pChanged = true;
 	}
 		
 	public function showNames($show) {
 		$this->pShowNames = $show ? true : false;
+		$this->pChanged = true;
 	}
 	
 	public function showProgress($show) {
 		$this->pShowProgress = $show ? true : false;
+		$this->pChanged = true;
 	}
 	
 	public function showPlannedData($show) {
 		$this->pShowPlannedData = $show ? true : false;
+		$this->pChanged = true;
 	}
 
 	public function showActualData($show) {
 		$this->pShowActualData = $show ? true : false;
+		$this->pChanged = true;
 	}
 	
 	public function showPlannedResources($show) {
@@ -214,6 +229,8 @@ class TaskNetwork {
 		
 		if ($this->pShowPlannedResources)
 			$this->pShowActualResources = false;
+		
+		$this->pChanged = true;
 	}
 
 	public function showActualResources($show) {
@@ -221,33 +238,41 @@ class TaskNetwork {
 		
 		if ($this->pShowActualResources)
 			$this->pShowPlannedResources = false;
+			
+		$this->pChanged = true;
 	}
 	
 	public function showPlannedTimeframe($show) {
 		$this->pShowPlannedTimeframe = $show ? true : false;
+		$this->pChanged = true;
 	}
 
 	public function showActualTimeframe($show) {
 		$this->pShowActualTimeframe = $show ? true : false;
+		$this->pChanged = true;
 	}
 	
 	public function showAlerts($show) {
 		$this->pShowAlerts = $show ? true : false;
+		$this->pChanged = true;
 	}
 	
 	public function showTimeGaps($show) {
 		$this->pShowTimeGaps = $show ? true : false;
+		$this->pChanged = true;
 	}
 	
 	public function getType() {
-		return "Task Network";
+		return "TaskNetwork";
 	}
 	
 	public function getWidth() {
+		$this->buildTN();
 		return $this->x;
 	}
 	
 	public function getHeight() {
+		$this->buildTN();
 		return $this->y;
 	}
 
@@ -257,6 +282,9 @@ class TaskNetwork {
 	}
 	
 	private function buildTN(){
+		if ($this->x > 1 && $this->y > 1 && !$this->pChanged)
+			return;
+		
 		$vertical = $this->pShowVertical;
 		$res=$this->getTbxFromLevel($this->pTaskLevel);
 		
@@ -421,27 +449,26 @@ class TaskNetwork {
 		}
 
 	public function draw($format = "png", $file = null) {
-//TODO fare visualizzare l'errore quando occorre
+
 		if($this->pError){
-			echo "Errore: Il cp non puo essere visualizzato perchè fa riferimento a Task Box non presenti nella TN.<br>";
-			echo "Selezionare un livello di vista inferiore per visualizzare il critical path.";
+			//TODO fare visualizzare l'errore quando occorre
+			//return;
 		}
-		else{
-			switch ($format) {
-				case "png":
-					if (!$file) header("Content-type: image/png");
-					imagepng($this->getImage(), $file);
-					break;
-				case "jpg":
-				case "jpeg":
-					if (!$file) header("Content-type: image/jpeg");
-					imagejpeg($this->getImage(), $file);
-					break;
-				case "gif":
-					if (!$file) header("Content-type: image/gif");
-					imagegif($this->getImage(), $file);
-					break;
-			}
+		
+		switch ($format) {
+			case "png":
+				if (!$file) header("Content-type: image/png");
+				imagepng($this->getImage(), $file);
+				break;
+			case "jpg":
+			case "jpeg":
+				if (!$file) header("Content-type: image/jpeg");
+				imagejpeg($this->getImage(), $file);
+				break;
+			case "gif":
+				if (!$file) header("Content-type: image/gif");
+				imagegif($this->getImage(), $file);
+				break;
 		}
 	}
 
