@@ -6,9 +6,9 @@ function getProjectName($project_id) {
 	$q->addQuery('projects.project_name');
 	$q->addTable('projects');
 	$q->addWhere("project_id = $project_id");
-	$name = $q->loadList();
+	$name = $q->loadResult();
 	
-	return $name[0]['project_name'];
+	return $name;
 }
 
 function getUserProjects($user_id) {
@@ -38,6 +38,8 @@ function deletePDF($project_id, $type) {
 }
 
 function purgeUserPDFs($user_id) {
+	global $AppUI;
+	
 	foreach (getUserProjects($user_id) as $pid) {
 		$pname = getProjectName($pid);
 		$types = array(PMPDF_ACTUAL, PMPDF_LOG, PMPDF_PLANNED, PMPDF_PROPERTIES, PMPDF_REPORT);
@@ -46,15 +48,32 @@ function purgeUserPDFs($user_id) {
 			if (file_exists($file)) @unlink($file);
 		}
 	}
+	
+	if(isset($AppUI))
+		unsetProjectsStates();
 }
 
 function generateLogPDF($project_id, $user_id, $hide_inactive, $hide_complete, $start_date, $end_date) {
-	global $AppUI;
+
 	$pname = getProjectName($project_id);
+	
 	$pdf = PM_headerPdf($pname);
 	PM_makeLogPdf($pdf, $project_id, $user_id, $hide_inactive, $hide_complete, $start_date, $end_date);
 	$filename = PM_footerPdf($pdf, $pname, PMPDF_LOG);
 	setProjectSubState('PDFReports', PMPDF_LOG, $filename);
+}
+
+function generateTasksPDF($project_id, $tview, $task_level, $tasks_closed, $tasks_opened, $roles,
+                          $start_date, $end_date, $showIncomplete, $showMine) {
+
+	$name = getProjectName($project_id);
+	$type = $tview ? PMPDF_ACTUAL : PMPDF_PLANNED;
+
+	$pdf = PM_headerPdf($name, 'P', 1, $group_name);
+	PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_opened, $roles,
+	               $tview, $start_date, $end_date, $showIncomplete, $showMine);
+	$filename = PM_footerPdf($pdf, $name, $type);
+	setProjectSubState('PDFReports', $type, $filename);
 }
 
 ?>
