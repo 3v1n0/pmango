@@ -713,8 +713,7 @@ class CAppUI {
 * @param string The label or key of the state variable
 */
 	function unsetState($label) {
-		if (isset($value))
-			unset($this->state[$label]);
+		unset($this->state[$label]);
 	}
 /**
 * Get the value of a temporary state variable.
@@ -724,8 +723,52 @@ class CAppUI {
 	function getState($label, $default_value = null ) {
 		if (array_key_exists($label, $this->state)) {
 			return $this->state[$label];
-		} else if (isset($default_value)) {
+		} else if (!is_null($default_value)) {
 			$this->setState($label, $default_value);
+			return $default_value;
+		} else  {
+			return NULL;
+		}
+	}
+	
+/**
+* Set the value of a temporary state variable.
+*
+* The state is only held for the duration of a session.  It is not stored in the database.
+* Also do not set the value if it is unset.
+* @param string The label or key of the state variable
+* @param string The label or key of the state variable
+* @param mixed Value to assign to the label/key
+*/
+	function setSubState($parent, $label, $value = null) {
+		if (is_null($value)) return;
+
+		$this->state[$parent][$label] = $value;
+	}
+/**
+* Unset the value of a temporary state variable.
+*
+* The state is only held for the duration of a session.  It is not stored in the database.
+* Also do not set the value if it is unset.
+* @param string The label or key of the state variable
+* @param string The label or key of the state variable
+*/
+	function unsetSubState($parent, $label) {
+		unset($this->state[$parent][$label]);
+	}
+/**
+* Get the value of a temporary state variable.
+* If a default value is supplied and no value is found, set the default.
+* @param string The label or key of the state variable
+* @param string The label or key of the state variable
+* @param mixed The default value to give to an unset variable
+* @return mixed
+*/
+	function getSubState($parent, $label, $default_value = null ) {	
+		if (isset($this->state[$parent][$label])) {
+			return $this->state[$parent][$label];
+		} else if (!is_null($default_value)) {
+			$this->setSubState($parent, $label, $default_value);
 			return $default_value;
 		} else  {
 			return NULL;
