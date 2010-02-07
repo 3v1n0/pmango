@@ -420,22 +420,29 @@ function PM_headerPdf($project_name, $page='P', $border=1, $group='', $image_fil
 	return $pdf;
 }
 
-function PM_footerPdf($pdf, $project_name, $pdf_type = 0){
-
+function PM_filenamePdf($project_name, $pdf_type = PMPDF_REPORT) {
+	global $AppUI;
+	
 	switch($pdf_type){
-	 	case PMPDF_REPORT: $filename=$project_name.".pdf";
+	 	case PMPDF_REPORT: $filename=$project_name;
 	 	break;
-		case PMPDF_PLANNED: $filename=$project_name."- Planned.pdf";
+		case PMPDF_PLANNED: $filename=$project_name."- Planned";
 		break;
-		case PMPDF_ACTUAL: $filename=$project_name."- Actual.pdf";
+		case PMPDF_ACTUAL: $filename=$project_name."- Actual";
 		break;
-		case PMPDF_LOG: $filename=$project_name."- Log.pdf";
+		case PMPDF_LOG: $filename=$project_name."- Log";
 		break;
-		case PMPDF_PROPERTIES: $filename=$project_name."- Properties.pdf";
+		case PMPDF_PROPERTIES: $filename=$project_name."- Properties";
 		break;
 	}
-	$pdf->Output("./modules/report/pdf/".$filename,'F');
-	return "./modules/report/pdf/".$filename;	
+	
+	return "./modules/report/pdf/".$AppUI->user_id."-".$filename.".pdf";
+}
+
+function PM_footerPdf($pdf, $project_name, $pdf_type = 0){
+	$filename = PM_filenamePdf($project_name, $pdf_type);
+	$pdf->Output($filename,'F');
+	return $filename;	
 }
 
 
@@ -704,8 +711,8 @@ function PM_makeLogPdf($pdf, $project_id, $user_id, $hide_inactive, $hide_comple
 	$s = '';
 	$hrs = 0;
 	$crs = 0;
-	$j=0;
-	$pdf->report_type=4;
+	$j = 0;
+	$pdf->report_type = 0;
 	
 	if($orient=='L') $w=array(6,22,65,20,25,10,10,10);
 	else $w=array(6,22,40,20,25,10,10,10);
@@ -897,7 +904,6 @@ function PM_makeLogPdf($pdf, $project_id, $user_id, $hide_inactive, $hide_comple
 		$pdf->Cell(0,CELLH+(2*SPACE)," ",'LR',1);
 		$pdf->SetLineWidth(0.05);
 	}
-	$pdf->report_type=0;
 	
 	$pdf->SetLineWidth(0.3);
 	$pdf->SetY($pdf->GetY()-CELLH);
