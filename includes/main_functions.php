@@ -302,7 +302,8 @@ function dPgetParam( &$arr, $name, $def=null ) {
 * Utility function to return a bool value from a named array or a specified default
 */
 function dPgetBoolParam(&$arr, $name) {
-	if (isset($arr[$name]) && ($arr[$name] == "true" || $arr[$name] == 1 || $arr[$name] == "on")) {
+	if (isset($arr[$name]) &&
+		 ($arr[$name] == "true" || $arr[$name] == "on" || $arr[$name] > 0)) {
 		return true;
 	}
 	
@@ -723,11 +724,11 @@ function formatHours($hours)
 
 /**
  * This function is now deprecated and will be removed.
- * In the interim it now does nothing.
+ * In the interim it uses the PHP's default realpath.
  */
 function dpRealPath($file)
 {
-	return $file;
+	return realpath($file);
 }
 
 ?>
