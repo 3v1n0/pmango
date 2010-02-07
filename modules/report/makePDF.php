@@ -918,17 +918,24 @@ function PM_makeLogPdf($pdf, $project_id, $user_id, $hide_inactive, $hide_comple
 	$pdf->SetLineWidth(0.05);
 }
 
-function PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_opened, $roles, $tview, $start, $end, $showIncomplete){
+function PM_makeTaskPdf($pdf, $project_id, $tview, $task_level, $tasks_closed, $tasks_opened, $roles, $start, $end, $showIncomplete, $showMine){
 
 	global $AppUI, $brd, $orient;
 
 	$q  = new DBQuery;
-	$q->addQuery('task_id, task_name, task_parent, task_project, task_start_date, task_finish_date, task_status, task_milestone');
-	$q->addTable('tasks');
-	$q->addWhere("task_project = $project_id ");
+	$q->addQuery('t.task_id, task_name, task_parent, task_project, task_start_date, task_finish_date, task_status, task_milestone');
+	$q->addTable('tasks', 't');
 	$q->addOrder('CAST(task_wbs_index as UNSIGNED)');
-	$tasks = $q->loadList();
+	$q->addWhere("task_project = $project_id");
 	
+	if ($showMine) {
+		$q->addJoin('user_tasks', 'ut', 'ut.task_id = t.task_id');
+		$q->addWhere('ut.user_id = '.$AppUI->user_id);
+		$q->addGroup('t.task_id');
+	}
+	
+	$tasks = $q->loadList();
+
 	$q  = new DBQuery;
 	$q->addQuery('projects.project_name');
 	$q->addTable('projects');
@@ -940,6 +947,14 @@ function PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_op
 	$q->addTable('projects');
 	$q->addWhere("project_id = $project_id ");
 	$archived = $q->loadList();
+	
+	if ($showMine) {
+		$q = new DBQuery;
+		$q->addQuery('CONCAT_WS(" ", user_last_name, user_first_name) as name');
+		$q->addTable('users');
+		$q->addWhere('user_id = '.$AppUI->user_id);
+		$username  = $q->loadResult();
+	}
 	
 	$df = $AppUI->getPref('SHDATEFORMAT');
 	$user_start=$start->format( FMT_TIMESTAMP_DATE );
@@ -1018,8 +1033,9 @@ function PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_op
 	
 	if(($archived[0]['project_active']<1)&&($archived[0]['project_current']!='0')) $is_archived=' (Archived)';
 	if($showIncomplete) $is_complete=', Incomplete tasks only';
+	if($showMine) $show_mine=', Tasks with '.$username;
 	$pdf->SetFont('Arial','B',10);
-	$pdf->Cell(0,4,$subtitle.' Report for '.$name[0]['project_name'].$is_archived,0,1,'L');
+	$pdf->Cell(0,4,$subtitle.' Report for '.$name[0]['project_name'].$is_archived.$show_mine,0,1,'L');
 	$pdf->SetFont('Arial','',8);
 	$pdf->Cell(0,4,'Filters: from '.$start->format( $df ).' to '.$end->format( $df ).$is_complete,0,1,'L');
 	
@@ -1079,9 +1095,9 @@ function PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_op
 	$pdf->SetLineWidth(0.05);
 	$pdf->SetFont('Arial','',8);	
 	
-	$array=PM_sortTask( $project_id, $task_level, $tasks_opened, $tasks_closed);
+	$tasks = PM_sortTask($tasks, $task_level, $tasks_opened, $tasks_closed);
 	
-	foreach ($array as $t){
+	foreach ($tasks as $t){
 		
 		$level_space="";
 		if($t['task_level']>1){
@@ -1256,7 +1272,7 @@ function PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_op
 				$pdf->SetLineWidth(0.3);
 				$pdf->SetY($pdf->GetY()-$task_height-(2*SPACE));
 				$pdf->Cell(0,$task_height+(2*SPACE)," ",'LR',1);
-				$pdf->SetLineWidth(0.05);	
+				$pdf->SetLineWidth(0.05);
 		}
 	$date_ok=true;
 	$incomplete=false;		   	
@@ -1271,14 +1287,8 @@ function PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_op
 
 }
 
-function PM_sortTask( $project_id, $task_level, $tasks_opened, $tasks_closed){
- 	
-	$q  = new DBQuery;
-	$q->addQuery('task_id, task_name, task_parent, task_project, task_start_date, task_finish_date, task_status, task_milestone');
-	$q->addTable('tasks');
-	$q->addWhere("task_project = $project_id ");
-	$q->addOrder('CAST(task_wbs_index as UNSIGNED)');
-	$tasks = $q->loadList();
+function PM_sortTask($tasks, $task_level, $tasks_opened, $tasks_closed){
+ 	global $AppUI;
 	
 	$a_task=array();
  	$obj = new CTask();
@@ -1288,7 +1298,7 @@ function PM_sortTask( $project_id, $task_level, $tasks_opened, $tasks_closed){
 			if ((CTask::getTaskLevel($t["task_id"])<$task_level)&&(!in_array($t["task_id"], $tasks_closed)))
 				$is_opened = true;
 			else
-		    		$is_opened = in_array($t["task_id"], $tasks_opened);
+		    	$is_opened = in_array($t["task_id"], $tasks_opened);
 		    
 			$t['task_level']=1;		
 		    $a_task[]=$t;
@@ -1299,7 +1309,7 @@ function PM_sortTask( $project_id, $task_level, $tasks_opened, $tasks_closed){
 		}
 	}
 
-return $a_task;
+	return $a_task;
 }
 
 function PM_sortChildTask($tasks, $parent, $task_level, $tasks_opened, $tasks_closed, $a_task, $level){
