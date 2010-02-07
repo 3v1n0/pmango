@@ -58,8 +58,10 @@
 -------------------------------------------------------------------------------------------
 */
 
+include 'modules/report/generatePDF.php';
+
 global $AppUI, $project_id, $canEdit, $m, $tab;
-	
+
 $q  = new DBQuery;
 $q->addTable('users','u');
 $q->addQuery("DISTINCT(u.user_id), concat(user_first_name,' ',user_last_name)");
@@ -69,31 +71,35 @@ $q->addOrder('user_first_name, user_last_name');
 $users = arrayMerge( array( '-1' => $AppUI->_('All Users') ), $q->loadHashList() );
 $users = arrayMerge( array( '-2' => $AppUI->_('Group by User') ), $users );
 
-if (!empty($_POST)) {
-	$logs_options['hide_inactive'] = dPgetBoolParam($_POST, 'hide_inactive');
-	$logs_options['hide_complete'] = dPgetBoolParam($_POST, 'hide_complete');
-	$logs_options['user_filter'] = dPgetParam($_POST, 'user_id', -1);
-	$AppUI->setState('ProjectsTaskLogsOptions', $logs_options);
-}
-
-if (!isset($logs_options))
-	$logs_options = $AppUI->getState('ProjectsTaskLogsOptions');
-
-$hide_inactive = $logs_options ? $logs_options['hide_inactive'] : false;
-$hide_complete = $logs_options ? $logs_options['hide_complete'] : false;
-$user_id = $logs_options ? $logs_options['user_filter'] : -1;
-
 $sql="SELECT projects.project_start_date FROM projects WHERE project_id ='$project_id'";
 $db_start_date = db_loadColumn($sql);
 $sql="SELECT projects.project_finish_date FROM projects WHERE project_id ='$project_id'";
 $db_finish_date = db_loadColumn($sql);
 $tab = dPgetParam($_REQUEST, 'tab', 0);
 
-if (isset($_POST['sdate']))	$AppUI->setState('StartDate', dPgetParam($_POST, 'sdate', $db_start_date[0]));
-if (isset($_POST['edate']))	$AppUI->setState('EndDate', dPgetParam($_POST, 'edate', $db_finish_date[0]));
+if (isset($_POST['sdate']))	;
+if (isset($_POST['edate']))	;
 
-$StartDate = $AppUI->getState('StartDate', $db_start_date[0]);
-$EndDate = $AppUI->getState('EndDate', $db_finish_date[0]);
+
+if (!empty($_POST) && !dPgetBoolParam($_POST, 'make_pdf')) {
+	$pre = $AppUI->getState('TaskLogs');
+	$pre_date = $AppUI->getState('TasksDate');
+	
+	$AppUI->setSubState('TasksDate', 'Start', dPgetParam($_POST, 'sdate', $db_start_date[0]));
+	$AppUI->setSubState('TasksDate', 'End', dPgetParam($_POST, 'edate', $db_finish_date[0]));
+	$AppUI->setSubState('TaskLogs', 'hide_inactive', dPgetBoolParam($_POST, 'hide_inactive'));
+	$AppUI->setSubState('TaskLogs', 'hide_complete', dPgetBoolParam($_POST, 'hide_complete'));
+	$AppUI->setSubState('TaskLogs', 'user_filter', dPgetParam($_POST, 'user_id', -1));
+	
+	if ($AppUI->getState('TaskLogs') != $pre || $AppUI->getState('TasksDate') != $pre_date)
+		deletePDF($project_id, PMPDF_LOG);
+}
+
+$StartDate = $AppUI->getSubState('TasksDate', 'Start', $db_start_date[0]);
+$EndDate = $AppUI->getSubState('TasksDate', 'End', $db_finish_date[0]);
+$hide_inactive = $AppUI->getSubState('TaskLogs', 'hide_inactive', false);
+$hide_complete = $AppUI->getSubState('TaskLogs', 'hide_complete', false);
+$user_id = $AppUI->getSubState('TaskLogs', 'user_filter', -1);
 
 $q->clear();
 $q->addQuery('project_group,project_current');
@@ -289,23 +295,18 @@ function showFullProject() {
 		<table width='100%' border='0' cellpadding='1' cellspacing='0' style="border-top: solid transparent 2px;">
 			<tr>
 				<td align="right">
-				<? if($_POST['make_pdf']=="true"){
-					
-					include('modules/report/makePDF.php');
-					$q  = new DBQuery;
-					$q->addQuery('projects.project_name');
-					$q->addTable('projects');
-					$q->addWhere("project_id = $project_id ");
-					$name = $q->loadList();
-					
-					$pdf = PM_headerPdf($name[0]['project_name']);
-					PM_makeLogPdf($pdf, $project_id, $user_id, $hide_inactive, $hide_complete, $start_date, $end_date);
-					$filename=PM_footerPdf($pdf, $name[0]['project_name'], PMPDF_LOG);
-				?>
-				<a href="<?echo $filename;?>"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a><?
-				}?>
+<? 
+				if (dPgetBoolParam($_POST, 'make_pdf')) {
+					generateLogPDF($project_id, $user_id, $hide_inactive, $hide_complete, $start_date, $end_date);
+				}
+
+				$pdf = $AppUI->getSubState('PDFReports', PMPDF_LOG);
 				
-				
+				if ($pdf) {
+?>
+				<a href="<?echo $pdf;?>"><img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" valign="middle"></a><?
+				}
+?>			
 				    <input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 					<input type="hidden" name="make_pdf" value="false" />
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF ' );?>" onclick='document.pdfFilter.make_pdf.value="true"; pdfFilter.submit();'>
