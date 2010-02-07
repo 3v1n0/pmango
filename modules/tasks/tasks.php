@@ -94,13 +94,13 @@ if ( stristr($currentTabName, 'actual') )
 else if ( ! $currentTabName)  // If we aren't tabbed we are in the tasks list.
 	$tview = 0;
 
-$tasks_closed = $AppUI->getState("tasks_closed");
+$tasks_closed = $AppUI->getSubState('Tasks', "closed");
 if((!$tasks_closed)||($_POST['reset_level']==1)){
 
     $tasks_closed = array();
 }
 
-$tasks_opened = $AppUI->getState("tasks_opened");
+$tasks_opened = $AppUI->getSubState('Tasks', "opened");
 if((!$tasks_opened)||($_POST['reset_level']==1)){
  	
     $tasks_opened = array();
@@ -167,19 +167,19 @@ $task_sort_order1 = intval( dPgetParam( $_GET, 'task_sort_order1', 0 ) );
 $task_sort_order2 = intval( dPgetParam( $_GET, 'task_sort_order2', 0 ) );
 
 if (isset($_POST['show_task_options'])) {
-	$AppUI->setState('TaskListShowIncomplete', dPgetParam($_POST, 'show_incomplete', 0));
-	$AppUI->setState('TaskListShowMine', dPgetParam($_POST, 'show_mine', 0));
-	$AppUI->setState('ExplodeTasks', dPgetParam($_POST, 'explode_tasks', '1'));
-	$AppUI->setState('PersonsRoles', dPgetParam($_POST, 'roles', 'N'));
-	$AppUI->setState('StartDate', dPgetParam($_POST, 'sdate', $db_start_date[0]['project_start_date']));
-	$AppUI->setState('EndDate', dPgetParam($_POST, 'edate', $db_start_date[0]['project_finish_date']));
+	$AppUI->setSubState('Tasks', 'ShowIncomplete', dPgetParam($_POST, 'show_incomplete', 0));
+	$AppUI->setSubState('Tasks', 'ShowMine', dPgetParam($_POST, 'show_mine', 0));
+	$AppUI->setSubState('Tasks', 'Explode', dPgetParam($_POST, 'explode_tasks', '1'));
+	$AppUI->setSubState('Tasks', 'PersonsRoles', dPgetParam($_POST, 'roles', 'N'));
+	$AppUI->setSubState('TasksDate', 'Start', dPgetParam($_POST, 'sdate', $db_start_date[0]['project_start_date']));
+	$AppUI->setSubState('TasksDate', 'End', dPgetParam($_POST, 'edate', $db_start_date[0]['project_finish_date']));
 }
-$showIncomplete = $AppUI->getState('TaskListShowIncomplete', 0);
-$showMine = $AppUI->getState('TaskListShowMine', 0);
-$explodeTasks = $AppUI->getState('ExplodeTasks', '1');
-$roles = $AppUI->getState('PersonsRoles', 'N');
-$StartDate = $AppUI->getState('StartDate', $db_start_date[0]['project_start_date']);
-$EndDate = $AppUI->getState('EndDate', $db_start_date[0]['project_finish_date'] );
+$showIncomplete = $AppUI->getSubState('Tasks', 'ShowIncomplete', 0);
+$showMine = $AppUI->getSubState('Tasks', 'ShowMine', 0);
+$explodeTasks = $AppUI->getSubState('Tasks', 'Explode', 1);
+$roles = $AppUI->getSubState('Tasks', 'PersonsRoles', 'N');
+$StartDate = $AppUI->getSubState('TasksDate', 'Start', $db_start_date[0]['project_start_date']);
+$EndDate = $AppUI->getSubState('TasksDate', 'End', $db_start_date[0]['project_finish_date'] );
 
 $where = '0';
 
@@ -315,7 +315,7 @@ if ( $min_view && isset($_GET['task_status']) )
 else if ( stristr($currentTabName, 'inactive') )
 	$task_status = '-1';
 else if ( ! $currentTabName)  // If we aren't tabbed we are in the tasks list.
-	$task_status = intval( $AppUI->getState( 'inactive' ) );
+	$task_status = intval( $AppUI->getSubState('Tasks', 'inactive' ) );
 
 $where .= "\n	AND task_status = '$task_status'";
 
@@ -933,9 +933,9 @@ foreach ($projects as $k => $p) {//echo $p['project_id']." "."$tnums<br>";
 }
 
 
-$AppUI->setState("tasks_opened", $tasks_opened);
-$AppUI->setState("tasks_closed", $tasks_closed);
-$AppUI->setState("PersonsRoles", $roles);
+$AppUI->setSubState("Tasks", "opened", $tasks_opened);
+$AppUI->setSubState("Tasks", "closed", $tasks_closed);
+$AppUI->setSubState("Tasks", "PersonsRoles", $roles);
 
 if ($tview) { 
 ?>

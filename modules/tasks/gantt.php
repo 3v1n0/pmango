@@ -59,13 +59,13 @@ $project_id = defVal(@$_REQUEST['project_id'], 0);
 $task_level = dPgetParam($_GET, 'explode_tasks');
 
 if ($task_level != null) {
-	$AppUI->setState('ExplodeTasks', $task_level);
-	$AppUI->setState('tasks_opened', array());
-	$AppUI->setState('tasks_closed', array());
+	$AppUI->setSubState('Tasks', 'Explode', $task_level);
+	$AppUI->setSubState('Tasks', 'opened', array());
+	$AppUI->setSubState('Tasks', 'closed', array());
 } else {
-	$task_level = $AppUI->getState('ExplodeTasks', 1);
-	$tasks_closed = $AppUI->getState("tasks_closed");
-	$tasks_opened = $AppUI->getState("tasks_opened");
+	$task_level = $AppUI->getSubState('Tasks', 'Explode', 1);
+	$tasks_closed = $AppUI->getSubState('Tasks', "closed");
+	$tasks_opened = $AppUI->getSubState('Tasks', "opened");
 }
 
 $project_id = ($project_id > 0) ? $project_id : 0;

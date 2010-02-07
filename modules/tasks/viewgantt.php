@@ -60,14 +60,14 @@ $project_id = defVal($_REQUEST['project_id'], 0);
 $tab = dPgetParam($_REQUEST, 'tab', 0);
 
 if (!empty($_POST)) {
-	$task_level = $AppUI->getState('ExplodeTasks');
+	$task_level = $AppUI->getState('Tasks', 'Explode');
 	$new_task_level = dPgetParam($_POST, 'explode_tasks', '1');
 
 	if ($task_level != $new_task_level) {
 		$task_level = $new_task_level;
-		$AppUI->setState('ExplodeTasks', $task_level);
-		$AppUI->setState('tasks_opened', array());
-		$AppUI->setState('tasks_closed', array());
+		$AppUI->setSubState('Tasks', 'Explode', $task_level);
+		$AppUI->setSubState('Tasks', 'opened', array());
+		$AppUI->setSubState('Tasks', 'closed', array());
 	}
 }
 
@@ -431,7 +431,7 @@ loadGraph('<?php echo $graph_img_src; ?>');
 								&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
 <?php
 								$maxLevel=CTask::getLevel($project_id);
-								$explodeTasks = $AppUI->getState('ExplodeTasks', '1');
+								$explodeTasks = $AppUI->getSubState('Tasks', 'Explode', 1);
 			
 						 		for($i=1; $i <=$maxLevel;$i++){
 										$arr2[$i-1] = "Level ".$i;
