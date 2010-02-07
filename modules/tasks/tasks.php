@@ -53,6 +53,8 @@
 
  -------------------------------------------------------------------------------------------
  */
+include 'modules/report/generatePDF.php';
+
 GLOBAL $m, $a, $f, $project_id, $min_view, $query_string;
 GLOBAL $task_sort_item1, $task_sort_type1, $task_sort_order1;
 GLOBAL $task_sort_item2, $task_sort_type2, $task_sort_order2;
@@ -96,16 +98,13 @@ $tview = 0;
 
 $tasks_closed = getProjectSubState('Tasks', "closed");
 if((!$tasks_closed)||($_POST['reset_level']==1)){
-
 	$tasks_closed = array();
 }
 
 $tasks_opened = getProjectSubState('Tasks', "opened");
 if((!$tasks_opened)||($_POST['reset_level']==1)){
-
 	$tasks_opened = array();
 }
-
 
 $task_id = intval( dPgetParam( $_GET, "task_id", 0 ) );
 $pinned_only = intval( dPgetParam( $_GET, 'pinned', 0) );
@@ -167,12 +166,19 @@ $task_sort_order1 = intval( dPgetParam( $_GET, 'task_sort_order1', 0 ) );
 $task_sort_order2 = intval( dPgetParam( $_GET, 'task_sort_order2', 0 ) );
 
 if (isset($_POST['show_task_options'])) {
+	$pre_tasks = getProjectState('Tasks');
+	$pre_date = getProjectState('TaskDates');
+//	print_r($pre_tasks);
+	
 	setProjectSubState('Tasks', 'ShowIncomplete', dPgetParam($_POST, 'show_incomplete', 0));
 	setProjectSubState('Tasks', 'ShowMine', dPgetParam($_POST, 'show_mine', 0));
 	setProjectSubState('Tasks', 'Explode', dPgetParam($_POST, 'explode_tasks', '1'));
 	setProjectSubState('Tasks', 'PersonsRoles', dPgetParam($_POST, 'roles', 'N'));
 	setProjectSubState('TaskDates'.$project_id, 'Start', dPgetParam($_POST, 'sdate', $db_start_date[0]['project_start_date']));
 	setProjectSubState('TaskDates'.$project_id, 'End', dPgetParam($_POST, 'edate', $db_start_date[0]['project_finish_date']));
+//	print_r(getProjectState('Tasks'));
+	if ($pre_tasks !== getProjectState('Tasks') || $pre_date !== getProjectState('TaskDates'))
+		deletePDF($project_id, ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
 }
 $showIncomplete = getProjectSubState('Tasks', 'ShowIncomplete', 0);
 $showMine = getProjectSubState('Tasks', 'ShowMine', 0);
@@ -713,34 +719,23 @@ if ($project_id) {
 <table width='100%' border='0' cellpadding='1' cellspacing='0'
 	style="border-top: solid transparent 2px;">
 	<tr>
-		<td align="right"><?if ($_POST['make_pdf']=="true")	{
-			include('modules/report/makePDF.php');
-
-			$task_level=$explodeTasks;
-			$q  = new DBQuery;
-			$q->addQuery('projects.project_name');
-			$q->addTable('projects');
-			$q->addWhere("project_id = $project_id ");
-			$name = $q->loadList();
-
-			$q  = new DBQuery;
-			$q->addTable('groups');
-			$q->addTable('projects');
-			$q->addQuery('groups.group_name');
-			$q->addWhere("projects.project_group = groups.group_id and projects.project_id = '$project_id'");
-			$group = $q->loadList();
-
-			foreach ($group as $g){
-				$group_name=$g['group_name'];
-			}
-
-			$pdf = PM_headerPdf($name[0]['project_name'],'P',1,$group_name);
-			PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_opened, $roles, $tview, $start_date, $end_date, $showIncomplete); //TODO show mine!
-			$filename = PM_footerPdf($pdf, $name[0]['project_name'], ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
-			?> <a href="<?echo $filename;?>"><img
-			src="./modules/report/images/pdf_report.gif" alt="PDF Report"
-			border="0" align="bottom"></a><?
-		}?> <input type="button" class="button"
+		<td align="right">
+<?
+		if (dPgetBoolParam($_POST, 'make_pdf')) {
+			generateTasksPDF($project_id, $tview, $task_level, $tasks_closed, $tasks_opened, $roles, $start_date, $end_date, $showIncomplete, $showMine);
+		}
+		
+		$pdf = getProjectSubState('PDFReports', ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
+		
+		if ($pdf) {
+?>
+			<a href="<?echo $pdf;?>">
+				<img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" valign="middle">
+			</a>
+<?
+		}
+?>
+		<input type="button" class="button"
 			value="<?php echo $AppUI->_( 'Configure' );?>"
 			onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 
@@ -942,6 +937,9 @@ if ($project_id) {
 		}
 	}
 
+	if (getProjectSubState("Tasks", "opened") !== $tasks_opened ||
+	      getProjectSubState("Tasks", "closed") !== $tasks_closed)
+		deletePDF($project_id, ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
 
 	setProjectSubState("Tasks", "opened", $tasks_opened);
 	setProjectSubState("Tasks", "closed", $tasks_closed);
