@@ -422,23 +422,28 @@ function PM_headerPdf($project_name, $page='P', $border=1, $group='', $image_fil
 	return $pdf;
 }
 
-function PM_filenamePdf($project_name, $pdf_type = PMPDF_REPORT) {
+function PM_filenamePdf($project_name, $pdf_type = PMPDF_REPORT, $user_id = null) {
 	global $AppUI;
+	
+	if (is_null($user_id))
+		$user_id = $AppUI->user_id;
 	
 	switch($pdf_type){
 	 	case PMPDF_REPORT: $filename=$project_name;
 	 	break;
-		case PMPDF_PLANNED: $filename=$project_name."- Planned";
+		case PMPDF_PLANNED: $filename=$project_name." Planned";
 		break;
-		case PMPDF_ACTUAL: $filename=$project_name."- Actual";
+		case PMPDF_ACTUAL: $filename=$project_name." Actual";
 		break;
-		case PMPDF_LOG: $filename=$project_name."- Log";
+		case PMPDF_LOG: $filename=$project_name." Log";
 		break;
-		case PMPDF_PROPERTIES: $filename=$project_name."- Properties";
+		case PMPDF_PROPERTIES: $filename=$project_name." Properties";
 		break;
 	}
 	
-	return PMPDF_DIRECTORY.$AppUI->user_id."-".$filename.".pdf";
+	$name = PMPDF_DIRECTORY.($user_id ? "$user_id " : "").$filename.".pdf";
+	
+	return str_replace(" ", "-", $name);
 }
 
 function PM_footerPdf($pdf, $project_name, $pdf_type = 0){
