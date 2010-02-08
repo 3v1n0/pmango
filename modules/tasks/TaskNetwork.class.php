@@ -128,7 +128,6 @@ class TaskNetwork {
 	private $pShowActualTimeframe;
 	private $pShowAlerts;
 	
-	private $pError;
 	private $pChanged;
 
 	function TaskNetwork($project){
@@ -153,7 +152,6 @@ class TaskNetwork {
 		$this->x = 1;
 		$this->y = 1;
 		$this->img = ImageCreate($this->x, $this->y);
-		$this->pError = false;
 		$this->pChanged = true;
 	}
 
@@ -279,6 +277,18 @@ class TaskNetwork {
 	public function getImage() {
 		$this->buildTN();
 		return $this->img;
+	}
+	
+	private function terminateWithError(){
+		$img = imagecreate(950,80);
+		$white = imagecolorallocate($img,255,255,255);
+		$black = imagecolorallocate($img,0,0,0);
+		imagestring($img,5,15,15,"-----------------------------------------------Error-----------------------------------------------",$black);
+		imagestring($img,5,10,30,"|  The critical path could not be drawn as the referring taskboxes were not shown in the diagram.  |",$black);
+		imagestring($img,5,10,50,"|                              Please select a lower explode task level.                           |",$black);
+		imagestring($img,5,15,65,"---------------------------------------------------------------------------------------------------",$black);   
+		imagepng($img);
+		exit();
 	}
 	
 	private function buildTN(){
@@ -448,13 +458,7 @@ class TaskNetwork {
 			
 		}
 
-	public function draw($format = "png", $file = null) {
-
-		if($this->pError){
-			//TODO fare visualizzare l'errore quando occorre
-			//return;
-		}
-		
+	public function draw($format = "png", $file = null) {		
 		switch ($format) {
 			case "png":
 				if (!$file) header("Content-type: image/png");
@@ -1004,7 +1008,7 @@ class TaskNetwork {
 			while ($control){
 				$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
 				$result = TaskNetwork::doQuery($q);
-				if($result[0][0] == $tbxfrom){$this->pError = true;exit();}
+				if($result[0][0] == $tbxfrom){TaskNetwork::terminateWithError();}
 				$coordfrom = $this->getTbxIndex($result[0][0]);
 				if(isset($coordfrom)){
 					$upper = true;	
@@ -1029,7 +1033,7 @@ class TaskNetwork {
 				while ($control){
 					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
 					$result = TaskNetwork::doQuery($q);
-					if($result[0][0] == $tbxfrom){$this->pError = true;exit();}
+					if($result[0][0] == $tbxfrom){TaskNetwork::terminateWithError();}
 					$coordfrom = $this->getTbxIndex($result[0][0]);
 					if(isset($coordfrom)){
 						$under = true;	
@@ -1048,7 +1052,7 @@ class TaskNetwork {
 				while ($control){
 					$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxto;
 					$result = TaskNetwork::doQuery($q);
-					if($result[0][0] == $tbxto){$this->pError = true;exit();}
+					if($result[0][0] == $tbxto){TaskNetwork::terminateWithError();}
 					$coordto = $this->getTbxIndex($result[0][0]);
 					if(isset($coordto)){
 						$upper = true;	
@@ -1076,7 +1080,7 @@ class TaskNetwork {
 			while ($control){
 				$q = "SELECT task_parent FROM tasks t WHERE task_project = ".$this->project." and task_id = ".$tbxfrom;
 				$result = TaskNetwork::doQuery($q);
-				if($result[0][0] == $tbxfrom){$this->pError = true;exit();}
+				if($result[0][0] == $tbxfrom){TaskNetwork::terminateWithError();}
 				$coordfrom = $this->getTbxIndex($result[0][0]);
 				if(isset($coordfrom)){
 					$under = true;	
