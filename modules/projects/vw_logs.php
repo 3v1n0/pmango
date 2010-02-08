@@ -203,6 +203,13 @@ function showFullProject() {
 function makeLogsPDF() {
 	document.pdfFilter.make_pdf.value = "true";
 	generatePDF('pdfFilter', 'logs_pdf_span');
+	document.pdfFilter.make_pdf.value = "false";
+}
+
+function addLogsReport() {
+	document.pdfFilter.addreport.value = "3";
+	document.pdfFilter.make_pdf.value = "false";
+	addReport('pdfFilter', 'logs_report_btn');
 }
 </script>
 
@@ -319,7 +326,7 @@ function makeLogsPDF() {
 				    <input type="hidden" name="make_pdf" value="false" />
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF ' );?>" onclick='makeLogsPDF();'>
 					<input type="hidden" name="addreport" value="-1" />
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>" onclick='document.pdfFilter.addreport.value="3"; pdfFilter.submit();'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>" onclick='addLogsReport();' id="logs_report_btn">
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 				</td>
 			</tr>

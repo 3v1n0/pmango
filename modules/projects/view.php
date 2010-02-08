@@ -197,12 +197,13 @@ $(function() {
     }, 1000);
 });
 
-function makePDF() {
+function makeProjectPDF() {
 	document.prop_report.make_prop_pdf.value = "true";
 	generatePDF('prop_report', 'project_pdf_span');
+	document.prop_report.make_prop_pdf.value = "false";
 }
 
-function addReport() {
+function addProjectReport() {
 	document.prop_report.make_prop_pdf.value = "false";
 	document.prop_report.submit();
 
@@ -483,7 +484,7 @@ function addReport() {
 									</span>
 									<input type="hidden" name="properties" value="<?php echo htmlentities(utf8_encode($properties), ENT_QUOTES, 'UTF-8');?>" />
 									<input type="hidden" name="make_prop_pdf" value="false" />
-									<input type="button" class="button" value="<?php echo $AppUI->_( 'Make PDF' );?>" onclick='makePDF();'> <!--  document.prop_report.submit(); -->
+									<input type="button" class="button" value="<?php echo $AppUI->_( 'Make PDF' );?>" onclick='makeProjectPDF();'> <!--  document.prop_report.submit(); -->
 									
 								</td>
 								<td width="0%">
@@ -492,7 +493,7 @@ function addReport() {
 									?>
 									
 										<input type="hidden" name="summary" value="<?php echo $message;?>" />
-										<input onclick="addReport();" id="add_to_report" type="submit" class="button" value="<?php echo $AppUI->_('Add to Report');?>">
+										<input onclick="addProjectReport();" id="add_to_report" type="submit" class="button" value="<?php echo $AppUI->_('Add to Report');?>">
 								</td>
 							</tr>
 						</table>

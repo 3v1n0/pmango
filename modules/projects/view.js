@@ -16,7 +16,8 @@
 
  Version history.
  - 2010.02.08
-   0.4, added a function for placing AJAX requests for pdf forms
+   0.5, added a function for placing AJAX requests for Report forms
+   0.4, added a function for placing AJAX requests for PDF forms
  - 2010.02.01
    0.3, use jQuery's slideToggle for switching item view
  - 2010.01.31
@@ -175,6 +176,31 @@ function generatePDF(form_id, parent_id) {
 	   error: function() {
   		 	parent.hide();
   		 	form.submit();
+  	   }
+	});
+}
+
+function addReport(form_id, button_id) {
+
+	var form = $("#"+form_id);
+	var button = $("#"+button_id);
+	var old_name = button.val();
+	
+	button.val("Loading...");
+	
+	$.ajax({
+	   type: form.attr('method'),
+	   url: form.attr('action'),
+	   data: form.serialize(),
+	   success: function() {
+		   button.val("Done!");
+		   setTimeout(function() {
+			   button.fadeOut();
+		   }, 500);
+  	   },
+	   error: function() {
+  		   button.val(old_name);
+  		   form.submit();
   	   }
 	});
 }

@@ -617,8 +617,14 @@ function showFullProject() {
 
 function makeTasksPDF() {
 	document.pdf_options.make_pdf.value = "true";
-	
-	generatePDF('pdf_options', 'tasks_pdf_span'); 
+	generatePDF('pdf_options', 'tasks_pdf_span');
+	document.pdf_options.make_pdf.value = "false"; 
+}
+
+function addTasksReport(type) {
+	document.pdf_options.make_pdf.value = "false"; 
+	document.pdf_options.addreport.value = type;
+	addReport('pdf_options', 'tasks_report_btn');
 }
 </script>
 <?php
@@ -748,14 +754,9 @@ if ($project_id) {
 			type="button" class="button"
 			value="<?php echo $AppUI->_( 'Generate PDF ' );?>"
 			onclick='makeTasksPDF();'>
-			<? if($tview==0){?> <input type="hidden" name="addreport" value="-1" />
-		<input type="button" class="button"
-			value="<?php echo $AppUI->_( 'Add to Report ' );?>"
-			onclick='document.pdf_options.addreport.value="1"; document.pdf_options.submit();'><?}
-			else{?> <input type="hidden" name="addreport" value="-1" /> <input
-			type="button" class="button"
-			value="<?php echo $AppUI->_( 'Add to Report ' );?>"
-			onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'><?}?>
+		<input type="hidden" name="addreport" value="-1" />
+		<input type="button" class="button" id="tasks_report_btn" value="<?php echo $AppUI->_( 'Add to Report ' );?>"
+			onclick='addTasksReport(<?echo $tview ? 2 : 1?>);'>
 		<input type="button" class="button"
 			value="<?php echo $AppUI->_( 'Configure' );?>"
 			onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
