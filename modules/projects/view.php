@@ -190,6 +190,32 @@ function delIt() {
 	}
 }
 <?php } ?>
+
+$(function() {
+    setTimeout(function() {
+        $("#projectBarTip").fadeOut(2000);
+    }, 1000);
+});
+
+function makePDF() {
+	document.prop_report.make_prop_pdf.value = "true";
+
+	$("#pdf_icon_span").hide();
+	$("#pdf_icon_span").html('<img id="pdf_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+	
+	$.ajax({
+	   type: "POST",
+	   url:  "./index.php?m=projects&a=view&project_id=<? echo $project_id?>",
+	   data: $("#prop_report").serialize(),
+	   success: function(html) {
+        	$("#pdf_loader").fadeOut("fast", function() {
+        		$("#pdf_icon_span").replaceWith($(html).find("#pdf_icon_span"));
+        		$("#pdf_icon_span").hide();
+        		$("#pdf_icon_span").fadeIn("fast");
+            });
+  	   }
+	});
+}
 </script>
 
 <table border="0" cellpadding="1" cellspacing="0" width="100%" class="std">
@@ -201,8 +227,8 @@ function delIt() {
 	<input type="hidden" name="project_group" value="<?php echo $obj->project_group;?>" />
 </form>
 
-<tr>
-	<td onclick="projectViewSwitch();" style="border: outset #d1d1cd 1px;background-color:#<?php echo $obj->project_color_identifier;?>" onmouseover="this.style.cursor='pointer';" colspan="2">
+<tr onclick="projectViewSwitch();" onmouseover="this.style.cursor='pointer';">
+	<td colspan="1" style="border: outset #d1d1cd 1px;background-color:#<?php echo $obj->project_color_identifier;?>; border-right: 0px;">
 	<?php
 		if (empty($AppUI->properties) && empty($_POST['properties']) &&
 		      empty($_REQUEST['make_prop_pdf']) &&
@@ -213,6 +239,17 @@ function delIt() {
 		echo '<font color="' . bestColor( $obj->project_color_identifier ) . '"><strong>'
 			. $obj->project_name .'<strong></font>';
 	?>
+	</td>
+	<td align="right" style="border: outset #d1d1cd 1px;background-color:#<? echo $obj->project_color_identifier;?>; border-left: 0px;">
+<?
+	if (!isset($_GET['tab'])) {
+?>
+		<span id="projectBarTip" style="padding-right: 80px; color: <? echo bestColor( $obj->project_color_identifier )?>;" >
+			<? echo $AppUI->_('Click here to toggle the project informations'); ?>
+		</span>
+<?
+	}
+?>
 	</td>
 </tr>
 <?php
@@ -411,7 +448,7 @@ function delIt() {
 					</form>
 				</td>
 				<td width="100%" valign="top">
-					<form name="prop_report" action="<?echo './index.php?m=projects&a=view&project_id='.$project_id;?>" method="post">				
+					<form id="prop_report" name="prop_report" action="<?echo './index.php?m=projects&a=view&project_id='.$project_id;?>" method="post">				
 						<table cellspacing="1" cellpadding="2" border="0" width="100%" height="100%" >
 							<tr>
 								<td class="hilite" style="border: outset #d1d1cd 2px" height="100px" valign="top" colspan="2">
@@ -430,25 +467,28 @@ function delIt() {
 								</td>
 							</tr>
 							<tr>
-								<td align="right" width="100%">
+								<td align="right" width="100%" id="pdf_cell">
 <?
 									if (dPgetBoolParam($_POST, 'make_prop_pdf')) {
 										generatePropertiesPDF($project_id, $properties);
 									}
 									
 									$pdf = getProjectSubState('PDFReports', PMPDF_PROPERTIES);
-//									echo htmlentities(utf8_encode($properties), ENT_QUOTES, 'UTF-8');
+?>
+									<span id="pdf_icon_span" style="vertical-align: middle">	
+<?							
 									if ($pdf) {
 ?>
-										<a href="<?echo $pdf;?>">
-											<img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" valign="middle">
+										<a id="pdf_link" href="<?echo $pdf;?>">
+											<img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0">
 										</a>
 <?
 									}
 ?>
-									<input type="hidden" name="properties" value="<?php echo htmlentities(utf8_encode(nl2br($properties)), ENT_QUOTES, 'UTF-8');?>" />
+									</span>
+									<input type="hidden" name="properties" value="<?php echo htmlentities(utf8_encode($properties), ENT_QUOTES, 'UTF-8');?>" />
 									<input type="hidden" name="make_prop_pdf" value="false" />
-									<input type="button" class="button" value="<?php echo $AppUI->_( 'Make PDF' );?>" onclick='document.prop_report.make_prop_pdf.value="true"; document.prop_report.submit();'>
+									<input type="button" class="button" value="<?php echo $AppUI->_( 'Make PDF' );?>" onclick='makePDF();'> <!--  document.prop_report.submit(); -->
 									
 								</td>
 								<td width="0%">
