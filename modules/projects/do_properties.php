@@ -50,24 +50,28 @@
 ---------------------------------------------------------------------------
 */
 
-function setItem($item_name, $defval = null) {
-	if (isset($_POST[$item_name]))
-		return $_POST[$item_name];
-	return $defval;
-}
+include_once "modules/report/generatePDF.php";
 
 $obj = new CProject();
-if (!$obj->load(setItem('project_id',0))) {
+if (!$obj->load(dPgetParam($_POST, 'project_id', 0))) {
 	$AppUI->setMsg( $obj->getError(), UI_MSG_ERROR );
 	$AppUI->redirect();
 }
-/*echo $obj->project_id;
-echo $obj->project_start_date;*/
-$wf = setItem('wf', 0);
-$ce = setItem('ce', 0);
-$ee = setItem('ee', 0);
-$te = setItem('te', 0);
 
+$wf = dPgetBoolParam($_POST, 'wf', false);
+$ce = dPgetBoolParam($_POST, 'ce', false);
+$ee = dPgetBoolParam($_POST, 'ee', false);
+$te = dPgetBoolParam($_POST, 'te', false);
+
+$pre_options = getProjectState('PropertiesOptions');
+
+setProjectSubState('PropertiesOptions', 'well_formed', $wf);
+setProjectSubState('PropertiesOptions', 'cost_effective', $ce);
+setProjectSubState('PropertiesOptions', 'effort_effective', $ee);
+setProjectSubState('PropertiesOptions', 'time_effective', $te);
+
+if ($pre_options !== getProjectState('PropertiesOptions'))
+	deletePDF($project_id, PMPDF_PROPERTIES);
 
 $r='';
 $okMsg='Project is ';
@@ -157,6 +161,8 @@ if (strlen($koMsg) == 14 && strlen($okMsg) > 11 )
 	$AppUI->setMsg( $okMsg , UI_MSG_PROP_OK);
 elseif (strlen($koMsg) > 14) 
 	$AppUI->setMsg( $koMsg , UI_MSG_PROP_KO);
+	
+setProjectState('PropertiesComputed', true);
 	
 $AppUI->redirect();
 

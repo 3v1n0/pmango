@@ -55,7 +55,9 @@
 
 -------------------------------------------------------------------------------------------
 */
-$project_id = intval( dPgetParam( $_GET, "project_id", 0 ) );
+include 'modules/report/generatePDF.php';
+
+$project_id = intval(dPgetParam($_GET, "project_id", 0 ));
 $msg = '';
 $objPr = new CProject();
 
@@ -202,7 +204,9 @@ function delIt() {
 <tr>
 	<td onclick="projectViewSwitch();" style="border: outset #d1d1cd 1px;background-color:#<?php echo $obj->project_color_identifier;?>" onmouseover="this.style.cursor='pointer';" colspan="2">
 	<?php
-		if (empty($AppUI->properties) && empty($_POST['properties']) && empty($_REQUEST['make_prop_pdf']))
+		if (empty($AppUI->properties) && empty($_POST['properties']) &&
+		      empty($_REQUEST['make_prop_pdf']) &&
+		      db_loadResult("SELECT COUNT(*) FROM tasks WHERE task_project=$project_id"))
 			$project_collapsed = true;
 		
 		echo '<img id="project_expander_img" src="images/icons/'.($project_collapsed ? 'expand' : 'collapse').'.gif" border="0" />&nbsp;';
@@ -371,31 +375,37 @@ function delIt() {
 		<strong><?php echo $AppUI->_('Properties');?></strong><br>
 		<table width="100%">
 			<tr>
-				<td>
+				<td valign="top">
 					<form name="frmProp" action="./index.php?m=projects" method="post">
 						<input type="hidden" name="dosql" value="do_properties" />
 						<input type="hidden" name="project_id" value="<?php echo $project_id;?>" />
-						
+						<input type="hidden" name="compute_prop" value="true" />
+<?
+						$wf = getProjectSubState('PropertiesOptions', 'well_formed', true);
+						$ce = getProjectSubState('PropertiesOptions', 'cost_effective', true);
+						$ee = getProjectSubState('PropertiesOptions', 'effort_effective', true);
+						$te = getProjectSubState('PropertiesOptions', 'time_effective', true);
+?>	
 						<table cellspacing="1" cellpadding="2" border="0">
 							<tr>
-								<td><input id="wf" name="wf" type="checkbox" value="1"></td>
+								<td><input id="wf" name="wf" type="checkbox" <? echo $wf ? 'checked="checked"' : '' ?> /></td>
 								<td nowrap="nowrap"><label for="wf"><?php echo $AppUI->_('Well Formed');?></label></td>
 							</tr>
 							<tr>
-								<td><input id="ce" name="ce" type="checkbox" value="1"></td>
+								<td><input id="ce" name="ce" type="checkbox" <? echo $ce ? 'checked="checked"' : '' ?> /></td>
 								<td nowrap="nowrap"><label for="ce"><?php echo $AppUI->_('Cost Effective');?></label></td>
 							</tr>
 							<tr>
-								<td><input id="ee" name="ee" type="checkbox" value="1"></td>
+								<td><input id="ee" name="ee" type="checkbox" <? echo $ee ? 'checked="checked"' : '' ?> /></td>
 								<td nowrap="nowrap"><label for="ee"><?php echo $AppUI->_('Effort Effective');?></label></td>
 							</tr>
 							<tr>
-								<td><input id="te" name="te" type="checkbox" value="1"></td>
+								<td><input id="te" name="te" type="checkbox" <? echo $te ? 'checked="checked"' : '' ?> /></td>
 								<td nowrap="nowrap"><label for="te"><?php echo $AppUI->_('Time Effective');?></label></td>
 							</tr>
 							<tr>
 								<td>&nbsp;</td>
-								<td align="center"><input type="submit" class="button" value="<?php echo $AppUI->_( 'compute ' );?>"></td>
+								<td align="center"><input type="submit" class="button" value="<?php echo $AppUI->_( 'compute' );?>"></td>
 							</tr>
 						</table>
 					</form>
@@ -406,40 +416,37 @@ function delIt() {
 							<tr>
 								<td class="hilite" style="border: outset #d1d1cd 2px" height="100px" valign="top" colspan="2">
 							<?php
-								
-								if($_POST['properties']){
-								 	$string=$_POST['properties'];
-									$string=urldecode($string);
-									echo str_replace("@","'",$string);
-								}
-								else{
-							 		echo $string=nl2br($AppUI->getProperties());
-									if($string!=''){
-									$string=str_replace("'","@",$string);
-									}
+								if (getProjectState('Properties') && !getProjectState('PropertiesComputed')) {
+									$properties = stripslashes(str_replace("@", "'", getProjectState('Properties')));
+									echo $properties;
+									
+								} else{
+							 		$properties = $AppUI->getProperties();
+							 		setProjectState('Properties', $properties);
+							 		setProjectState('PropertiesComputed', false);
+							 		echo $properties;
 								}
 							?>&nbsp;
 								</td>
 							</tr>
 							<tr>
 								<td align="right" width="100%">
-								<?if ($_POST['make_prop_pdf']=="true")	{
-									include('modules/report/makePDF.php');
-				
-									$task_level=$explodeTasks;
-									$q  = new DBQuery;
-									$q->addQuery('projects.project_name');
-									$q->addTable('projects');
-									$q->addWhere("project_id = $project_id ");
-									$name = $q->loadList();
-									$pdf = PM_headerPdf($name[0]['project_name']);
-									PM_makePropPdf($pdf, str_replace("@","'",$string),$project_id,'P');
+<?
+									if (dPgetBoolParam($_POST, 'make_prop_pdf')) {
+										generatePropertiesPDF($project_id, $properties);
+									}
 									
-									$filename=PM_footerPdf($pdf, $name[0]['project_name'], PMPDF_PROPERTIES);
-									?>
-									<a href="<?echo $filename;?>" TARGET="_new"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a>
-						<? 	}?>
-									<input type="hidden" name="properties" value="<?php echo strip_tags($string,"<br>");?>" />
+									$pdf = getProjectSubState('PDFReports', PMPDF_PROPERTIES);
+//									echo htmlentities(utf8_encode($properties), ENT_QUOTES, 'UTF-8');
+									if ($pdf) {
+?>
+										<a href="<?echo $pdf;?>">
+											<img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" valign="middle">
+										</a>
+<?
+									}
+?>
+									<input type="hidden" name="properties" value="<?php echo htmlentities(utf8_encode(nl2br($properties)), ENT_QUOTES, 'UTF-8');?>" />
 									<input type="hidden" name="make_prop_pdf" value="false" />
 									<input type="button" class="button" value="<?php echo $AppUI->_( 'Make PDF' );?>" onclick='document.prop_report.make_prop_pdf.value="true"; document.prop_report.submit();'>
 									
@@ -449,10 +456,8 @@ function delIt() {
 									$string=urlencode($string);
 									?>
 									
-										<input type="hidden" name="properties" value="<?php echo strip_tags($string,"<br>");?>" />
 										<input type="hidden" name="summary" value="<?php echo $message;?>" />
 										<input type="submit" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>">
-									
 								</td>
 							</tr>
 						</table>

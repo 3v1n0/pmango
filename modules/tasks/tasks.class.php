@@ -1568,13 +1568,13 @@ class CTask extends CDpObject {
         // Defined
         // 1.4.1.1 V
         if ($this->task_start_date == '' || is_null($this->task_start_date) || $this->task_start_date == '0000-00-00 00:00:00')
-        	$msg.="- Task start date is not defined\n";
+        	$msg.="- Task start date is not defined<br>";
         // 1.4.1.2 V
         if ($this->task_finish_date == '' || is_null($this->task_finish_date) || $this->task_finish_date == '0000-00-00 00:00:00')
-        	$msg.="- Task finish date is not defined\n";
+        	$msg.="- Task finish date is not defined<br>";
         // 1.4.1.3 V
         if ($this->task_start_date > $this->task_finish_date)
-        	$msg.="- Task start date is after task finish date\n";
+        	$msg.="- Task start date is after task finish date<br>";
         // 1.4.1.4 V
         // Automatically calculated
         // 1.4.1.5 V
@@ -1585,7 +1585,7 @@ class CTask extends CDpObject {
         $q->addWhere("task_id = $tid");
         $r = $q->loadResult();
         if ($r <= 0)
-        	$msg.="- There aren't resources assigned to task\n";
+        	$msg.="- There aren't resources assigned to task<br>";
 
         return $msg;
 
@@ -1607,7 +1607,7 @@ class CTask extends CDpObject {
         //print_r($ar);echo "2";
         if (is_array($ar))
         	foreach ($ar as $t) {
-        		$msg .= "- Task start date is before <a href=\"?m=tasks&a=view&task_id=".$t['task_id']."\"><span style=\"color:#990000;text-decoration:underline;\">".CTask::getWBS($t['task_id'])." ".$t['task_name']."</span></a> finish date\n";
+        		$msg .= "- Task start date is before <a href=\"?m=tasks&a=view&task_id=".$t['task_id']."\"><span style=\"color:#990000;text-decoration:underline;\">".CTask::getWBS($t['task_id'])." ".$t['task_name']."</span></a> finish date<br>";
         	}
 
 		if($this->isLeaf())
@@ -1615,12 +1615,12 @@ class CTask extends CDpObject {
 
         $ts = $this->getStartDateFromTask($tid,$setTid);
         if ($this->task_start_date > $ts['task_start_date'])
-        	$msg.="- Task start date is after <a href=\"?m=tasks&a=view&task_id=".$ts["task_id"]."\"><span style=\"color:#990000;text-decoration:underline;\">start date from tasks</span></a>\n";
+        	$msg.="- Task start date is after <a href=\"?m=tasks&a=view&task_id=".$ts["task_id"]."\"><span style=\"color:#990000;text-decoration:underline;\">start date from tasks</span></a><br>";
         $tf = $this->getFinishDateFromTask($tid,$setTid);
         if ($this->task_finish_date < $tf['task_finish_date'])
-        	$msg.="- Task finish date is before <a href=\"?m=tasks&a=view&task_id=".$tf["task_id"]."\"><span style=\"color:#990000;text-decoration:underline;\">finish date from tasks</span></a>\n";
+        	$msg.="- Task finish date is before <a href=\"?m=tasks&a=view&task_id=".$tf["task_id"]."\"><span style=\"color:#990000;text-decoration:underline;\">finish date from tasks</span></a><br>";
   		if ($this->getBudget($tid,$setTid) <> $this->getBudgetFromTask($tid,$setTid))
-  			$msg.="- Task budget is different from budget from tasks\n";
+  			$msg.="- Task budget is different from budget from tasks<br>";
   		$tasks = explode(",",$setTid);
 
   		$leafs = array();
@@ -1642,7 +1642,7 @@ class CTask extends CDpObject {
 		  		$ar = $q->loadList();
 		  		if (is_array($ar) && count($ar)>0)
 		  			foreach ($ar as $t)
-		  				$msg.="- Task doesn't contain a resource assigned to <a href=\"?m=tasks&a=view&task_id=".$t['task_id']."\"><span style=\"color:#990000;text-decoration:underline;\">".CTask::getWBS($t['task_id'])." ".$t['task_name']."</span></a>\n";
+		  				$msg.="- Task doesn't contain a resource assigned to <a href=\"?m=tasks&a=view&task_id=".$t['task_id']."\"><span style=\"color:#990000;text-decoration:underline;\">".CTask::getWBS($t['task_id'])." ".$t['task_name']."</span></a><br>";
 
 	  		}
 	  		foreach ($tasks as $ch)
@@ -1662,7 +1662,7 @@ class CTask extends CDpObject {
 		  		$ar = $q->loadColumn();
 		  		if (is_array($ar))
 		  			foreach ($ar as $t)
-		  				$msg.="- Task effort resource $t is different from the sum of its parts\n";
+		  				$msg.="- Task effort resource $t is different from the sum of its parts<br>";
 	  		}
   		}
   		$q->clear();
@@ -1671,14 +1671,14 @@ class CTask extends CDpObject {
   		$q->addWhere("task_parent <> task_id && task_parent = $tid && task_project = $this->task_project");
   		$t = $q->loadResult();
   		if ($t == 1)
-  			$msg.="- Task has only one child\n";
+  			$msg.="- Task has only one child<br>";
 
   		$q->clear();
   		$q->addQuery("COUNT(task_log_id)");
   		$q->addTable("task_log");
   		$q->addWhere("task_log_task = $tid");
   		if ($q->loadResult() > 0)
-  			$msg.="- Task isn't leaf and there are task logs assigned to it\n";
+  			$msg.="- Task isn't leaf and there are task logs assigned to it<br>";
 
   		$q->clear();
 		$q->addQuery('task_finish_date');
@@ -1705,7 +1705,7 @@ class CTask extends CDpObject {
 		}
 		if ($d1 > 0)
 			if (!array_search($d1,$dates))
-				$msg .=" - Task delivery date doesn't match with a child task finish date\n";
+				$msg .=" - Task delivery date doesn't match with a child task finish date<br>";
 
 	  	if (!$fromProj) {
 	  		if (is_array($tasks))
@@ -1718,7 +1718,7 @@ class CTask extends CDpObject {
 		        	$temp = $obj->isDefined();
 		        	$temp .= $obj->isWellFormed('','',true);
 		        	if ($temp <> '') {
-		        		$msg.=" - Task: <a href=\"?m=tasks&a=view&task_id=$obj->task_id\"><span style=\"color:#990000;text-decoration:underline;\">".$obj->getWBS($obj->task_id)." $obj->task_name</span></a> isn't Well Formed\n";
+		        		$msg.=" - Task: <a href=\"?m=tasks&a=view&task_id=$obj->task_id\"><span style=\"color:#990000;text-decoration:underline;\">".$obj->getWBS($obj->task_id)." $obj->task_name</span></a> isn't Well Formed<br>";
 		        		//$msg.=$temp;
 		        	}
 		        }
@@ -1734,9 +1734,9 @@ class CTask extends CDpObject {
         $tb = $this->getBudget($tid,$setTid);
         $tac = $this->getActualCost($tid,$setTid);
         if ($tb < $tac)
-        	$msg.="- Task budget is smaller than actual cost\n";
+        	$msg.="- Task budget is smaller than actual cost<br>";
         if ($this->getCostPerformanceIndex($tid,$tac,$tb,'',$setTid) > 1)
-        	$msg.="- Task cost performance index is greater than 1\n";
+        	$msg.="- Task cost performance index is greater than 1<br>";
         return $msg;
 	}
 
@@ -1747,9 +1747,9 @@ class CTask extends CDpObject {
         $te = $this->getEffort($tid,$setTid);
         $tae = $this->getActualEffort($tid,$setTid);
         if ($te < $tae)
-        	$msg.="- Task effort is smaller than actual effort\n";
+        	$msg.="- Task effort is smaller than actual effort<br>";
         if ($this->getCostPerformanceIndex($tid,$tae,$te,'',$setTid) > 1)
-        	$msg.="- Task effort performance index is greater than 1\n";
+        	$msg.="- Task effort performance index is greater than 1<br>";
         return $msg;
 	}
 
@@ -1760,7 +1760,7 @@ class CTask extends CDpObject {
         $msg='';
 
         if ($this->getTimePerformanceIndex($tid,'','','','','',$setTid) > 1)
-        	$msg.="- Task time performance index is greater than 1\n";
+        	$msg.="- Task time performance index is greater than 1<br>";
         return $msg;
 
 	}

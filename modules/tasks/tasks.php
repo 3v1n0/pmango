@@ -53,8 +53,6 @@
 
  -------------------------------------------------------------------------------------------
  */
-include 'modules/report/generatePDF.php';
-
 GLOBAL $m, $a, $f, $project_id, $min_view, $query_string;
 GLOBAL $task_sort_item1, $task_sort_type1, $task_sort_order1;
 GLOBAL $task_sort_item2, $task_sort_type2, $task_sort_order2;
@@ -721,6 +719,10 @@ if ($project_id) {
 	<tr>
 		<td align="right">
 <?
+		if (getProjectSubState("Tasks", "opened") !== $tasks_opened ||
+	          getProjectSubState("Tasks", "closed") !== $tasks_closed)
+			deletePDF($project_id, ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
+
 		if (dPgetBoolParam($_POST, 'make_pdf')) {
 			generateTasksPDF($project_id, $tview, $task_level, $tasks_closed, $tasks_opened, $roles, $start_date, $end_date, $showIncomplete, $showMine);
 		}
@@ -936,10 +938,6 @@ if ($project_id) {
 	<?php
 		}
 	}
-
-	if (getProjectSubState("Tasks", "opened") !== $tasks_opened ||
-	      getProjectSubState("Tasks", "closed") !== $tasks_closed)
-		deletePDF($project_id, ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
 
 	setProjectSubState("Tasks", "opened", $tasks_opened);
 	setProjectSubState("Tasks", "closed", $tasks_closed);

@@ -517,23 +517,23 @@ function delIt() {
 				<input type="hidden" name="dosql" value="do_properties" />
 				<input type="hidden" name="task_id" value="<?php echo $task_id;?>" />
 				<tr>
-					<td align="right" nowrap><?php echo $AppUI->_('Well Formed');?>:
-					<td align="left" nowrap> <input id="wf" name="wf" type="checkbox" value="1"></td>
+					<td align="right" nowrap><input id="wf" name="wf" type="checkbox" checked="checked"</td>
+					<td nowrap="nowrap"><label for="wf"><?php echo $AppUI->_('Well Formed');?></label></td>
 					<td class="hilite" width="100%" rowspan="4" valign="top" style="border: outset #d1d1cd 2px">
-						<?php echo str_replace( chr(10), "<br>", $AppUI->getProperties()) ; ?>&nbsp;
+						<?php echo $AppUI->getProperties(); ?>&nbsp;
 					</td>
 				</tr>
 				<tr>
-					<td align="right" nowrap><?php echo $AppUI->_('Cost Effective');?>:
-					<td align="left" nowrap> <input id="ce" name="ce" type="checkbox" value="1"></td>
+					<td><input id="ce" name="ce" type="checkbox" checked="checked"></td>
+					<td nowrap="nowrap"><label for="ce"><?php echo $AppUI->_('Cost Effective');?></label></td>
 				</tr>
 				<tr>
-					<td align="right" nowrap><?php echo $AppUI->_('Effort Effective');?>:
-					<td align="left" nowrap> <input id="ee" name="te" type="checkbox" value="1"></td>
+					<td><input id="ee" name="ee" type="checkbox" checked="checked"></td>
+					<td nowrap="nowrap"><label for="ee"><?php echo $AppUI->_('Effort Effective');?></label></td>
 				</tr>
 				<tr>
-					<td align="right" nowrap><?php echo $AppUI->_('Time Effective');?>:
-					<td align="left" nowrap><input id="te" name="te" type="checkbox" value="1"></td>
+					<td><input id="te" name="te" type="checkbox" checked="checked"></td>
+					<td nowrap="nowrap"><label for="te"><?php echo $AppUI->_('Time Effective');?></label></td>
 				</tr>
 				<tr>
 					<td valign="bottom" align="right" colspan="3" nowrap> <input type="submit" class="button" value="compute"></td>

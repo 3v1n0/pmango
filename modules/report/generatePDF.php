@@ -11,6 +11,17 @@ function getProjectName($project_id) {
 	return $name;
 }
 
+function getGroupName($project_id) {
+	$q  = new DBQuery;
+	$q->addTable('groups');
+	$q->addTable('projects');
+	$q->addQuery('groups.group_name');
+	$q->addWhere("projects.project_group = groups.group_id and projects.project_id = $project_id");
+	$group = $q->loadResult();
+	
+	return $group;
+}
+
 function getUserProjects($user_id) {
 	
 	$q  = new DBQuery();
@@ -26,6 +37,11 @@ function getUserProjects($user_id) {
 		$ret[] = $result['project_id'];
 
 	return $ret;
+}
+
+function getUserPDF($project_id, $type) {
+	$pname = getProjectName($project_id);
+	return PM_filenamePdf($pname, $type);
 }
 
 function deletePDF($project_id, $type) {
@@ -67,13 +83,25 @@ function generateTasksPDF($project_id, $tview, $task_level, $tasks_closed, $task
                           $start_date, $end_date, $showIncomplete, $showMine) {
 
 	$name = getProjectName($project_id);
+	$group_name = getGroupName($project_id);
 	$type = $tview ? PMPDF_ACTUAL : PMPDF_PLANNED;
 
 	$pdf = PM_headerPdf($name, 'P', 1, $group_name);
-	PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_opened, $roles,
-	               $tview, $start_date, $end_date, $showIncomplete, $showMine);
+	PM_makeTaskPdf($pdf, $project_id, $tview, $task_level, $tasks_closed, $tasks_opened,
+	               $roles, $start_date, $end_date, $showIncomplete, $showMine);
 	$filename = PM_footerPdf($pdf, $name, $type);
 	setProjectSubState('PDFReports', $type, $filename);
+}
+
+function generatePropertiesPDF($project_id, $properties, $page = 'P') {
+
+	$name = getProjectName($project_id);
+
+	$pdf = PM_headerPdf($name);
+	PM_makePropPdf($pdf, $project_id, $properties, $page);
+	
+	$filename = PM_footerPdf($pdf, $name, PMPDF_PROPERTIES);
+	setProjectSubState('PDFReports', PMPDF_PROPERTIES, $filename);
 }
 
 ?>

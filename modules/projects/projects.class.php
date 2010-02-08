@@ -580,22 +580,22 @@ class CProject extends CDpObject {
         // Defined
         // 1.4.1.1 V
         if ($this->project_start_date == '' || is_null($this->project_start_date) || $this->project_start_date == '0000-00-00 00:00:00')
-        	$msg.="- Project start date is not defined\n";
+        	$msg.="- Project start date is not defined<br>";
         // 1.4.1.2 V
         if ($this->project_finish_date == '' || is_null($this->project_finish_date) || $this->project_finish_date == '0000-00-00 00:00:00')
-        	$msg.="- Project finish date is not defined\n";
+        	$msg.="- Project finish date is not defined<br>";
         // 1.4.1.3 V
         if ($this->project_start_date > $this->project_finish_date)
-        	$msg.="- Project start date is after finish date\n";  
+        	$msg.="- Project start date is after finish date<br>";  
         // 1.4.1.4 V
         if ($this->project_effort <= 0)    	
-        	$msg.="- Project effort is not defined\n";	 
+        	$msg.="- Project effort is not defined<br>";	 
         // 1.4.1.5 V
         if ($this->project_target_budget <= 0)    	
-        	$msg.="- Project target budget is not defined\n";
+        	$msg.="- Project target budget is not defined<br>";
         // 1.4.1.6 V
         if ($this->project_hard_budget <= 0)    	
-        	$msg.="- Project hard budget is not defined\n";
+        	$msg.="- Project hard budget is not defined<br>";
         // 1.4.1.7 V
         $r = 0;
         $q = new DBQuery();
@@ -604,7 +604,7 @@ class CProject extends CDpObject {
         $q->addWhere("project_id = $pid");
         $r = $q->loadResult();
         if ($r <= 0)
-        	$msg.="- There aren't resources assigned to project\n";
+        	$msg.="- There aren't resources assigned to project<br>";
 
         return $msg;
         
@@ -617,16 +617,16 @@ class CProject extends CDpObject {
         $msg=''; 
         $ts = $this->getStartDateFromTask($pid);
         if ($this->project_start_date > $ts['task_start_date'])
-        	$msg.="- Project start date is after <a href=\"?m=tasks&a=view&task_id=".$ts["task_id"]."\"><span style=\"color:#990000;text-decoration:underline;\">start date from tasks</span></a>\n";
+        	$msg.="- Project start date is after <a href=\"?m=tasks&a=view&task_id=".$ts["task_id"]."\"><span style=\"color:#990000;text-decoration:underline;\">start date from tasks</span></a><br>";
         $tf = $this->getFinishDateFromTask($pid);
         if ($this->project_finish_date < $tf['task_finish_date'])
-        	$msg.="- Project finish date is before <a href=\"?m=tasks&a=view&task_id=".$tf["task_id"]."\"><span style=\"color:#990000;text-decoration:underline;\">finish date from tasks</span></a>\n";
+        	$msg.="- Project finish date is before <a href=\"?m=tasks&a=view&task_id=".$tf["task_id"]."\"><span style=\"color:#990000;text-decoration:underline;\">finish date from tasks</span></a><br>";
         if ($this->project_target_budget > $this->project_hard_budget)
-        	$msg.="- Project target budget is greater than hard budget\n";
+        	$msg.="- Project target budget is greater than hard budget<br>";
         if ($this->project_effort <> $this->getEffortFromTask())
-        	$msg.="- Project effort is different from effort from tasks\n";
+        	$msg.="- Project effort is different from effort from tasks<br>";
         if ($this->project_target_budget <> $this->getBudgetFromTask())
-        	$msg.="- Project target budget is different from budget from tasks\n";
+        	$msg.="- Project target budget is different from budget from tasks<br>";
         $q = new DBQuery;
 		$q->addQuery("DISTINCT(t.task_id), t.task_name");
 		$q->addTable('tasks','t');
@@ -636,7 +636,7 @@ class CProject extends CDpObject {
 		$ar = $q->loadList();
 		if (is_array($ar))
 	  		foreach ($ar as $t)
-	  			$msg.="- Project doesn't contain a resource assigned to task <a href=\"?m=tasks&a=view&task_id=".$t['task_id']."\"><span style=\"color:#990000;text-decoration:underline;\">".CTask::getWBS($t['task_id'])." ".$t['task_name']."</span></a>\n";
+	  			$msg.="- Project doesn't contain a resource assigned to task <a href=\"?m=tasks&a=view&task_id=".$t['task_id']."\"><span style=\"color:#990000;text-decoration:underline;\">".CTask::getWBS($t['task_id'])." ".$t['task_name']."</span></a><br>";
 	  			
 	  	$q->clear();
 		$q->addQuery('task_finish_date');
@@ -664,7 +664,7 @@ class CProject extends CDpObject {
 		}
 		if ($d1 > 0)
 			if (!array_search($d1,$dates))
-				$msg .="- Project delivery date doesn't match with a child task finish date\n";
+				$msg .="- Project delivery date doesn't match with a child task finish date<br>";
         
 		$q->clear();
 		$q->addQuery('task_id');
@@ -681,7 +681,7 @@ class CProject extends CDpObject {
 	        	$temp = $obj->isDefined();
 	        	$temp .= $obj->isWellFormed('','',true);
 	        	if ($temp <> '') {
-	        		$msg.=" - Task: <a href=\"?m=tasks&a=view&task_id=$obj->task_id\"><span style=\"color:#990000;text-decoration:underline;\">".$obj->getWBS($obj->task_id)." $obj->task_name</span></a> isn't Well Formed\n";
+	        		$msg.=" - Task: <a href=\"?m=tasks&a=view&task_id=$obj->task_id\"><span style=\"color:#990000;text-decoration:underline;\">".$obj->getWBS($obj->task_id)." $obj->task_name</span></a> isn't Well Formed<br>";
 	        		//$msg.=$temp;
 	        	}
 	        }
@@ -699,9 +699,9 @@ class CProject extends CDpObject {
         $ptb = $this->project_target_budget;
         $pac = $this->getActualCost();
         if ($ptb < $pac)
-        	$msg.="- Project budget is smaller than actual cost\n";
+        	$msg.="- Project budget is smaller than actual cost<br>";
         if ($this->getCostPerformanceIndex($pid,$pac,$ptb,'') > 1)
-        	$msg.="- Project cost performance index is greater than 1\n";
+        	$msg.="- Project cost performance index is greater than 1<br>";
         return $msg;
 	}
 	
@@ -713,9 +713,9 @@ class CProject extends CDpObject {
         $pe = $this->project_effort;
         $pae = $this->getActualEffort();
         if ($pe < $pae)
-        	$msg.="- Project effort is smaller than actual effort\n";
+        	$msg.="- Project effort is smaller than actual effort<br>";
         if ($this->getCostPerformanceIndex($pid,$pae,$pe,'') > 1)
-        	$msg.="- Project effort performance index is greater than 1\n";
+        	$msg.="- Project effort performance index is greater than 1<br>";
         return $msg;
         
 	}
@@ -726,7 +726,7 @@ class CProject extends CDpObject {
         	return "Error";
         $msg='';
         if ($this->getTimePerformanceIndex($pid) > 1)
-        	$msg.="- Project time performance index is greater than 1\n";
+        	$msg.="- Project time performance index is greater than 1<br>";
         return $msg;
 	}
 	

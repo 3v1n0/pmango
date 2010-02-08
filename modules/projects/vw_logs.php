@@ -58,8 +58,6 @@
 -------------------------------------------------------------------------------------------
 */
 
-include 'modules/report/generatePDF.php';
-
 global $AppUI, $project_id, $canEdit, $m, $tab;
 
 $q  = new DBQuery;
@@ -90,7 +88,7 @@ if (!empty($_POST) && !dPgetBoolParam($_POST, 'make_pdf')) {
 	setProjectSubState('TaskLogs', 'hide_complete', dPgetBoolParam($_POST, 'hide_complete'));
 	setProjectSubState('TaskLogs', 'user_filter', dPgetParam($_POST, 'user_id', -1));
 	
-	if (getProjectState('TaskLogs') != $pre || getProjectState('TasksDate') != $pre_date)
+	if (getProjectState('TaskLogs') !== $pre || getProjectState('TasksDate') !== $pre_date)
 		deletePDF($project_id, PMPDF_LOG);
 }
 
@@ -303,7 +301,10 @@ function showFullProject() {
 				
 				if ($pdf) {
 ?>
-				<a href="<?echo $pdf;?>"><img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" valign="middle"></a><?
+					<a href="<?echo $pdf;?>">
+						<img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" valign="middle">
+					</a>
+<?
 				}
 ?>			
 				    <input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
