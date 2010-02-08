@@ -279,18 +279,6 @@ class TaskNetwork {
 		return $this->img;
 	}
 	
-	private function terminateWithError(){
-		$img = imagecreate(950,80);
-		$white = imagecolorallocate($img,255,255,255);
-		$black = imagecolorallocate($img,0,0,0);
-		imagestring($img,5,15,15,"-----------------------------------------------Error-----------------------------------------------",$black);
-		imagestring($img,5,10,30,"|  The critical path could not be drawn as the referring taskboxes were not shown in the diagram.  |",$black);
-		imagestring($img,5,10,50,"|                              Please select a lower explode task level.                           |",$black);
-		imagestring($img,5,15,65,"---------------------------------------------------------------------------------------------------",$black);   
-		imagepng($img);
-		exit();
-	}
-	
 	private function buildTN(){
 		if ($this->x > 1 && $this->y > 1 && !$this->pChanged)
 			return;
@@ -373,6 +361,9 @@ class TaskNetwork {
 		
 		if($this->pShowCriticalPath){
 			$this->drawCriticalPath();
+		}
+		else{
+			$this->mergeNotice();
 		}
 			
 	}
@@ -1319,9 +1310,48 @@ class TaskNetwork {
 
 	}
 
-//------Funzioni di merging------------fine
+	private function mergeNotice(){
+		$imgTN = $this->img;
+		$imgTNx = $this->x;
+		$imgTNy = $this->y;
+		
+		$imgnotice = imagecreate(400,20);
+		$imgnoticex = 400;
+		$imgnoticey = 20;
+		$bianco = ImageColorAllocate($imgnotice,255,255,255);
+		$nero = ImageColorAllocate($imgnotice,0,0,0);
+		imagestring($imgnotice,4,50,0,"* The critical path is not displayed.",$nero);
+		
+		$outx = $imgTNx;
+		$outy = $imgTNy + $imgnoticey;
+		
+		$out = ImageCreate($outx , $outy);
+		$bianco = ImageColorAllocate($out,255,255,255);
+
+		imagecopy($out,$imgTN,0,0,0,0,$imgTNx,$imgTNy);
+		imagecopy($out,$imgnotice,0,$imgTNy,0,0,$imgnoticex,$imgnoticey);
+
+
+		imagedestroy($imgnotice);
+		imagedestroy($imgTN);
+
+		$this->img=$out; $this->x = $outx; $this->y = $outy;
+	}
+	//------Funzioni di merging------------fine
 
 //------Funzioni di setting------------
+	private function terminateWithError(){
+		$img = imagecreate(950,80);
+		$white = imagecolorallocate($img,255,255,255);
+		$black = imagecolorallocate($img,0,0,0);
+		imagestring($img,5,15,15,"-----------------------------------------------Error-----------------------------------------------",$black);
+		imagestring($img,5,10,30,"|  The critical path could not be drawn as the referring taskboxes were not shown in the diagram.  |",$black);
+		imagestring($img,5,10,50,"|                              Please select a lower explode task level.                           |",$black);
+		imagestring($img,5,15,65,"---------------------------------------------------------------------------------------------------",$black);   
+		imagepng($img);
+		exit();
+	}
+
 	private function incrementmatrix($matrix,$inc){
 		for($i=0;$i<sizeof($matrix);$i++){
 			for($j=0;$j<sizeof($matrix[$i]);$j++){
