@@ -199,6 +199,11 @@ function showFullProject() {
 	document.frmFilter.sdate.value = "<?php echo $whole_start->format($df);?>";
 	document.frmFilter.edate.value = "<?php echo $whole_finish->format($df);?>";
 }
+
+function makeLogsPDF() {
+	document.pdfFilter.make_pdf.value = "true";
+	generatePDF('pdfFilter', 'logs_pdf_span');
+}
 </script>
 
 <form name="frmFilter" method='post' action="?m=projects&a=view&project_id=<?=$project_id?>&tab=<?=$tab?>">
@@ -285,7 +290,7 @@ function showFullProject() {
 	</div>
 </form>
 
-<form name='pdfFilter' method='post' action='?m=projects&a=view&project_id=<?=$project_id?>&tab=<?=$tab?>'>
+<form id='pdfFilter' name='pdfFilter' method='post' action='?m=projects&a=view&project_id=<?=$project_id?>&tab=<?=$tab?>'>
 	<input type="hidden" name="m" value="projects"/>
 
 	<div id='tab_content'>
@@ -293,25 +298,29 @@ function showFullProject() {
 			<tr>
 				<td align="right">
 <? 
-				if (dPgetBoolParam($_POST, 'make_pdf')) {
-					generateLogPDF($project_id, $user_id, $hide_inactive, $hide_complete, $start_date, $end_date);
-				}
-
-				$pdf = getProjectSubState('PDFReports', PMPDF_LOG);
+					if (dPgetBoolParam($_POST, 'make_pdf')) {
+						generateLogPDF($project_id, $user_id, $hide_inactive, $hide_complete, $start_date, $end_date);
+					}
+	
+					$pdf = getProjectSubState('PDFReports', PMPDF_LOG);
 				
-				if ($pdf) {
+?>	
+					<span id="logs_pdf_span" style="vertical-align: middle">	
+<?							
+					if ($pdf && file_exists($pdf)) {
 ?>
-					<a href="<?echo $pdf;?>">
-						<img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" valign="middle">
-					</a>
+						<a id="logs_pdf_link" href="<?echo $pdf;?>">
+							<img id="logs_pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0">
+						</a>
 <?
-				}
-?>			
-				    <input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
-					<input type="hidden" name="make_pdf" value="false" />
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF ' );?>" onclick='document.pdfFilter.make_pdf.value="true"; pdfFilter.submit();'>
+					}
+?>
+					</span>		
+				    <input type="hidden" name="make_pdf" value="false" />
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF ' );?>" onclick='makeLogsPDF();'>
 					<input type="hidden" name="addreport" value="-1" />
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>" onclick='document.pdfFilter.addreport.value="3"; pdfFilter.submit();'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 				</td>
 			</tr>
 		</table>

@@ -614,9 +614,13 @@ function showFullProject() {
 	document.task_list_options.sdate.value = "<?php echo $whole_start->format($df);?>";
 	document.task_list_options.edate.value = "<?php echo $whole_finish->format($df);?>";
 }
+
+function makeTasksPDF() {
+	document.pdf_options.make_pdf.value = "true";
+	
+	generatePDF('pdf_options', 'tasks_pdf_span'); 
+}
 </script>
-<script
-	type="text/javascript" src="/js/dateControl.js"></script>
 <?php
 if ($project_id) {
 	?>
@@ -711,7 +715,7 @@ if ($project_id) {
 </div>
 </form>
 
-<form name='pdf_options' method='POST'
+<form id='pdf_options' name='pdf_options' method='POST'
 	action='<?php echo $query_string; ?>'>
 <div id='tab_content'>
 <table width='100%' border='0' cellpadding='1' cellspacing='0'
@@ -728,23 +732,22 @@ if ($project_id) {
 		}
 		
 		$pdf = getProjectSubState('PDFReports', ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
-		
-		if ($pdf) {
+?>	
+		<span id="tasks_pdf_span" style="vertical-align: middle">	
+<?							
+			if ($pdf && file_exists($pdf)) {
 ?>
-			<a href="<?echo $pdf;?>">
-				<img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" valign="middle">
-			</a>
+				<a id="tasks_pdf_link" href="<?echo $pdf;?>">
+					<img id="tasks_pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0">
+				</a>
 <?
-		}
+			}
 ?>
-		<input type="button" class="button"
-			value="<?php echo $AppUI->_( 'Configure' );?>"
-			onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
-
+		</span>
 		<input type="hidden" name="make_pdf" value="false" /> <input
 			type="button" class="button"
 			value="<?php echo $AppUI->_( 'Generate PDF ' );?>"
-			onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
+			onclick='makeTasksPDF();'>
 			<? if($tview==0){?> <input type="hidden" name="addreport" value="-1" />
 		<input type="button" class="button"
 			value="<?php echo $AppUI->_( 'Add to Report ' );?>"
@@ -753,6 +756,9 @@ if ($project_id) {
 			type="button" class="button"
 			value="<?php echo $AppUI->_( 'Add to Report ' );?>"
 			onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'><?}?>
+		<input type="button" class="button"
+			value="<?php echo $AppUI->_( 'Configure' );?>"
+			onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 		</td>
 	</tr>
 </table>

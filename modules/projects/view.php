@@ -199,26 +199,14 @@ $(function() {
 
 function makePDF() {
 	document.prop_report.make_prop_pdf.value = "true";
+	generatePDF('prop_report', 'project_pdf_span');
+}
 
-	$("#pdf_icon_span").hide();
-	$("#pdf_icon_span").html('<img id="pdf_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
-	
-	$.ajax({
-	   type: "POST",
-	   url:  "./index.php?m=projects&a=view&project_id=<? echo $project_id?>",
-	   data: $("#prop_report").serialize(),
-	   success: function(html) {
-        	$("#pdf_loader").fadeOut("fast", function() {
-            	var data = $(html).find("#pdf_icon_span").hide();
-        		$("#pdf_icon_span").replaceWith(data);
-        		data.fadeIn("fast");
-            });
-  	   },
-	   error: function() {
-  		 	$("#pdf_icon_span").hide();
-  		 	document.prop_report.submit();
-  	   }
-	});
+function addReport() {
+	document.prop_report.make_prop_pdf.value = "false";
+	document.prop_report.submit();
+
+	$("#add_to_report").val('<? echo $AppUI->_('Loading...'); ?>');
 }
 
 </script>
@@ -482,12 +470,12 @@ function makePDF() {
 									
 									$pdf = getProjectSubState('PDFReports', PMPDF_PROPERTIES);
 ?>
-									<span id="pdf_icon_span" style="vertical-align: middle">	
+									<span id="project_pdf_span" style="vertical-align: middle">	
 <?							
-									if ($pdf) {
+									if ($pdf && file_exists($pdf)) {
 ?>
-										<a id="pdf_link" href="<?echo $pdf;?>">
-											<img id="pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0">
+										<a id="project_pdf_link" href="<?echo $pdf;?>">
+											<img id="project_pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0">
 										</a>
 <?
 									}
@@ -504,7 +492,7 @@ function makePDF() {
 									?>
 									
 										<input type="hidden" name="summary" value="<?php echo $message;?>" />
-										<input type="submit" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>">
+										<input onclick="addReport();" id="add_to_report" type="submit" class="button" value="<?php echo $AppUI->_('Add to Report');?>">
 								</td>
 							</tr>
 						</table>

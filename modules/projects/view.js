@@ -15,6 +15,8 @@
  Further information at: http://penelope.di.unipi.it
 
  Version history.
+ - 2010.02.08
+   0.4, added a function for placing AJAX requests for pdf forms
  - 2010.02.01
    0.3, use jQuery's slideToggle for switching item view
  - 2010.01.31
@@ -148,5 +150,32 @@ function displayItemSwitch(id1, id2) {
 			item2.style.display = 'none';
 	}
 	*/
+}
+
+function generatePDF(form_id, parent_id) {
+	var parent = $('#'+parent_id);
+	var loader = parent_id+"_pdf_loader";
+	var form = $("#"+form_id);
+	
+	
+	parent.hide();
+	parent.html('<img id="'+loader+'" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+	
+	$.ajax({
+	   type: form.attr('method'),
+	   url: form.attr('action'),
+	   data: form.serialize(),
+	   success: function(html) {
+        	$("#"+loader).fadeOut("fast", function() {
+            	var data = $(html).find('#'+parent_id).hide();
+            	parent.replaceWith(data);
+        		data.fadeIn("fast");
+            });
+  	   },
+	   error: function() {
+  		 	parent.hide();
+  		 	form.submit();
+  	   }
+	});
 }
 
