@@ -238,7 +238,7 @@ function addProjectReport() {
 <?
 	if (!isset($_GET['tab'])) {
 ?>
-		<span id="projectBarTip" style="padding-right: 80px; color: <? echo bestColor( $obj->project_color_identifier )?>;" >
+		<span id="projectBarTip" style="padding-right: 80px; color: <? echo bestColor( $obj->project_color_identifier )?>; font-style: italic;" >
 			<? echo $AppUI->_('Click here to toggle the project informations'); ?>
 		</span>
 <?
