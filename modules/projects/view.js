@@ -196,11 +196,18 @@ function addReport(form_id, button_id) {
 	   type: form.attr('method'),
 	   url: form.attr('action'),
 	   data: form.serialize(),
-	   success: function() {
-		   button.val("Done!");
-		   setTimeout(function() {
-			   button.fadeOut();
-		   }, 500);
+	   success: function(html) {
+		   var data = $(html).find('#'+button_id);
+
+		   if (!data.size()) {
+			   button.val("Error, reloading...");
+			   form.submit();
+		   } else {
+			   button.val("Done!");
+			   setTimeout(function() {
+				   button.fadeOut();
+			   }, 500);
+		   }
   	   },
 	   error: function() {
   		   button.val(old_name);
