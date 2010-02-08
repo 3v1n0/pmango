@@ -668,7 +668,7 @@ class CAppUI {
 * Display the formatted message and icon
 * @param boolean If true the current message state is cleared.
 */
-	function getProperties( $reset=true) {
+	function getProperties($reset=true) {
 		$s = '';
 		$msg = $this->properties;
 		$msgNo = $this->prpNo;//print_r($this->prpNo);
@@ -691,7 +691,7 @@ class CAppUI {
 					break;
 			}
 		}
-		return rtrim($s,'<br>');
+		return $s;
 	}
 /**
 * Set the value of a temporary state variable.
