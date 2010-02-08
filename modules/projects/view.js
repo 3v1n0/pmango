@@ -169,8 +169,12 @@ function generatePDF(form_id, parent_id) {
 	   success: function(html) {
         	$("#"+loader).fadeOut("fast", function() {
             	var data = $(html).find('#'+parent_id).hide();
-            	parent.replaceWith(data);
-        		data.fadeIn("fast");
+            	if (data.size() == 1) {
+	            	parent.replaceWith(data);
+	        		data.fadeIn("fast");
+            	} else {
+            		form.submit();
+            	}
             });
   	   },
 	   error: function() {
