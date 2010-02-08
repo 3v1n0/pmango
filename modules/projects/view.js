@@ -93,7 +93,7 @@ function projectViewSwitch() {
 	  });
 	}
 	
-	var pr_c = $(".project_infos_childs");
+	var pr_c = $("div.project_infos_childs");
 	
 	if (pr_hidden) {
 		img.attr('src', 'images/icons/collapse.gif');
