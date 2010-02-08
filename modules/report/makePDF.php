@@ -66,14 +66,10 @@ define("PMPDF_PROPERTIES", 4);
 $orient='L';
 $y=40;
 
-switch($dPconfig['currency_symbol']){
-	case '€': $currency='�';
-	break;
-	case '£': $currency='�';
-	break;
-	case '¥': $currency='�';
-	break;
-	default: $currency=$dPconfig['currency_symbol'];
+if ($dPconfig['currency_symbol'] == '€') {
+	$currency = chr(128);
+} else {
+	$currency = iconv('UTF-8', 'ISO-8859-1', $dPconfig['currency_symbol']);
 }
 
 define("CURRENCY",$currency);
@@ -456,7 +452,7 @@ function PM_footerPdf($pdf, $project_name, $pdf_type = 0){
 
 
 
-function PM_makePropPdf($pdf, $properties, $project_id, $page='P'){
+function PM_makePropPdf($pdf, $project_id, $properties, $page = 'P'){
 	global $brd, $AppUI;
 	$top='LRT';
 	$lr='LR';
@@ -670,13 +666,13 @@ function PM_makePropPdf($pdf, $properties, $project_id, $page='P'){
 		$pdf->Cell(0,4,'Properties',1,1,'C');
 		$pdf->SetFont('Arial','',8);
 	
-		$properties=explode("<br>",$properties);
-		$pdf->Cell(0,4,strip_tags($properties[0]),$top,1,'L');
+		$properties = explode('<br>', strip_tags($properties, '<br>'));
+		$pdf->Cell(0,4,$properties[0],$top,1,'L');
 		for($i=1;$i<count($properties)-1;$i++){
-			$pdf->Cell(0,4,strip_tags($properties[$i]),$lr,1,'L');
+			$pdf->Cell(0,4,$properties[$i],$lr,1,'L');
 		}
 		$j=count($properties)-1;
-		$pdf->Cell(0,4,strip_tags($properties[$j]),$bottom,1,'L');
+		$pdf->Cell(0,4,$properties[$j],$bottom,1,'L');
 	}
 	
 	$y3=$pdf->GetY();
@@ -981,12 +977,12 @@ function PM_makeTaskPdf($pdf, $project_id, $tview, $task_level, $tasks_closed, $
 		if($wbs>$max) $max=$wbs;
 		if(!$tview){
 			$te = $obj->getEffort($t['task_id']);
-			$tc = $obj->getBudget($t['task_id']);
+			$tc = $obj->getBudget($t['task_id']).CURRENCY;
 		}else{
 		 	$childs = $obj->getChild($t['task_id'],$t['task_project']);
 			$p_te = $obj->getEffort($t['task_id'], $childs);
 			$p_tc = $obj->getBudget($t['task_id']);
-			$tc = $obj->getActualCost($t['task_id'], $childs);
+			$tc = $obj->getActualCost($t['task_id'], $childs).CURRENCY;
 			$te = $obj->getActualEffort($t['task_id'], $childs);
 		}
 		$cost=$pdf->GetStringWidth($tc)+1;
@@ -1111,7 +1107,7 @@ function PM_makeTaskPdf($pdf, $project_id, $tview, $task_level, $tasks_closed, $
 		if(!$tview){
 			$te = $obj->getEffort($t['task_id']);
 			$tpr = intval( $obj->getProgress($t['task_id'],$te));
-			$tc = $obj->getBudget($t['task_id']);
+			$tc = $obj->getBudget($t['task_id']).CURRENCY;
 			
 			if ($showIncomplete && ($tpr >= 100)) $incomplete=true;
 			
@@ -1138,8 +1134,8 @@ function PM_makeTaskPdf($pdf, $project_id, $tview, $task_level, $tasks_closed, $
 			}
 			
 			$p_te = $obj->getEffort($t['task_id'], $childs);
-			$p_tc = $tc = $obj->getBudget($t['task_id']);
-			$tc = $obj->getActualCost($t['task_id'], $childs);
+			$p_tc = $tc = $obj->getBudget($t['task_id']).CURRENCY;
+			$tc = $obj->getActualCost($t['task_id'], $childs).CURRENCY;
 			$tpr = intval( $obj->getProgress($t['task_id'],$p_te));
 			$te = $obj->getActualEffort($t['task_id'], $childs);
 			
