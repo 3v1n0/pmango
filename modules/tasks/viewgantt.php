@@ -252,20 +252,23 @@ function showFullProject() {
 }
 
 $(function(){
-	$("#graphloader").width(graphWidth);
-	$("#graphloader").height(400);
-	$("#graphloader").css("background-color", "#fff");
+	var loader = $('#graphloader');
+	loader.width(graphWidth);
+	loader.height(400);
+	loader.css("background-color", "#fff");
 });
 
 function loadGraph(src) {
 	$(function () {
 		var img = new Image();
+		var loader = $('#graphloader');
+		var graph = $('#graph');
 
 		$(img).load(function () {
 			$(this).hide();
-			$('#graphloader').hide();
-			$('#graph').append(this);
-			$('#graph').show();
+			loader.hide();
+			graph.append(this);
+			graph.show();
 	      	$(this).fadeIn();
 		})
 
@@ -274,9 +277,9 @@ function loadGraph(src) {
 
 	    	$(errimg).load(function () {
 				$(this).hide();
-				$('#graphloader').hide();
-				$('#graph').append(this);
-				$('#graph').show();
+				loader.hide();
+				graph.append(this);
+				graph.show();
 		      	$(this).fadeIn();
 			})
 
