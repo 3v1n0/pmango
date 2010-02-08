@@ -106,6 +106,8 @@ class TaskNetwork {
 
 	private $SpM,$EpM; //gli array associativi delle start e end project milestone
 	private $mapBlank; //mappa de punti vuoti della TN
+	
+	private $crPath; //il critical path
 
 	private $project; //numero pregetto
 	private $pTaskLevel;
@@ -117,6 +119,7 @@ class TaskNetwork {
 	private $pShowAllArrow;
 	private $pShowTimeGaps;
 	private $pShowCriticalPath;
+	private $pIndexCriticalPath;
 
 	private $pShowNames;
 	private $pShowProgress;
@@ -134,6 +137,7 @@ class TaskNetwork {
 		$this->project = $project;
 		if(!is_null($project)){
 			$this->pTaskLevel = 1;
+			$this->pIndexCriticalPath = 1;
 			$this->pOpenedTasks = array();
 			$this->pClosedTasks = array();
 			$this->pShowVertical = false;		
@@ -167,6 +171,11 @@ class TaskNetwork {
 		$this->pChanged = true;
 	}
 
+	public function setIndexCriticalPath($ind){
+		$this->pIndexCriticalPath = intval($ind) > 1 ? intval($ind) : 1;
+		$this->pChanged = true;
+	}
+	
 	public function setOpenedTasks($tsk) {
 		$this->pOpenedTasks = is_array($tsk) ? $tsk : array();
 		$this->pChanged = true;
@@ -361,6 +370,7 @@ class TaskNetwork {
 		
 		if($this->pShowCriticalPath){
 			$this->drawCriticalPath();
+			$this->mergeTableCrPath();
 		}
 		else{
 			$this->mergeNotice();
@@ -918,6 +928,7 @@ class TaskNetwork {
 	
 	private function drawCriticalPath(){
 		$level = CTask::getLevel($this->project);
+		$indexCriticalPath = $this->pIndexCriticalPath;
 		$vertical = $this->pShowVertical;
 		$allArrow = $this->pShowAllArrow;
 		$timeGaps = $this->pShowTimeGaps;
@@ -987,8 +998,13 @@ class TaskNetwork {
 		
 		$output = $this->orderArray($output);
 	 
+		$this->crPath[0] = $output[sizeof($output)-1];
+		if(isset($output[sizeof($output)-2])){$this->crPath[1] = $output[sizeof($output)-2];}
+		if(isset($output[sizeof($output)-3])){$this->crPath[2] = $output[sizeof($output)-3];}
+		if(isset($output[sizeof($output)-4])){$this->crPath[3] = $output[sizeof($output)-4];}
+		if(isset($output[sizeof($output)-5])){$this->crPath[4] = $output[sizeof($output)-5];}
 		
-		$cPath = $output[sizeof($output)-1]; // prendo il critical path
+		$cPath = $output[sizeof($output)-$indexCriticalPath]; // prendo il critical path da disegnare
 		$tbxidpath = explode(",",substr($cPath["id"],strpos($cPath["id"],",")+1));
 
 	//controlla se dipendenze sono nascoste	
@@ -1337,17 +1353,81 @@ class TaskNetwork {
 
 		$this->img=$out; $this->x = $outx; $this->y = $outy;
 	}
-	//------Funzioni di merging------------fine
+	
+	
+	private function centerString($str,$len){
+		$s;
+		$strl = strlen($str);
 
+		for($i=0;$i<intval(($len-$strl)/2);$i++){
+			$s[sizeof($s)] = " ";
+		}
+		
+		$s[sizeof($s)] = $str;
+		for($i=0;$i<intval(($len-$strl)/2);$i++){
+			$s[sizeof($s)] = " ";
+		}
+		
+		$out = implode('',$s);
+		
+		if(strlen($out) < $len){
+			$s[sizeof($s)] = " ";		
+			$out = implode('',$s);
+		}
+		
+		
+		return $out;
+	}
+	
+	private function mergeTableCrPath(){
+		$cPath = $this->crPath;
+		$imgTN = $this->img;
+		$imgTNx = $this->x;
+		$imgTNy = $this->y;
+		
+		$imgtable = imagecreate(600,200);
+		$imgtablex = 600;
+		$imgtabley = 200;
+		$bianco = ImageColorAllocate($imgtable,255,255,255);
+		$black = ImageColorAllocate($imgtable,0,0,0);
+		imagestring($imgtable,5,50,0,"+---------------------Critical Path----------------------+",$black);
+		imagestring($imgtable,5,50,15,"| Index ||  Duration  ||  Effort  ||  Cost  ||  Last Gap |",$black);
+		imagestring($imgtable,5,50,25,"+========================================================+",$black);
+		
+		$y=25;
+		for($i=0;$i<sizeof($cPath);$i++){
+			imagestring($imgtable,5,50,$y+10,"+--------------------------------------------------------+",$black);
+			imagestring($imgtable,5,50,$y+20,"|   ".($i+1)."   ||".TaskNetwork::centerString($cPath[$i]["duration"],12)."||".TaskNetwork::centerString($cPath[$i]["effort"],10)."||".TaskNetwork::centerString($cPath[$i]["cost"],8)."||".TaskNetwork::centerString($cPath[$i]["lastgap"],11)."|",$black);
+			imagestring($imgtable,5,50,$y+30,"+--------------------------------------------------------+",$black);
+			$y = $y +30;
+		}		
+		$outx = $imgTNx + $imgtablex;
+		$outy = $imgTNy;
+		
+		$out = ImageCreate($outx , $outy);
+		$bianco = ImageColorAllocate($out,255,255,255);
+
+		imagecopy($out,$imgTN,0,0,0,0,$imgTNx,$imgTNy);
+		imagecopy($out,$imgtable,$imgTNx,$imgTNy/2,0,0,$imgtablex,$imgtabley);
+
+
+		imagedestroy($imgtable);
+		imagedestroy($imgTN);
+
+		$this->img=$out; $this->x = $outx; $this->y = $outy;
+	}
+
+//------Funzioni di merging------------fine
+	
 //------Funzioni di setting------------
 	private function terminateWithError(){
 		$img = imagecreate(950,80);
 		$white = imagecolorallocate($img,255,255,255);
 		$black = imagecolorallocate($img,0,0,0);
-		imagestring($img,5,15,15,"-----------------------------------------------Error-----------------------------------------------",$black);
+		imagestring($img,5,10,15,"+----------------------------------------------Error-----------------------------------------------+",$black);
 		imagestring($img,5,10,30,"|  The critical path could not be drawn as the referring taskboxes were not shown in the diagram.  |",$black);
-		imagestring($img,5,10,50,"|                              Please select a lower explode task level.                           |",$black);
-		imagestring($img,5,15,65,"---------------------------------------------------------------------------------------------------",$black);   
+		imagestring($img,5,10,50,"|                    Please select a lower explode task level or a different path.                 |",$black);
+		imagestring($img,5,10,65,"+--------------------------------------------------------------------------------------------------+",$black);   
 		imagepng($img);
 		exit();
 	}
@@ -1618,17 +1698,22 @@ class TaskNetwork {
 		$query = "SELECT project_finish_date FROM projects p WHERE p.project_id =".$this->project;
 		$res = TaskNetwork::doQuery($query);
 		$EpD = str_replace("-",".",substr($res[0][0],0,10));
-		$EpD = substr($EpD,8,2).".".substr($EpD,5,2).".".substr($EpD,0,4); //End Project Date
+		//$EpD = substr($EpD,8,2).".".substr($EpD,5,2).".".substr($EpD,0,4); //End Project Date
 		
 		//per ogni elemento di arr,
 		for($i=0; $i< sizeof($array); $i++) {
 	 
 		    //imposto il min a i (quelli prima di i sono stati gia' ordinati)
 		    $min=$i;
-	 
+		    $minid = $array[$min]["id"];
+		    $mintask = new taskBoxDB(substr($minid,(strrpos($minid ,',')+1)));
+			$minend = $mintask->getPlannedTimeframe();
+			$mintimegap = TaskNetwork::getTimeDiff($minend["end"],$EpD);
+		    
+			$array[$min]["lastgap"] = $mintimegap;
+			
 		    //parto da i+1 e, se trovo un elemento piu' piccolo, cambio min
 		    for($j=$i+1; $j<sizeof($array); $j++){
-		        
 				if ($array[$j]["duration"] < $array[$min]["duration"]){
 					$min=$j;
 				}
@@ -1642,13 +1727,19 @@ class TaskNetwork {
 						}
 						elseif($array[$j]["cost"] == $array[$min]["cost"]){
 							$jtask = new taskBoxDB(substr($array[$j]["id"],(strrchr($array[$j]["id"],',')+1),(strlen($array[$j]["id"])-strrchr($array[$j]["id"],',')+1)));
-							$mintask = new taskBoxDB(substr($array[$min]["id"],(strrchr($array[$min]["id"],',')+1),(strlen($array[$min]["id"])-strrchr($array[$min]["id"],',')+1)));
 							
+							$jend = $jtask->getPlannedTimeframe();
+							$jtimegap = TaskNetwork::getTimeDiff($jend["end"],$EpD);
+							
+							if($jtimegap < $mintimegap){
+								$min=$j;
+							}
 						}
 					}
 				}
 		    }
-		 
+		    
+
 			    //se durante il for ho cambiato min, scambio arr[i] e arr[min].
 			    if ($min != $i){
 			    	$array = TaskNetwork::arraySwap($array, $i, $min);

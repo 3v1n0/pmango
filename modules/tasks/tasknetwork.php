@@ -94,6 +94,7 @@ $show_dep       = dPgetBoolParam($_GET, 'dep');
 $show_all_arrow = dPgetBoolParam($_GET, 'all_arrow');
 $show_time_gaps = dPgetBoolParam($_GET, 'time_gaps');
 $show_cr_path   = dPgetBoolParam($_GET, 'cr_path');
+$index_cr_path  = dPgetParam($_GET, 'cr_index',1);
 
 // re-set the memory limit for gantt chart drawing acc. to the config value of reset_memory_limit
 ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
@@ -117,6 +118,7 @@ $TN->showDependencies($show_dep);
 $TN->showAllArrow($show_all_arrow);
 $TN->showTimeGaps($show_time_gaps);
 $TN->showCriticalPath($show_cr_path);
+$TN->setIndexCriticalPath($index_cr_path);
 $TN->draw();
 
 // reset the php memory limit to the original php.ini value
