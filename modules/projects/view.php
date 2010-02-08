@@ -209,13 +209,18 @@ function makePDF() {
 	   data: $("#prop_report").serialize(),
 	   success: function(html) {
         	$("#pdf_loader").fadeOut("fast", function() {
-        		$("#pdf_icon_span").replaceWith($(html).find("#pdf_icon_span"));
-        		$("#pdf_icon_span").hide();
-        		$("#pdf_icon_span").fadeIn("fast");
+            	var data = $(html).find("#pdf_icon_span").hide();
+        		$("#pdf_icon_span").replaceWith(data);
+        		data.fadeIn("fast");
             });
+  	   },
+	   error: function() {
+  		 	$("#pdf_icon_span").hide();
+  		 	document.prop_report.submit();
   	   }
 	});
 }
+
 </script>
 
 <table border="0" cellpadding="1" cellspacing="0" width="100%" class="std">
@@ -452,18 +457,20 @@ function makePDF() {
 						<table cellspacing="1" cellpadding="2" border="0" width="100%" height="100%" >
 							<tr>
 								<td class="hilite" style="border: outset #d1d1cd 2px" height="100px" valign="top" colspan="2">
-							<?php
-								if (getProjectState('Properties') && !getProjectState('PropertiesComputed')) {
-									$properties = stripslashes(str_replace("@", "'", getProjectState('Properties')));
-									echo $properties;
-									
-								} else{
-							 		$properties = $AppUI->getProperties();
-							 		setProjectState('Properties', $properties);
-							 		setProjectState('PropertiesComputed', false);
-							 		echo $properties;
-								}
-							?>&nbsp;
+									<div id="properties_div">
+								<?php
+									if (getProjectState('Properties') && !getProjectState('PropertiesComputed')) {
+										$properties = stripslashes(str_replace("@", "'", getProjectState('Properties')));
+										echo $properties;
+										
+									} else{
+								 		$properties = $AppUI->getProperties();
+								 		setProjectState('Properties', $properties);
+								 		setProjectState('PropertiesComputed', false);
+								 		echo $properties;
+									}
+								?>&nbsp;
+									</div>
 								</td>
 							</tr>
 							<tr>
