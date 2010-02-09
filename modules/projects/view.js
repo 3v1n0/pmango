@@ -171,6 +171,21 @@ function delAJAX(form_selector) {
 		ajax.remove();
 }
 
+function topMsgUpdate(updated_parent) {
+	var msg = $("#ui_top_message:first");
+	var new_msg = $(updated_parent).find("#ui_top_message:first");
+
+	if (new_msg.size())
+		new_msg.hide();
+	
+	msg.fadeOut(function() {
+		if (new_msg.size() == 1) {
+			msg.replaceWith(new_msg);
+			new_msg.fadeIn();
+		}
+	});
+}
+
 function generatePDF(form_id, parent_id) {
 	var parent = $('#'+parent_id);
 	var loader = parent_id+"_pdf_loader";
@@ -195,6 +210,8 @@ function generatePDF(form_id, parent_id) {
 	   data: form.serialize(),
 	   success: function(html) {
         	$("#"+loader).fadeOut("fast", function() {
+        		topMsgUpdate(html);
+        		
             	var data = $(html).find('#'+parent_id).hide();
             	if (data.size() == 1) {
 	            	parent.replaceWith(data);
@@ -234,6 +251,7 @@ function addReport(form_id, button_id) {
 	   url: form.attr('action'),
 	   data: form.serialize(),
 	   success: function(html) {
+		   topMsgUpdate(html);
 		   var data = $(html).find('#'+button_id);
 
 		   if (!data.size()) {

@@ -152,8 +152,6 @@ $titleBlock->addCrumb( "?m=report&a=view&project_id=$project_id", "Project Repor
 
 if ($canEdit) 
 	$titleBlock->addCrumb("?m=tasks&a=addedit&task_project=$project_id", "New task");
-	
-$titleBlock->show();
 
 for($i=0;$i<count($AppUI->properties);$i++){
 	if(strstr($AppUI->properties[$i], "Project isn't")!=false)
@@ -173,7 +171,7 @@ if(count($exist)==0){
 
 if (dPgetBoolParam($_POST, 'add_prop_report') && getProjectState('Properties') &&
 	!getProjectState('PropertiesComputed') && !dPgetBoolParam($_POST, 'make_prop_pdf')) {
-
+	$AppUI->setMsg($AppUI->_('Project Properties added to Reports!'), UI_MSG_OK);
 	$properties = addslashes(getProjectState('Properties'));
 	$summary = addslashes($_POST['summary']);
 	$sql = "UPDATE reports SET properties='$properties', ".
@@ -181,6 +179,8 @@ if (dPgetBoolParam($_POST, 'add_prop_report') && getProjectState('Properties') &
 	       "AND reports.user_id=$user_id";
 	$db_roles = db_loadList($sql);						
 }
+
+$titleBlock->show();
  
 ?>
 <script language="javascript">
@@ -244,6 +244,8 @@ function computeProp() {
 					$("#project_pdf_span").fadeOut();
 				}
 
+				topMsgUpdate(html);
+
         		var data = $(html).find("#properties_div");
         		data.hide();
 
@@ -271,16 +273,6 @@ function computeProp() {
             		form.submit();
             		return;
         		}
-
-        		data = $(html).find("#ui_top_message:first");
-        		data.hide();
-
-        		$("#ui_top_message:first").fadeOut(function() {
-	        		if (data.size() == 1) {
-	        			$("#ui_top_message:first").replaceWith(data);
-	        			data.fadeIn();
-	        		}
-        		});
             });
   	   },
   	   error: function() {
