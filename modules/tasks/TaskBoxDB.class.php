@@ -17,6 +17,8 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
+ - 2010.02.10, Marco Trevisan
+   0.9, fixed (hopefully) the alert Computation on running tasks
  - 2010.01.22, Marco Trevisan
    0.8, fixed the actual/planned resources methods
  - 2010.01.19, Matteo Pratesi
@@ -153,7 +155,7 @@ class TaskBoxDB {
 		if (!$this->pPlannedTimeframe || !$this->pUseCache)
 			$this->computePlannedTimeframe();
 
-		$duration = $this->getTimediff($this->pPlannedTimeframe['start'], $this->pPlannedTimeframe['end']);
+		$duration = $this->getHumanTimeDiff($this->pPlannedTimeframe['start'], $this->pPlannedTimeframe['end']);
 		$effort = $this->pCTask->getEffort();
 		$cost = $this->pCTask->getBudget();
 
@@ -175,14 +177,14 @@ class TaskBoxDB {
 		// TODO check for progress < 100;
 		return array("duration" => !is_null($duration) ? $duration : "NA",
 		             "effort"   => !is_null($effort) ? $effort." ph" : "NA",
-		             "cost"     => !is_null($cost) ? $cost.$dPconfig['currency_symbol'] : "NA");
+		             "cost"     => !is_null($cost) ? $cost." ".$dPconfig['currency_symbol'] : "NA");
 	}
 
 	private function computeActualData() {
 		if (!$this->pActualTimeframe || !$this->pUseCache)
 			$this->computeActualTimeframe();
 
-		$duration = $this->getTimediff($this->pActualTimeframe['start'], $this->pActualTimeframe['end']);
+		$duration = $this->getHumanTimeDiff($this->pActualTimeframe['start'], $this->pActualTimeframe['end']);
 		$effort = $this->pCTask->getActualEffort(null, $this->pChild);
 		$cost = $this->pCTask->getActualCost(null, $this->pChild);
 
@@ -345,25 +347,41 @@ class TaskBoxDB {
 	public function isAlerted() {
 		$alert = TaskBoxDB::ALERT_NONE;
 
-		//TODO check for unfinished tasks!
-
 		if (!$this->pPlannedTimeframe || !$this->pUseCache)
 			$this->computePlannedTimeframe();
 
 		if (!$this->pActualTimeframe || !$this->pUseCache)
 			$this->computeActualTimeframe();
 
+		$today = date("Y.m.d");
 		$p = $this->pPlannedTimeframe;
 		$a = $this->pActualTimeframe;
+
+		if (!$a['start']) {
+			if (time() > strtotime($p['start']))
+				return TaskBoxDB::ALERT_ERROR;
+			else
+				$a['start'] = $p['start'];
+		}
+		
+		if (!$a['end']) {
+			if (time() > strtotime($p['end']))
+				return TaskBoxDB::ALERT_ERROR;
+			else
+				$a['end'] = $p['end'];
+		}
 
 		if ($p['start'] != $a['start'] || $p['end'] != $a['end']) {
 			$alert = TaskBoxDB::ALERT_WARNING;
 
 			if (strtotime($p['start']) < strtotime($a['start']) ||
-			    strtotime($p['end']) < strtotime($a['end'])) {
-				  $alert = TaskBoxDB::ALERT_ERROR;
-				  return $alert;
-			    }
+			      strtotime($p['end']) < strtotime($a['end'])) {
+				$alert = TaskBoxDB::ALERT_ERROR;
+				return $alert;
+		    }
+		    
+	    	if ($p['start'] == $a['start'] && $this->getProgress() < 100)
+				$alert = TaskBoxDB::ALERT_NONE;
 		}
 
 		if (!$this->pPlannedData || !$this->pUseCache)
@@ -382,6 +400,10 @@ class TaskBoxDB {
 				$alert = TaskBoxDB::ALERT_ERROR;
 				return $alert;
 			}
+			
+			if ($this->getProgress() < 100 &&
+			    ($a['effort'] < $p['effort'] || $a['cost'] < $p['cost']))
+			    $alert = TaskBoxDB::ALERT_NONE;
 		}
 
 		$pa = $this->getActualResources();
@@ -397,6 +419,10 @@ class TaskBoxDB {
 					$alert = TaskBoxDB::ALERT_ERROR;
 					break;
 				}
+				
+				if ($this->getProgress() < 100 &&
+				     $r['actual_effort'] < $r['planned_effort'])
+					$alert = TaskBoxDB::ALERT_NONE;
 			}
 		}
 
@@ -409,7 +435,7 @@ class TaskBoxDB {
 
 	//--
 
-	private function getTimediff($start, $end) {
+	private function getHumanTimeDiff($start, $end) {
 		if (is_null($start))
 			$start = time();
 		else
