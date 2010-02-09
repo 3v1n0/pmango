@@ -237,6 +237,7 @@ function computeProp() {
 		opacity: "toggle"
 	}, 250, function() {
 		properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+		properties.attr('align', 'center');
 		
 		$.ajax({
 		   type: form.attr("method"),
