@@ -168,8 +168,8 @@ if (isset($_POST['show_task_options'])) {
 	$pre_date = getProjectState('TaskDates');
 //	print_r($pre_tasks);
 	
-	setProjectSubState('Tasks', 'ShowIncomplete', dPgetParam($_POST, 'show_incomplete', 0));
-	setProjectSubState('Tasks', 'ShowMine', dPgetParam($_POST, 'show_mine', 0));
+	setProjectSubState('Tasks', 'ShowIncomplete', dPgetBoolParam($_POST, 'show_incomplete', false));
+	setProjectSubState('Tasks', 'ShowMine', dPgetBoolParam($_POST, 'show_mine', false));
 	setProjectSubState('Tasks', 'Explode', dPgetParam($_POST, 'explode_tasks', '1'));
 	setProjectSubState('Tasks', 'PersonsRoles', dPgetParam($_POST, 'roles', 'N'));
 	setProjectSubState('TaskDates'.$project_id, 'Start', dPgetParam($_POST, 'sdate', $db_start_date[0]['project_start_date']));
@@ -178,8 +178,8 @@ if (isset($_POST['show_task_options'])) {
 	if ($pre_tasks !== getProjectState('Tasks') || $pre_date !== getProjectState('TaskDates'))
 		deletePDF($project_id, ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
 }
-$showIncomplete = getProjectSubState('Tasks', 'ShowIncomplete', 0);
-$showMine = getProjectSubState('Tasks', 'ShowMine', 0);
+$showIncomplete = getProjectSubState('Tasks', 'ShowIncomplete', false);
+$showMine = getProjectSubState('Tasks', 'ShowMine', false);
 $explodeTasks = getProjectSubState('Tasks', 'Explode', 1);
 $roles = getProjectSubState('Tasks', 'PersonsRoles', 'N');
 $StartDate = getProjectSubState('TaskDates', 'Start', $db_start_date[0]['project_start_date']);
@@ -544,18 +544,15 @@ if(dPgetParam( $_POST, 'addreport', '' )&&dPgetParam( $_POST, 'addreport', '' )!
 	$sd=$start_date->format(FMT_DATETIME_MYSQL);
 	$ed=$end_date->format(FMT_DATETIME_MYSQL);
 
-	for($i=0;$i<count($tasks_opened);$i++){
-		$r_task_opened=$r_task_opened.$tasks_opened[$i]."/";
-	}
-	for($i=0;$i<count($tasks_closed);$i++){
-		$r_task_closed=$r_task_closed.$tasks_closed[$i]."/";
-	}
+	$r_task_opened = implode("/", $tasks_opened);
+	$r_task_closed = implode("/", $tasks_closed);
 
 	if(dPgetParam( $_POST, 'addreport', '' )==1){
 		$sql="UPDATE
 				reports
 			  SET
 			  	p_is_incomplete='$showIncomplete',
+			  	p_show_mine='$showMine',
 				p_report_level=$explodeTasks,
 				p_report_roles='$roles',
 				p_report_sdate='$sd', 
@@ -572,6 +569,7 @@ if(dPgetParam( $_POST, 'addreport', '' )&&dPgetParam( $_POST, 'addreport', '' )!
 					reports
 				  SET
 				  	a_is_incomplete='$showIncomplete',
+				  	a_show_mine='$showMine',
 					a_report_level=$explodeTasks,
 					a_report_roles='$roles', 
 					a_report_sdate='$sd', 
@@ -584,6 +582,8 @@ if(dPgetParam( $_POST, 'addreport', '' )&&dPgetParam( $_POST, 'addreport', '' )!
 				  	reports.user_id=".$user_id;
 			$db_roles = db_loadList($sql);
 		}
+		
+		echo $sql;
 }
 ?>
 <SCRIPT SRC="js/dateControl.js"></SCRIPT>
