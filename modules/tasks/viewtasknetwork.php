@@ -321,11 +321,15 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 						<tr>
 							<td class="tab_setting_item">
 								<select id=cr_path_index name="cr_path_index" class="text">
-									<option value="0">No Critical Path</option>
+									<option value="0"<? echo $cr_path_index == 0 ? ' selected="selected"' : '' ?>>
+										<? echo $AppUI->_('No Critical Path')?>
+									</option>
 <?
 								for ($i = 1; $i <= 5; $i++) {
 ?>
-									<option value="<? echo $i ?>">Critical path index <? echo $i ?></option>
+									<option value="<? echo $i ?>"<? echo $cr_path_index == $i ? ' selected="selected"' : '' ?>>
+										<? echo $AppUI->_('Critical path index')." ".$i ?>
+									</option>
 <?
 								}
 ?>
