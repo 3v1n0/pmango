@@ -220,39 +220,36 @@ function addProjectReport() {
 function computeProp() {
 
 	var form = $("#frmProp");
-	var form_data = form.serialize();
+	var properties = $("#properties_div");
+	var old_properties = properties.clone().text();
 
-	if (typeof old_form_data == 'undefined')
-		old_form_data = form_data;
-
-	$("#properties_div").hide();
-	$("#properties_div").html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+	properties.hide();
+	properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
 
 	document.prop_report.make_prop_pdf.value = "false";
 	
 	$.ajax({
 	   type: form.attr("method"),
 	   url:  form.attr("action"),
-	   data: form_data,
+	   data: form.serialize(),
 	   success: function(html) {
         	$("#prop_loader").fadeOut("fast", function() {
 				if (!$(html).find("#project_pdf_span").children().size()) {
 					$("#project_pdf_span").fadeOut();
 				}
-            	
-        		if (old_form_data != form_data) {
-        			$("#project_to_report").fadeIn();
-        		}
-            	
+
         		var data = $(html).find("#properties_div");
         		data.hide();
 
         		if (data.size() == 1) {
-        			$("#properties_div").replaceWith(data);
+        			properties.replaceWith(data);
         			data.animate({
         				height: "toggle",
         				opacity: "toggle"
         			});
+
+        			if (old_properties != data.clone().text())
+        				$("#project_to_report").fadeIn();
 
         			var new_prop = $(html).find("input[name=properties]");
         			var new_sum = $(html).find("input[name=summary]");
