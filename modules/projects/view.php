@@ -164,16 +164,19 @@ $sql="SELECT * FROM reports WHERE project_id=".$project_id." AND user_id=".$user
 $exist=db_loadList($sql);
 
 if(count($exist)==0){
-	$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete` , `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete` , `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary` )
-	VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL);";		
+	$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete` , `p_show_mine`, `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete` , `a_show_mine` , `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary` )
+	VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL, NULL, NULL);";		
 	db_exec( $sql ); db_error();
 }
 
-if($_POST['properties']){
-	//$AppUI->setMsg("Added to Report",5);
-	$string=urldecode($_POST['properties']); 
-	$sql="UPDATE reports SET properties='".$string."', prop_summary='".$_POST['summary']."' WHERE project_id=".$project_id." AND reports.user_id=".$user_id;
-	$db_roles = db_loadList($sql);													
+if (isset($_POST['properties']) && getProjectState('Properties') &&
+	!getProjectState('PropertiesComputed') && !dPgetBoolParam($_POST, 'make_prop_pdf')) {
+	print_r($_POST);
+	$properties = str_replace("'", "@", getProjectState('Properties'));
+	$sql = "UPDATE reports SET properties='$properties', ".
+	       "prop_summary='".$_POST['summary']."' WHERE project_id=$project_id ".
+	       "AND reports.user_id=$user_id";
+	$db_roles = db_loadList($sql);						
 }
  
 ?>
@@ -204,10 +207,82 @@ function makeProjectPDF() {
 }
 
 function addProjectReport() {
-	document.prop_report.make_prop_pdf.value = "false";
-	document.prop_report.submit();
 
-	$("#add_to_report").val('<? echo $AppUI->_('Loading...'); ?>');
+	if (document.prop_report.properties.value == "") {
+		alert('<? echo $AppUI->_('Nothing to report here, compute something.'); ?>');
+		return;
+	}
+	
+	document.prop_report.make_prop_pdf.value = "false";
+	addReport("prop_report", "project_to_report");
+}
+
+function computeProp() {
+
+	var form = $("#frmProp");
+	var form_data = form.serialize();
+
+	if (typeof old_form_data == 'undefined')
+		old_form_data = form_data;
+
+	$("#properties_div").hide();
+	$("#properties_div").html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+
+	document.prop_report.make_prop_pdf.value = "false";
+	
+	$.ajax({
+	   type: form.attr("method"),
+	   url:  form.attr("action"),
+	   data: form_data,
+	   success: function(html) {
+        	$("#prop_loader").fadeOut("fast", function() {
+				if (!$(html).find("#project_pdf_span").children().size()) {
+					$("#project_pdf_span").fadeOut();
+				}
+            	
+        		if (old_form_data != form_data) {
+        			$("#project_to_report").fadeIn();
+        		}
+            	
+        		var data = $(html).find("#properties_div");
+        		data.hide();
+
+        		if (data.size() == 1) {
+        			$("#properties_div").replaceWith(data);
+        			data.animate({
+        				height: "toggle",
+        				opacity: "toggle"
+        			});
+
+        			var new_prop = $(html).find("input[name=properties]");
+        			var new_sum = $(html).find("input[name=summary]");
+
+        			if (new_prop.size())
+        				$("input[name=properties]").val(new_prop.val());
+
+    				if (new_sum.size())
+    					$("input[name=summary]").val(new_sum.val());
+
+        		} else {
+            		form.submit();
+            		return;
+        		}
+
+        		data = $(html).find("#ui_top_message:first");
+        		data.hide();
+
+        		$("#ui_top_message:first").fadeOut(function() {
+	        		if (data.size() == 1) {
+	        			$("#ui_top_message:first").replaceWith(data);
+	        			data.fadeIn();
+	        		}
+        		});
+            });
+  	   },
+  	   error: function() {
+  		 	form.submit();
+  	   }
+	});
 }
 
 </script>
@@ -407,7 +482,7 @@ function addProjectReport() {
 		<table width="100%">
 			<tr>
 				<td valign="top">
-					<form name="frmProp" action="./index.php?m=projects" method="post">
+					<form id="frmProp" name="frmProp" action="./index.php?m=projects" method="post">
 						<input type="hidden" name="dosql" value="do_properties" />
 						<input type="hidden" name="project_id" value="<?php echo $project_id;?>" />
 						<input type="hidden" name="compute_prop" value="true" />
@@ -436,7 +511,9 @@ function addProjectReport() {
 							</tr>
 							<tr>
 								<td>&nbsp;</td>
-								<td align="center"><input type="submit" class="button" value="<?php echo $AppUI->_( 'compute' );?>"></td>
+								<td align="center">
+									<input type="button" class="button" value="<?php echo $AppUI->_( 'compute' );?>" onclick="computeProp();">
+								</td>
 							</tr>
 						</table>
 					</form>
@@ -451,7 +528,6 @@ function addProjectReport() {
 									if (getProjectState('Properties') && !getProjectState('PropertiesComputed')) {
 										$properties = stripslashes(str_replace("@", "'", getProjectState('Properties')));
 										echo $properties;
-										
 									} else{
 								 		$properties = $AppUI->getProperties();
 								 		setProjectState('Properties', $properties);
@@ -493,7 +569,7 @@ function addProjectReport() {
 									?>
 									
 										<input type="hidden" name="summary" value="<?php echo $message;?>" />
-										<input onclick="addProjectReport();" id="add_to_report" type="submit" class="button" value="<?php echo $AppUI->_('Add to Report');?>">
+										<input onclick="addProjectReport();" id="project_to_report" type="button" class="button" value="<?php echo $AppUI->_('Add to Report');?>">
 								</td>
 							</tr>
 						</table>
