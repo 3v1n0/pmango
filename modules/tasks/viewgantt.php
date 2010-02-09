@@ -159,7 +159,6 @@ $graph_img_src = "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id".
 <script language="javascript">
 var projectID = <?php  echo $project_id ?>;
 var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth : document.body.offsetWidth) * 0.95;
-var expandChanged = false;
 var calendarField = '';
 var graph_load_error = './style/default/images/graph_loading_error.png';
 
@@ -303,12 +302,8 @@ function buildGraphUrl() {
 	          '&show_names='+(show_names ? 'true' : 'false')+
 	          '&draw_deps='+(show_deps ? 'true' : 'false')+
 			  '&colors='+(show_bw ? 'false' : 'true')+
-			  '&show_res='+(show_res ? 'true' : 'false');
-
-	if (expandChanged) {
-		url += '&explode_tasks='+explode;
-		expandChanged = false;
-	}
+			  '&show_res='+(show_res ? 'true' : 'false')+
+			  '&explode_tasks='+explode;
 
 	if (document.editFrm.display_option.value != 'all') {
 		url += '&start_date='+start_date+'&finish_date='+end_date;
@@ -431,7 +426,7 @@ loadGraph('<?php echo $graph_img_src; ?>');
 								<?php echo $AppUI->_('Explode Tasks').": ";?>
 							</td>
 							<td class="tab_setting_item">
-								&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
+								&nbsp; <select id="explode_tasks" name="explode_tasks" class="text">
 <?php
 								$maxLevel=CTask::getLevel($project_id);
 								$explodeTasks = getProjectSubState('Tasks', 'Explode', 1);

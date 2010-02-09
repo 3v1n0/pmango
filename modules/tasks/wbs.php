@@ -57,7 +57,7 @@ include "WBS.class.php";
 $project_id = defVal(@$_REQUEST['project_id'], 0);
 $task_level = dPgetParam($_GET, 'explode_tasks');
 
-if ($task_level != null) {
+if ($task_level != null && $task_level != getProjectSubState('Tasks', 'Explode', 1)) {
 	setProjectSubState('Tasks', 'Explode', $task_level);
 	setProjectSubState('Tasks', 'opened', array());
 	setProjectSubState('Tasks', 'closed', array());

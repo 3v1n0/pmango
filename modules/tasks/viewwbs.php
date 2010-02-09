@@ -111,7 +111,7 @@ $graph_img_src = "?m=tasks&suppressHeaders=1&a=wbs&project_id=$project_id".
 <script type="text/javascript">
 
 var projectID = <?php  echo $project_id ?>;
-var expandChanged = false;
+
 var loader = './style/default/images/loader.gif';
 var graph_error = './style/default/images/graph_loading_error.png';
 
@@ -212,6 +212,7 @@ function buildGraphUrl() {
 	var show_a_res = $("#show_a_res:checked").val();
 	var show_p_time = $("#show_p_time:checked").val();
 	var show_a_time = $("#show_a_time:checked").val();
+	var explosion = $('#explode_tasks').val();
 	
 	var url = "?m=tasks&suppressHeaders=1&a=wbs&project_id="+projectID+
 		      "&names="+(show_names ? "true" : "false")+
@@ -222,12 +223,8 @@ function buildGraphUrl() {
 		      "&p_res="+(show_p_res ? "true" : "false")+
 		      "&a_res="+(show_a_res ? "true" : "false")+
 		      "&p_time="+(show_p_time ? "true" : "false")+
-		      "&a_time="+(show_a_time ? "true" : "false");
-
-	if (expandChanged) {
-		url += '&explode_tasks='+$("#explode_tasks").val();
-		expandChanged = false;
-	}
+		      "&a_time="+(show_a_time ? "true" : "false")+
+		      "&explode_tasks="+explosion;
 	
     return url;
 }
@@ -343,7 +340,7 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 					<table border="0" cellspacing="0">
 						<tr>
 							<td class="tab_setting_title"><?php echo $AppUI->_('Explode Tasks'); ?>:</td>
-							<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
+							<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text">
 <?php
 									$maxLevel = CTask::getLevel($project_id);
 									$explodeTasks = getProjectSubState('Tasks', 'Explode', 1);
