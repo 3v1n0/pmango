@@ -461,9 +461,9 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 		<table id='' width='100%' border='0' cellpadding='1' cellspacing='0' style="border-top: solid transparent 2px;">
 			<tr>
 				<td align="right">
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 				</td>
 			</tr>
 		</table>
