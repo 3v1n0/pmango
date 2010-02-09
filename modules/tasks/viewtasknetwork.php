@@ -82,7 +82,7 @@ $show_def_dep   = dPgetBoolParam($_POST, 'show_def_dep');
 $show_dep       = dPgetBoolParam($_POST, 'show_dep');
 $show_all_arrow = dPgetBoolParam($_POST, 'show_all_arrow');
 $show_time_gaps = dPgetBoolParam($_POST, 'show_time_gaps');
-$show_cr_path   = dPgetBoolParam($_POST, 'show_cr_path');
+$cr_path_index  = dPgetParam($_POST, 'cr_path_index', 0);
 
 if (empty($_POST)) {
 	$show_def_dep = true;
@@ -103,7 +103,7 @@ $graph_img_src = "?m=tasks&suppressHeaders=1&a=tasknetwork&project_id=$project_i
                  "&dep=".($show_dep ? "true" : "false").
                  "&all_arrow=".($show_all_arrow ? "true" : "false").
                  "&time_gaps=".($show_time_gaps ? "true" : "false").
-                 "&cr_path=".($show_cr_path ? "true" : "false");
+                 "&cr_path=$cr_path_index";
 
 ?>
 
@@ -126,7 +126,6 @@ $graph_img_src = "?m=tasks&suppressHeaders=1&a=tasknetwork&project_id=$project_i
 <script type="text/javascript">
 
 var projectID = <?php  echo $project_id ?>;
-var expandChanged = false;
 var loader = './style/default/images/loader.gif';
 var graph_error = './style/default/images/graph_loading_error.png';
 
@@ -232,7 +231,8 @@ function buildGraphUrl() {
 	var show_dep = $("#show_dep:checked").val();
 	var show_all_arrow = $("#show_all_arrow:checked").val();
 	var show_time_gaps = $("#show_time_gaps:checked").val();
-	var show_cr_path = $("#show_cr_path:checked").val();
+	var cr_path_index = $("#cr_path_index").val();
+	var explosion = $("#explode_tasks").val();
 	
 	var url = "?m=tasks&suppressHeaders=1&a=tasknetwork&project_id="+projectID+
 		      "&names="+(show_names ? "true" : "false")+
@@ -249,12 +249,8 @@ function buildGraphUrl() {
 	          "&dep="+(show_dep ? "true" : "false")+
 	          "&all_arrow="+(show_all_arrow ? "true" : "false")+
 	          "&time_gaps="+(show_time_gaps ? "true" : "false")+
-	          "&cr_path="+(show_cr_path ? "true" : "false");
-
-	if (expandChanged) {
-		url += '&explode_tasks='+$("#explode_tasks").val();
-		expandChanged = false;
-	}
+	          "&cr_path="+cr_path_index+
+	          "&explode_tasks="+explosion;
 	
     return url;
 }
@@ -324,8 +320,16 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 						</tr>
 						<tr>
 							<td class="tab_setting_item">
-								<input type='checkbox' id="show_cr_path" name='show_cr_path' <? echo $show_cr_path ? 'checked="checked" ' : '' ?>/>
-								<label for="show_cr_path"><?php echo $AppUI->_('Critical Path'); ?></label>
+								<select id=cr_path_index name="cr_path_index" class="text">
+									<option value="0">No Critical Path</option>
+<?
+								for ($i = 1; $i <= 5; $i++) {
+?>
+									<option value="<? echo $i ?>">Critical path index <? echo $i ?></option>
+<?
+								}
+?>
+								</select>
 							</td>
 						</tr>
 					</table>
@@ -409,7 +413,7 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 						</tr>
 						<tr>
 							<td class="tab_setting_title"><?php echo $AppUI->_('Explode Tasks'); ?>:</td>
-							<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text" onchange="expandChanged=true;">
+							<td>&nbsp; <select id="explode_tasks" name="explode_tasks" class="text">
 <?php
 									$maxLevel = CTask::getLevel($project_id);
 									$explodeTasks = getProjectSubState('Tasks', 'Explode', 1);

@@ -21,7 +21,7 @@
  PMango - A web application for project planning and control.
 
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi
- Copyright (C) 2009-2010 Matteo Pratesi (Treviño) <pratesi.matteo@gmail.com>
+ Copyright (C) 2009-2010 Matteo Pratesi <pratesi.matteo@gmail.com>
  All rights reserved.
 
  PMango reuses part of the code of dotProject 2.0.1: dotProject code is
@@ -119,7 +119,7 @@ class TaskNetwork {
 	private $pShowAllArrow;
 	private $pShowTimeGaps;
 	private $pShowCriticalPath;
-	private $pIndexCriticalPath;
+	private $pCriticalPathIndex;
 
 	private $pShowNames;
 	private $pShowProgress;
@@ -137,7 +137,7 @@ class TaskNetwork {
 		$this->project = $project;
 		if(!is_null($project)){
 			$this->pTaskLevel = 1;
-			$this->pIndexCriticalPath = 1;
+			$this->pCriticalPathIndex = 1;
 			$this->pOpenedTasks = array();
 			$this->pClosedTasks = array();
 			$this->pShowVertical = false;		
@@ -171,9 +171,19 @@ class TaskNetwork {
 		$this->pChanged = true;
 	}
 
-	public function setIndexCriticalPath($ind){
-		$this->pIndexCriticalPath = intval($ind) > 1 ? intval($ind) : 1;
-		$this->pChanged = true;
+	public function setCriticalPathIndex($ind) {
+		$ind = intval($ind);
+		if ($ind < 1) {
+			$this->showCriticalPath(false);
+		} else {
+			$this->showCriticalPath(true);
+			
+			if ($ind > 5)
+				$ind = 5;
+		
+			$this->pCriticalPathIndex = $ind;
+			$this->pChanged = true;
+		}
 	}
 	
 	public function setOpenedTasks($tsk) {
@@ -928,7 +938,7 @@ class TaskNetwork {
 	
 	private function drawCriticalPath(){
 		$level = CTask::getLevel($this->project);
-		$indexCriticalPath = $this->pIndexCriticalPath;
+		$indexCriticalPath = $this->pCriticalPathIndex;
 		$vertical = $this->pShowVertical;
 		$allArrow = $this->pShowAllArrow;
 		$timeGaps = $this->pShowTimeGaps;

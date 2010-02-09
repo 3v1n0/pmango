@@ -57,7 +57,7 @@ include "TaskNetwork.class.php";
 $project_id = defVal(@$_REQUEST['project_id'], 0);
 $task_level = dPgetParam($_GET, 'explode_tasks');
 
-if ($task_level != null) {
+if ($task_level != null && $task_level != getProjectSubState('Tasks', 'Explode', 1)) {
 	setProjectSubState('Tasks', 'Explode', $task_level);
 	setProjectSubState('Tasks', 'opened', array());
 	setProjectSubState('Tasks', 'closed', array());
@@ -93,8 +93,7 @@ $show_def_dep   = dPgetBoolParam($_GET, 'def_dep');
 $show_dep       = dPgetBoolParam($_GET, 'dep');
 $show_all_arrow = dPgetBoolParam($_GET, 'all_arrow');
 $show_time_gaps = dPgetBoolParam($_GET, 'time_gaps');
-$show_cr_path   = dPgetBoolParam($_GET, 'cr_path');
-$index_cr_path  = dPgetParam($_GET, 'cr_index',1);
+$cr_path_index  = dPgetParam($_GET, 'cr_path', 0);
 
 // re-set the memory limit for gantt chart drawing acc. to the config value of reset_memory_limit
 ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
@@ -117,8 +116,7 @@ $TN->showDefaultDependencies($show_def_dep);
 $TN->showDependencies($show_dep);
 $TN->showAllArrow($show_all_arrow);
 $TN->showTimeGaps($show_time_gaps);
-$TN->showCriticalPath($show_cr_path);
-$TN->setIndexCriticalPath($index_cr_path);
+$TN->setCriticalPathIndex($cr_path_index);
 $TN->draw();
 
 // reset the php memory limit to the original php.ini value
