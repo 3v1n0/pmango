@@ -1440,7 +1440,7 @@ class CTitleBlock_core {
 		}
 		
 		$s .= '</tr></table>';
-		$s .= '<table width="100%" border="0" cellpadding="1" cellspacing="1"><tr>';
+		$s .= '<table id="ui_top_message" width="100%" border="0" cellpadding="1" cellspacing="1"><tr>';
 		$s .= $AppUI->getMsg(true,true);// STAMPA ADDED o UPDATE o ERROR...
 		$s .= '<td align="left" width="100%" nowrap="nowrap">&nbsp;</td>';
 
