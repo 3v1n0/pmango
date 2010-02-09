@@ -16,6 +16,8 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
+ - 2010.02.09 Marco Trevisan
+   Third version, added an ajax loader for properties computation
  - 2006.07.30 Lorenzo
    Second version, modified to view PMango task.
  - 2006.07.30 Lorenzo
@@ -262,6 +264,56 @@ function setAMPM( field) {
 			ampm_field.value = "am";
 		}
 	}
+}
+
+function computeTaskProp() {
+
+	var form = $("#frmTaskProp");
+	var properties = $("#task_properties_div");
+	var top_ui_msg = $("#ui_top_message:first");
+
+	if (!form.size())
+		return;
+
+	properties.hide();
+	properties.html('<img id="task_prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+
+	$.ajax({
+	   type: form.attr("method"),
+	   url:  form.attr("action"),
+	   data: form.serialize(),
+	   success: function(html) {
+        	$("#task_prop_loader").fadeOut("fast", function() {
+
+        		var data = $(html).find("#task_properties_div");
+        		data.hide();
+
+        		if (data.size() == 1) {
+        			properties.replaceWith(data);
+        			data.animate({
+        				height: "toggle",
+        				opacity: "toggle"
+        			});
+        		} else {
+            		form.submit();
+            		return;
+        		}
+
+        		data = $(html).find("#ui_top_message:first");
+        		data.hide();
+
+        		top_ui_msg.fadeOut(function() {
+	        		if (data.size() == 1) {
+	        			top_ui_msg.replaceWith(data);
+	        			data.fadeIn();
+	        		}
+        		});
+            });
+  	   },
+  	   error: function() {
+  		 	form.submit();
+  	   }
+	});
 }
 </script>
 <?php if ($canDelete) {?>
@@ -511,36 +563,40 @@ function delIt() {
 		</table>
 		<hr align="center" style="border: outset #d1d1cd 1px">
 		<strong><?php echo $AppUI->_('Properties');?></strong><br>
-		<table cellspacing="1" cellpadding="2" border="0" width="100%">
-			<tr>
-				<form name="frmProp" action="./index.php?m=tasks" method="post">
-				<input type="hidden" name="dosql" value="do_properties" />
-				<input type="hidden" name="task_id" value="<?php echo $task_id;?>" />
-				<tr>
-					<td align="right" nowrap><input id="wf" name="wf" type="checkbox" checked="checked"</td>
-					<td nowrap="nowrap"><label for="wf"><?php echo $AppUI->_('Well Formed');?></label></td>
-					<td class="hilite" width="100%" rowspan="4" valign="top" style="border: outset #d1d1cd 2px">
-						<?php echo $AppUI->getProperties(); ?>&nbsp;
-					</td>
+		<form name="frmTaskProp" id="frmTaskProp" action="./index.php?m=tasks" method="post">
+			<input type="hidden" name="dosql" value="do_properties" />
+			<input type="hidden" name="task_id" value="<?php echo $task_id;?>" />
+			
+			<table cellspacing="1" cellpadding="2" border="0" width="100%">
+					<tr>
+						<td align="right" nowrap><input id="wf" name="wf" type="checkbox" checked="checked" /></td>
+						<td nowrap="nowrap"><label for="wf"><?php echo $AppUI->_('Well Formed');?></label></td>
+						<td class="hilite" width="100%" rowspan="4" valign="top" style="border: outset #d1d1cd 2px">
+							<div id="task_properties_div">
+								<?php echo $AppUI->getProperties(); ?>&nbsp;
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><input id="ce" name="ce" type="checkbox" checked="checked"></td>
+						<td nowrap="nowrap"><label for="ce"><?php echo $AppUI->_('Cost Effective');?></label></td>
+					</tr>
+					<tr>
+						<td><input id="ee" name="ee" type="checkbox" checked="checked"></td>
+						<td nowrap="nowrap"><label for="ee"><?php echo $AppUI->_('Effort Effective');?></label></td>
+					</tr>
+					<tr>
+						<td><input id="te" name="te" type="checkbox" checked="checked"></td>
+						<td nowrap="nowrap"><label for="te"><?php echo $AppUI->_('Time Effective');?></label></td>
+					</tr>
+					<tr>
+						<td valign="bottom" align="right" colspan="3" nowrap>
+							<input type="button" class="button" value="compute" onclick="computeTaskProp();">
+						</td>
+					</tr>
 				</tr>
-				<tr>
-					<td><input id="ce" name="ce" type="checkbox" checked="checked"></td>
-					<td nowrap="nowrap"><label for="ce"><?php echo $AppUI->_('Cost Effective');?></label></td>
-				</tr>
-				<tr>
-					<td><input id="ee" name="ee" type="checkbox" checked="checked"></td>
-					<td nowrap="nowrap"><label for="ee"><?php echo $AppUI->_('Effort Effective');?></label></td>
-				</tr>
-				<tr>
-					<td><input id="te" name="te" type="checkbox" checked="checked"></td>
-					<td nowrap="nowrap"><label for="te"><?php echo $AppUI->_('Time Effective');?></label></td>
-				</tr>
-				<tr>
-					<td valign="bottom" align="right" colspan="3" nowrap> <input type="submit" class="button" value="compute"></td>
-				</tr>
-				</form>
-			</tr>
-		</table>
+			</table>
+		</form>
 
 
 	</td>
