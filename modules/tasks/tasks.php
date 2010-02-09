@@ -163,18 +163,17 @@ $child_task = dPgetParam( $_GET, 'child_task', '' );
 $task_sort_order1 = intval( dPgetParam( $_GET, 'task_sort_order1', 0 ) );
 $task_sort_order2 = intval( dPgetParam( $_GET, 'task_sort_order2', 0 ) );
 
-if (isset($_POST['show_task_options'])) {
+if (isset($_POST['sdate'])) {
 	$pre_tasks = getProjectState('Tasks');
 	$pre_date = getProjectState('TaskDates');
-//	print_r($pre_tasks);
 	
 	setProjectSubState('Tasks', 'ShowIncomplete', dPgetBoolParam($_POST, 'show_incomplete', false));
 	setProjectSubState('Tasks', 'ShowMine', dPgetBoolParam($_POST, 'show_mine', false));
 	setProjectSubState('Tasks', 'Explode', dPgetParam($_POST, 'explode_tasks', '1'));
 	setProjectSubState('Tasks', 'PersonsRoles', dPgetParam($_POST, 'roles', 'N'));
-	setProjectSubState('TaskDates'.$project_id, 'Start', dPgetParam($_POST, 'sdate', $db_start_date[0]['project_start_date']));
-	setProjectSubState('TaskDates'.$project_id, 'End', dPgetParam($_POST, 'edate', $db_start_date[0]['project_finish_date']));
-//	print_r(getProjectState('Tasks'));
+	setProjectSubState('TaskDates', 'Start', dPgetParam($_POST, 'sdate', $db_start_date[0]['project_start_date']));
+	setProjectSubState('TaskDates', 'End', dPgetParam($_POST, 'edate', $db_start_date[0]['project_finish_date']));
+
 	if ($pre_tasks !== getProjectState('Tasks') || $pre_date !== getProjectState('TaskDates'))
 		deletePDF($project_id, ($tview ? PMPDF_ACTUAL : PMPDF_PLANNED));
 }
