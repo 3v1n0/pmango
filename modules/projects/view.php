@@ -232,54 +232,58 @@ function computeProp() {
 
 	addAJAX("#frmProp");
 
-	properties.hide();
-	properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
-	
-	$.ajax({
-	   type: form.attr("method"),
-	   url:  form.attr("action"),
-	   data: form.serialize(),
-	   success: function(html) {
-        	$("#prop_loader").fadeOut("fast", function() {
-				if (!$(html).find("#project_pdf_span").children().size()) {
-					$("#project_pdf_span").fadeOut();
-				}
+	properties.animate({
+		height: "toggle",
+		opacity: "toggle"
+	}, 250, function() {
+		properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+		
+		$.ajax({
+		   type: form.attr("method"),
+		   url:  form.attr("action"),
+		   data: form.serialize(),
+		   success: function(html) {
+	        	$("#prop_loader").fadeOut("fast", function() {
+					if (!$(html).find("#project_pdf_span").children().size()) {
+						$("#project_pdf_span").fadeOut();
+					}
 
-				topMsgUpdate(html);
+					topMsgUpdate(html);
 
-        		var data = $(html).find("#properties_div");
-        		data.hide();
+	        		var data = $(html).find("#properties_div");
+	        		data.hide();
 
-        		if (data.size() == 1) {
-        			properties.replaceWith(data);
-        			data.animate({
-        				height: "toggle",
-        				opacity: "toggle"
-        			});
+	        		if (data.size() == 1) {
+	        			properties.replaceWith(data);
+	        			data.animate({
+	        				height: "toggle",
+	        				opacity: "toggle"
+	        			});
 
-        			if (old_properties != data.clone().text())
-        				$("#project_to_report").fadeIn();
+	        			if (old_properties != data.clone().text())
+	        				$("#project_to_report").fadeIn();
 
-        			var new_prop = $(html).find("input[name=properties]");
-        			var new_sum = $(html).find("input[name=summary]");
+	        			var new_prop = $(html).find("input[name=properties]");
+	        			var new_sum = $(html).find("input[name=summary]");
 
-        			if (new_prop.size())
-        				$("input[name=properties]").val(new_prop.val());
+	        			if (new_prop.size())
+	        				$("input[name=properties]").val(new_prop.val());
 
-    				if (new_sum.size())
-    					$("input[name=summary]").val(new_sum.val());
+	    				if (new_sum.size())
+	    					$("input[name=summary]").val(new_sum.val());
 
-        		} else {
-        			delAJAX("#frmProp");
-            		form.submit();
-            		return;
-        		}
-            });
-  	   },
-  	   error: function() {
-  		 	delAJAX("#frmProp");
-  		 	form.submit();
-  	   }
+	        		} else {
+	        			delAJAX("#frmProp");
+	            		form.submit();
+	            		return;
+	        		}
+	            });
+	  	   },
+	  	   error: function() {
+	  		 	delAJAX("#frmProp");
+	  		 	form.submit();
+	  	   }
+		});
 	});
 }
 
