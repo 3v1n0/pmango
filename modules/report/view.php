@@ -7,7 +7,7 @@
  Title:      reports page.
 
  File:       view.php
- Location:   PMango\modules\report
+ Location:   PMango/modules/report
  Started:    2007.05.08
  Author:     Riccardo Nicolini
  Type:       PHP
@@ -16,6 +16,8 @@
  Further information at: http://penelope.di.unipi.it
 
  Version history.
+ - 2010.02.08 Marco Trevisan
+   AJAX forms, code cleanup.
  - 2007.10.20 Marco
    Now the report's pages it's opened in a new windows.
  - 2007.05.08 Riccardo
@@ -232,6 +234,26 @@ function makeReportPDF() {
 	generatePDF('make_pdf_form', 'report_pdf_span');
 
 	document.make_pdf_form.make_report_pdf.value = "false";
+}
+
+function loadGroupImage() {
+	document.make_pdf_form.load_image.value = "true";
+	document.make_pdf_form.make_report_pdf.value = "false";
+	document.make_pdf_form.delete_image.value = "false";
+
+	document.make_pdf_form.submit();
+
+	document.make_pdf_form.load_image.value = "false";
+}
+
+function deleteGroupImage() {
+	document.make_pdf_form.delete_image.value = "true";
+	document.make_pdf_form.load_image.value = "false";
+	document.make_pdf_form.make_report_pdf.value = "false";
+
+	document.make_pdf_form.submit();
+
+	document.make_pdf_form.delete_image.value = "false";
 }
 
 </script>
@@ -488,7 +510,9 @@ else $image_file=$image_path.'nologo.gif';
 	<table border="0" cellpadding="3" cellspacing="1">
 	<tr>
 		<td align="left" rowspan="2" nowrap="nowrap">
-			<img src="<? echo $image_file;?>">
+			<span id="group_logo_span">
+				<img id="group_logo" src="<? echo $image_file;?>">
+			</span>
 		</td>
 		<td align="left" nowrap="nowrap" colspan="2">
 		<input  name="image" type="file" size="18" /><br>
@@ -508,11 +532,11 @@ else $image_file=$image_path.'nologo.gif';
   	<tr>
   	<td align="left" nowrap="nowrap">
   			<input type="hidden" name="load_image" value="false">
-			<input  class="button" name="upload" type="button" value="Load Image" onclick='document.make_pdf_form.load_image.value=true;submit();'/>
+			<input  class="button" name="upload" type="button" value="Load Image" onclick='loadGroupImage();'/>
 		</td>
 		<td align="right" nowrap="nowrap">
 			<input type="hidden" name="delete_image" value="false">
-			<input  class="button" name="upload" type="button" value="Delete Image" onclick='document.make_pdf_form.delete_image.value=true;submit();'/>
+			<input  class="button" name="upload" type="button" value="Delete Image" onclick='deleteGroupImage();'/>
 		</td>
 		<td align="left" width="100%" nowrap="nowrap">
 		</td>
@@ -594,6 +618,9 @@ if (dPgetBoolParam($_POST, 'make_report_pdf') && !dPgetBoolParam($_POST, 'load_i
 }
 
 $pdf_file = getProjectSubState('PDFReports', PMPDF_REPORT);
+
+if (!file_exists($pdf_file))
+	$pdf_file = setProjectSubState('PDFReports', PMPDF_REPORT, null);
 ?>
 			<span id="report_pdf_span" style="vertical-align: middle">
 <?
