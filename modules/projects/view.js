@@ -205,7 +205,9 @@ function addReport(form_id, button_id) {
 		   } else {
 			   button.val("Done!");
 			   setTimeout(function() {
-				   button.fadeOut();
+				   button.fadeOut(function() {
+					   button.val(old_name);
+				   });
 			   }, 500);
 		   }
   	   },
