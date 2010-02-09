@@ -176,6 +176,14 @@ function generatePDF(form_id, parent_id) {
 	var loader = parent_id+"_pdf_loader";
 	var form = $("#"+form_id);
 	
+	if (!form.size())
+		return;
+	
+	if (!parent.size()) {
+		form.submit();
+		return;
+	}
+	
 	addAJAX("#"+form_id);
 	
 	parent.hide();
@@ -206,10 +214,17 @@ function generatePDF(form_id, parent_id) {
 }
 
 function addReport(form_id, button_id) {
-
 	var form = $("#"+form_id);
 	var button = $("#"+button_id);
 	var old_name = button.val();
+	
+	if (!form.size())
+		return;
+	
+	if (!button.size()) {
+		form.submit();
+		return;
+	}
 	
 	addAJAX("#"+form_id);
 	button.val("Loading...");
