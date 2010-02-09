@@ -7,7 +7,7 @@
  Title:      view project information
 
  File:       view.php
- Location:   PMango\modules\projects
+ Location:   PMango/modules/projects
  Started:    2005.09.30
  Author:     Lorenzo Ballini
  Type:       PHP
@@ -16,6 +16,8 @@
  Further information at: http://penelope.di.unipi.it
 
  Version history.
+ - 2010.02.09 Marco Trevisan
+   Ajax based project properties and PDF computation
  - 2007.10.20 Marco
    Now the report's pages it's opened in a new windows.
  - 2007.05.08 Riccardo
@@ -57,7 +59,7 @@
 */
 include 'modules/report/generatePDF.php';
 
-$project_id = intval(dPgetParam($_GET, "project_id", 0 ));
+$project_id = intval(dPgetParam($_REQUEST, "project_id", 0 ));
 $msg = '';
 $objPr = new CProject();
 
@@ -172,9 +174,10 @@ if(count($exist)==0){
 if (dPgetBoolParam($_POST, 'add_prop_report') && getProjectState('Properties') &&
 	!getProjectState('PropertiesComputed') && !dPgetBoolParam($_POST, 'make_prop_pdf')) {
 
-	$properties = str_replace("'", "@", getProjectState('Properties'));
+	$properties = addslashes(getProjectState('Properties'));
+	$summary = addslashes($_POST['summary']);
 	$sql = "UPDATE reports SET properties='$properties', ".
-	       "prop_summary='".$_POST['summary']."' WHERE project_id=$project_id ".
+	       "prop_summary='$summary' WHERE project_id=$project_id ".
 	       "AND reports.user_id=$user_id";
 	$db_roles = db_loadList($sql);						
 }
@@ -524,7 +527,7 @@ function computeProp() {
 									<div id="properties_div">
 								<?php
 									if (getProjectState('Properties') && !getProjectState('PropertiesComputed')) {
-										$properties = stripslashes(str_replace("@", "'", getProjectState('Properties')));
+										$properties = stripslashes(getProjectState('Properties'));
 										echo $properties;
 									} else{
 								 		$properties = $AppUI->getProperties();

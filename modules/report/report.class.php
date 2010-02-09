@@ -340,8 +340,8 @@ class CReport extends CDpObject {
 		$wbs_param = db_loadList($sql);
 
 		if ( $wbs_param[0]['properties'] != null) {
-				$string=str_replace("@","'",$wbs_param[0]['properties']);
-				$summary=explode("|",$wbs_param[0]['prop_summary']);
+				$string = stripslashes($wbs_param[0]['properties']);
+				$summary=explode("|",stripslashes($wbs_param[0]['prop_summary']));
 				$string2="Project isn't ";
 				for($i=0;$i<count($summary);$i++){
 				$string2.=str_replace("Project isn't","",$summary[$i]);
