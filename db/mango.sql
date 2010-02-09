@@ -19,6 +19,8 @@
 # Further information at: http://penelope.di.unipi.it
 #
 # Version history.
+# - 2010.02.08 Marco Trevisan
+#   Seventh version, added showMine support for task reports
 # - 2007.06.23 Riccardo
 #   Sixth version, modified to create reports table and to insert report module and permissions. 
 # - 2007.06.16 Lorenzo
@@ -66,6 +68,7 @@ CREATE TABLE `reports` (
 	`project_id` int(11) default NULL,
 	`user_id` int(11) default NULL,
 	`p_is_incomplete` varchar(3) collate latin1_general_ci default NULL,
+	`p_show_mine` boolean default NULL,
 	`p_report_level` int(2) default NULL,
 	`p_report_roles` varchar(3) collate latin1_general_ci default NULL,
 	`p_report_sdate` datetime default NULL,
@@ -73,6 +76,7 @@ CREATE TABLE `reports` (
 	`p_report_opened` text collate latin1_general_ci,
 	`p_report_closed` text collate latin1_general_ci,
 	`a_is_incomplete` varchar(3) collate latin1_general_ci default NULL,
+	`a_show_mine` boolean default NULL,
 	`a_report_level` int(2) default NULL,
 	`a_report_roles` varchar(3) collate latin1_general_ci default NULL,
 	`a_report_sdate` datetime default NULL,
