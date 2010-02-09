@@ -89,6 +89,7 @@ class TaskBox {
 	private $pMaxWidth;
 	private $pMaxLineHeight;
 	private $pMinTitleLen;
+	private $pChanged;
 	
 	//--
 	private $cMinTitleLen = 3;

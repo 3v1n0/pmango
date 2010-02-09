@@ -48,6 +48,7 @@
 ---------------------------------------------------------------------------
 */
 
+include "{$dPconfig['root_dir']}/classes/PMGraph.interface.php";
 include "TaskBox.class.php";
 include "TaskBoxDB.class.php";
 
@@ -98,7 +99,7 @@ class TNNode extends TaskBox {
 }
 
 
-class TaskNetwork {
+class TaskNetwork implements PMGraph {
 
 	//matrice di Taskboxnodes, le righe sono i lv della wbs, le colonne i tbx di quel livello
 	private $index;
@@ -279,6 +280,16 @@ class TaskNetwork {
 		$this->pChanged = true;
 	}
 	
+	public function setWidth($w) {
+		//TODO
+		//$this->pChanged = true;
+	}
+	
+	public function setHeight($h) {
+		//TODO
+		//$this->pChanged = true;
+	}
+	
 	public function getType() {
 		return "TaskNetwork";
 	}
@@ -385,7 +396,8 @@ class TaskNetwork {
 		else{
 			$this->mergeNotice();
 		}
-			
+		
+		$this->pChanged = false;
 	}
 
 	private function addDefaultDependancies(){

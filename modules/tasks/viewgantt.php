@@ -69,26 +69,24 @@ if (!empty($_POST)) {
 		setProjectSubState('Tasks', 'opened', array());
 		setProjectSubState('Tasks', 'closed', array());
 	}
+	
+	if (isset($_POST['sdate'])) $AppUI->setState('StartDate', $_POST['sdate']);
+	if (isset($_POST['edate'])) $AppUI->setState('EndDate', $_POST['edate']);
 }
 
 $sql = "SELECT project_start_date, project_finish_date FROM projects WHERE project_id = $project_id";
 $tmp = db_loadList($sql);
 $project_dates = $tmp[0];
 
-// sdate and edate passed as unix time stamps
-$sdate = dPgetParam( $_POST, 'sdate', 0 );
-$edate = dPgetParam( $_POST, 'edate', 0 );
-$showLabels = dPgetParam( $_POST, 'showLabels', '0' );
-//if set GantChart includes user labels as captions of every GantBar
-if ($showLabels!='0') {
-    $showLabels='1';
-}
-$showWork = dPgetParam( $_POST, 'showWork', '0' );
-if ($showWork!='0') {
-    $showWork='1';
-}
+$sdate = $AppUI->getState('StartDate', 0);
+$edate = $AppUI->getState('EndDate', 0);
 
-$show_names = dPgetParam($_POST, 'show_names', false);
+if ($sdate != 0 && $edate != 0)
+	$display_option = 'custom';
+else 
+	$display_option = dPgetParam($_POST, 'display_option', 'all');
+
+$show_names = dPgetBoolParam($_POST, 'show_names');
 if (empty($_POST)) $show_names = true;
 
 $show_deps = dPgetBoolParam($_POST, 'show_dependencies');
@@ -97,8 +95,6 @@ $show_res = dPgetBoolParam($_POST, 'show_res');
 
 // months to scroll
 $scroll_date = 1;
-
-$display_option = dPgetParam( $_POST, 'display_option', 'all' );
 
 // format dates
 $df = $AppUI->getPref('SHDATEFORMAT');
@@ -531,7 +527,7 @@ loadGraph('<?php echo $graph_img_src; ?>');
 
 <br />
 <table cellspacing="0" cellpadding="0" border="1" align="center" style="border-top-style: hidden;">
-<?php if ($display_option != "all") { ?>
+<?php if ($display_option != "DISABLED"."all") { ?>
 	<tr style="border-style: hidden;">
 		<td align="left" style="border-top-style: hidden; border-left-style: hidden; border-right-style: hidden;">
 			<a href="#" onclick="scrollPrev();">
@@ -546,7 +542,7 @@ loadGraph('<?php echo $graph_img_src; ?>');
 	</tr>
 <?php } ?>
 	<tr>
-		<td <?php if ($display_option != "all") echo "colspan='2'" ?>>
+		<td <?php if ($display_option != "DISABLED"."all") echo "colspan='2'" ?>>
 <?php
 if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )) {
 ?>

@@ -69,8 +69,9 @@
 include "TaskBox.class.php";
 include "TaskBoxDB.class.php";
 include "{$dPconfig['root_dir']}/lib/phptreegraph/GDRenderer.php";
+include "{$dPconfig['root_dir']}/classes/PMGraph.interface.php";
 
-class WBS /*implements PMGraph TODO */ {
+class WBS implements PMGraph {
 	private $pProject;
 	private $pTaskLevel;
 	private $pOpenedTasks;
@@ -183,6 +184,14 @@ class WBS /*implements PMGraph TODO */ {
 	
 	public function getHeight() {
 		return $this->pTree->getHeight();
+	}
+	
+	public function setWidth($w) {
+		//TODO
+	}
+	
+	public function setHeight($h) {
+		//TODO
 	}
 
 	public function getImage() {

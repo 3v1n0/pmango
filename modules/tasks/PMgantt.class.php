@@ -4,28 +4,32 @@
 
  PMango Project
 
- Title:      Gantt generation.
+ Title:      PMango Graph GANTT class.
 
- File:       gantt.php
- Location:   pmango\modules\tasks
- Started:    2005.09.30
- Author:     Lorenzo Ballini
+ File:       PMgantt.class.php
+ Location:   pmango/modules/tasks
+ Started:    2010.01.15
+ Author:     Marco Trevisan (Treviño) <mail@3v1n0.net>
  Type:       PHP
 
  This file is part of the PMango project
  Further information at: http://pmango.sourceforge.net
 
  Version history.
- - 2006.07.30 Lorenzo
- Second version, modified to manage PMango Gantt.
- - 2006.07.30 Lorenzo
- First version, unmodified from dotProject 2.0.1 (J. Christopher Pereira).
+
+ - 2010.01.27 Marco Trevisan
+   0.3, bars joiners
+   0.2, captions work
+ - 2010.01.15 Marco Trevisan
+   0.1, created the class based on the work by Lorenzo Ballini (2005.09.30)
+        and on my previous patched non-classed version (2009.11.04)
 
  ---------------------------------------------------------------------------
 
  PMango - A web application for project planning and control.
 
  Copyright (C) 2006 Giovanni A. Cignoni, Lorenzo Ballini, Marco Bonacchi
+ Copyrigth (C) 2010 Marco Trevisan (Treviño) <mail@3v1n0.net>
  All rights reserved.
 
  PMango reuses part of the code of dotProject 2.0.1: dotProject code is
@@ -54,6 +58,7 @@
 
 define('TTF_DIR', "{$dPconfig['root_dir']}/fonts/Droid/");
 
+include "{$dPconfig['root_dir']}/classes/PMGraph.interface.php";
 include "{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php";
 include "{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php";
 include "TaskBoxDB.class.php";
@@ -346,7 +351,7 @@ class PMGanttBar extends GanttPlotObject {
 ////////////////////////////////////////
 ########################################
 
-class PMGantt /*implements PMGraph TODO */ {
+class PMGantt implements PMGraph {
 	private $pProjectID;
 	private $pTaskLevel;
 	private $pOpenedTasks;
@@ -361,15 +366,17 @@ class PMGantt /*implements PMGraph TODO */ {
 	private $pShowResources;
 	private $pShowTaskGroups;
 	private $pUseColors;
-	//private $pShowLabels;
-	//private $pShowWork;
-	//private $pCharSet;
+	
+	private $pWidth;
+	private $pHeight;
 
 	private $pProject;
 	private $pTasks;
 	private $pGraph;
+	
+	private $pChanged;
 
-	public function PMGantt($project, $width = 600) {
+	public function PMGantt($project) {
 		$this->pProjectID = $project;
 		$this->pTaskLevel = 1;
 		$this->pOpenedTasks = array();
@@ -383,59 +390,93 @@ class PMGantt /*implements PMGraph TODO */ {
 		$this->pUseColors = true;
 		$this->pProject = array();
 		$this->pTasks = array();
-		$this->pGraph = new GanttGraph($width);
+		$this->pGraph = null;
+		$this->pWidth = 0;
+		$this->pHeight = 0;
+		$this->pChanged = true;
 	}
 
 	public function setProject($p) {
 		$this->pProject = abs(intval($p));
+		$this->pChanged = true;
 	}
 
 	public function setTaskLevel($tl) {
 		$this->pTaskLevel = intval($tl) > 1 ? intval($tl) : 1;
+		$this->pChanged = true;
 	}
 
 	public function setOpenedTasks($tsk) {
 		$this->pOpenedTasks = is_array($tsk) ? $tsk : array();
+		$this->pChanged = true;
 	}
 
 	public function setClosedTasks($tsk) {
 		$this->pClosedTasks = is_array($tsk) ? $tsk : array();
+		$this->pChanged = true;
 	}
 
 	public function setWidth($w) {
-		$this->pGraph->img->width = intval($w) > 1 ? intval($w) : 0;
+		$this->pWidth = intval($w) > 1 ? intval($w) : 0;
+		$this->pChanged = true;
+	}
+	
+	public function setHeight($h) {
+		$this->pHeight = intval($h) > 1 ? intval($h) : 0;
+		$this->pChanged = true;
 	}
 
 	public function setStartDate($sd) {
 		$this->pStartDate = $sd;
+		$this->pChanged = true;
 	}
 
 	public function setEndDate($ed) {
 		$this->pEndDate = $ed;
+		$this->pChanged = true;
 	}
 
 	public function showNames($sn) {
 		$this->pShowNames = $sn ? true : false;
+		$this->pChanged = true;
 	}
 
 	public function showDeps($sd) {
 		$this->pShowDeps = $sd ? true : false;
+		$this->pChanged = true;
 	}
 
 	public function showResources($sr) {
 		$this->pShowResources = $sr ? true : false;
+		$this->pChanged = true;
 	}
 
 	public function showTaskGroups($stg) {
 		$this->pShowTaskGroups = $stg ? true : false;
+		$this->pChanged = true;
 	}
 
 	public function useColors($uc) {
 		$this->pUseColors = $uc ? true : false;
+		$this->pChanged = true;
 	}
 
 	public function getWidth() {
+		$this->buildGANTT();
+			
+		if ($this->pGraph->img->width == 0)
+			$this->pGraph->AutoSize();
+		
 		return $this->pGraph->img->width;
+	}
+	
+	public function getHeight() {
+		$this->buildGANTT();
+		
+		if ($this->pGraph->img->height == 0)
+			$this->pGraph->AutoSize();
+		
+		return $this->pGraph->img->height;
 	}
 
 	public function getType() {
@@ -467,12 +508,16 @@ class PMGantt /*implements PMGraph TODO */ {
 
 	//--
 	private function buildGANTT() {
+		if ($this->pGraph != null && !$this->pChanged)
+			return;
+
 		$this->pullProjectData();
 		$this->pullTasks();
 		$this->parseTasks();
 		$this->initDates();
 		$this->initGraph();
 		$this->populateGraph();
+		$this->pChanged = false;
 	}
 
 	private function pullProjectData() {
@@ -609,6 +654,8 @@ class PMGantt /*implements PMGraph TODO */ {
 
 	private function initGraph() {
 		global $AppUI;
+		
+		$this->pGraph = new GanttGraph($this->pWidth, $this->pHeight);
 
 		$this->pGraph->SetUserFont1('DroidSans.ttf', 'DroidSans-Bold.ttf');
 		$this->pGraph->SetUserFont2('DroidSerif-Regular.ttf', 'DroidSerif-Bold.ttf',
@@ -632,7 +679,7 @@ class PMGantt /*implements PMGraph TODO */ {
 
 		$this->pGraph->scale->actinfo->vgrid->SetColor('gray');
 		$this->pGraph->scale->actinfo->SetColor('darkgray');
-		$titles_size = ($this->pShowNames && $this->getWidth() != 0) ? array($this->getWidth()/6) : null;
+		$titles_size = ($this->pShowNames && $this->pWidth != 0) ? array($this->pWidth/6) : null;
 		$this->pGraph->scale->actinfo->SetColTitles(array($AppUI->_('Task', UI_OUTPUT_RAW)), $titles_size);
 		$this->pGraph->scale->actinfo->SetFont(FF_USERFONT);
 
@@ -762,7 +809,7 @@ class PMGantt /*implements PMGraph TODO */ {
 				$tst->ttf->SetUserFont2('DroidSerif-Regular.ttf');
 
 				$cut = 2;
-				while ($bar->title->GetWidth($tst) >= $this->getWidth()/6 && $cut < strlen($name)) {
+				while ($bar->title->GetWidth($tst) >= $this->pWidth/6 && $cut < strlen($name)) {
 					$n = substr($name, 0, strlen($name)-(1+$cut))."...";
 					$bar->title->Set($n);
 					$cut++;
