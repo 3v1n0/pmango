@@ -120,8 +120,8 @@ $sql="SELECT * FROM reports WHERE project_id=".$project_id." AND user_id=".$user
 $exist=db_loadList($sql);
 
 if(count($exist)==0){
-$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete` , `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete` , `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary` )
-VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL);";
+$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete`, `p_show_mine`, `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete`, `a_show_mine`, `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary` )
+VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL, NULL, NULL);";
 
 db_exec( $sql ); db_error();
 }
@@ -129,10 +129,10 @@ db_exec( $sql ); db_error();
 
 if($_GET['reset']){
 	if($_GET['reset']=='actual'){
-		$sql="UPDATE reports SET a_is_incomplete = NULL ,a_report_level = NULL ,a_report_roles = NULL ,a_report_sdate = NULL ,a_report_edate = NULL ,a_report_opened = NULL ,a_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
+		$sql="UPDATE reports SET a_is_incomplete = NULL, a_show_mine = NULL, a_report_level = NULL ,a_report_roles = NULL ,a_report_sdate = NULL ,a_report_edate = NULL ,a_report_opened = NULL ,a_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
 
 	if($_GET['reset']=='planned'){
-		$sql="UPDATE reports SET p_is_incomplete = NULL ,p_report_level = NULL ,p_report_roles = NULL ,p_report_sdate = NULL ,p_report_edate = NULL ,p_report_opened = NULL ,p_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
+		$sql="UPDATE reports SET p_is_incomplete = NULL, p_show_mine = NULL, p_report_level = NULL ,p_report_roles = NULL ,p_report_sdate = NULL ,p_report_edate = NULL ,p_report_opened = NULL ,p_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
 
 	if($_GET['reset']=='properties'){
 		$sql="UPDATE reports SET properties = NULL ,prop_summary = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
@@ -172,10 +172,36 @@ function showhide(layer_ref) {
 }
 
 function check(){
-	if((!document.make_pdf_options.add_properties.checked)&&(!document.make_pdf_options.add_planned.checked)&&(!document.make_pdf_options.add_actual.checked)&&(!document.make_pdf_options.add_log.checked)){
-			alert("Please, select a Report.");
-	}else {document.make_pdf_options.submit();}
+	if ((!document.make_pdf_options.add_properties.checked) && 
+		  (!document.make_pdf_options.add_planned.checked) &&
+		  (!document.make_pdf_options.add_actual.checked) && 
+		  (!document.make_pdf_options.add_log.checked)) {
+		alert("Please, select a Report.");
+	} else {
+		document.make_pdf_options.submit();
+	}
 }
+
+var selectors_values = [];
+
+function selectorSwitch(me) {
+	var selectors = $("select.report_page_selector");
+	var equal_sel;
+	var my_id;
+	
+	selectors.each(function(i) {
+		if (this == me)
+			my_id = i;
+		
+		if ($(this).val() == $(me).val() && this != me) {
+			equal_sel = $(this);
+		}
+	});
+
+	equal_sel.val(selectors_values[my_id]);
+	updateSelectorsState();
+}
+
 </script>
 
 <form name='make_pdf_options' method='POST' action=<? echo '?m=report&a=view&project_id='.$project_id;?> enctype="multipart/form-data">
@@ -205,10 +231,12 @@ function check(){
 			</tr>
 			<tr>
 				<td nowrap='nowrap' align="left">
-					<input type="checkbox" name="add_properties" <?echo ($_POST['add_properties'])?"checked":"";echo ($disable_report[0]['properties'])?"":"disabled";?> >
+					<input id="add_properties" type="checkbox" name="add_properties" <?echo ($_POST['add_properties'])?"checked":"";echo ($disable_report[0]['properties'])?"":"disabled";?> >
 				</td>
 				<td nowrap="nowrap">
-					<strong><?php echo $AppUI->_( 'Project Properties' );?></strong>
+					<label for="add_properties">
+						<strong><?php echo $AppUI->_( 'Project Properties' );?></strong>
+					</label>
 				</td>
 				<td width='100%'>
 				</td>
@@ -217,11 +245,11 @@ function check(){
 				<?php echo "<a href='./index.php?m=projects&a=view&tab=0&project_id=$project_id'>".$AppUI->_('Modify')."</a>";?>&nbsp;&nbsp;&nbsp;
 				</td>
 				<td nowrap="nowrap" align="center">
-				<select name="append_order_a" class="text">
-					<option value="1" <?echo ($_POST['append_order_a']=="1")? "selected":""?>>1
-					<option value="2" <?echo ($_POST['append_order_a']=="2")? "selected":""?>>2
-					<option value="3" <?echo ($_POST['append_order_a']=="3")? "selected":""?>>3
-					<option value="4" <?echo ($_POST['append_order_a']=="4")? "selected":""?>>4
+				<select class="report_page_selector" name="append_order_a" class="text" onchange="selectorSwitch(this);">
+					<option value="1" <?echo ($_POST['append_order_a']=="1")? "selected":""?>>1</option>
+					<option value="2" <?echo ($_POST['append_order_a']=="2")? "selected":""?>>2</option>
+					<option value="3" <?echo ($_POST['append_order_a']=="3")? "selected":""?>>3</option>
+					<option value="4" <?echo ($_POST['append_order_a']=="4")? "selected":""?>>4</option>
 				</select>
 				</td>
 				<td nowrap="nowrap" align="center">
@@ -232,7 +260,7 @@ function check(){
 				<td nowrap='nowrap'>
 				</td>
 				<td nowrap='nowrap'>
-					<? $task_properties = CReport::getWBSReport($project_id); ?>
+					<? $task_properties = CReport::getProjectReport($project_id); ?>
 				</td>
 				<td nowrap='nowrap' colspan='4'width='100%'>
 				</td>
@@ -244,10 +272,12 @@ function check(){
 			</tr>
 			<tr>
 				<td nowrap='nowrap' align="left" style="border-top: outset #d1d1cd 1px">
-				<input type="checkbox" name="add_planned" <?echo ($_POST['add_planned'])?"checked":"";echo ($disable_report[0]['p_report_sdate'])?"":"disabled";?>>
+				<input id="add_planned" type="checkbox" name="add_planned" <?echo ($_POST['add_planned'])?"checked":"";echo ($disable_report[0]['p_report_sdate'])?"":"disabled";?>>
 				</td>
 				<td nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
-				<strong><?echo $AppUI->_( 'Planned Tasks' );?></strong>
+					<label for="add_planned">
+						<strong><?echo $AppUI->_( 'Planned Tasks' );?></strong>
+					</label>
 				</td>
 				<td width='100%' style="border-top: outset #d1d1cd 1px">
 				&nbsp;
@@ -257,11 +287,11 @@ function check(){
 				<?php echo "<a href='./index.php?m=projects&a=view&tab=0&project_id=$project_id'>".$AppUI->_('Modify')."</a>";?>&nbsp;&nbsp;&nbsp;
 				</td>
 				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
-				<select name="append_order_b" class="text">
-					<option value="2" <?echo ($_POST['append_order_b']=="2")? "selected":""?>>2
-					<option value="1" <?echo ($_POST['append_order_b']=="1")? "selected":""?>>1
-					<option value="3" <?echo ($_POST['append_order_b']=="3")? "selected":""?>>3
-					<option value="4" <?echo ($_POST['append_order_b']=="4")? "selected":""?>>4
+				<select class="report_page_selector" name="append_order_b" class="text" onchange="selectorSwitch(this);">
+					<option value="2" <?echo ($_POST['append_order_b']=="2")? "selected":""?>>2</option>
+					<option value="1" <?echo ($_POST['append_order_b']=="1")? "selected":""?>>1</option>
+					<option value="3" <?echo ($_POST['append_order_b']=="3")? "selected":""?>>3</option>
+					<option value="4" <?echo ($_POST['append_order_b']=="4")? "selected":""?>>4</option>
 				</select>
 				</td>
 				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
@@ -272,7 +302,7 @@ function check(){
 				<td nowrap='nowrap'>
 				</td>
 				<td nowrap='nowrap'>
-					<? $task_planned = CReport::getTaskReport($project_id, 1); ?>
+					<? $task_planned = CReport::getTaskReport($project_id, PMPDF_PLANNED); ?>
 				</td>
 				<td nowrap='nowrap' colspan="4">
 				</td>
@@ -284,10 +314,12 @@ function check(){
 			</tr>
 			<tr>
 				<td nowrap='nowrap' align="left" style="border-top: outset #d1d1cd 1px">
-				<input type="checkbox" name="add_actual" <?echo ($_POST['add_actual'])?"checked":"";echo ($disable_report[0]['a_report_sdate'])?"":"disabled";?>>
+				<input id="add_actual" type="checkbox" name="add_actual" <?echo ($_POST['add_actual'])?"checked":"";echo ($disable_report[0]['a_report_sdate'])?"":"disabled";?>>
 				</td>
 				<td nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
-				<strong><?echo $AppUI->_( 'Actual Tasks' );?></strong>
+					<label for="add_actual">
+						<strong><?echo $AppUI->_( 'Actual Tasks' );?></strong>
+					</label>
 				</td>
 				<td width="100%" style="border-top: outset #d1d1cd 1px">
 				&nbsp;
@@ -297,11 +329,11 @@ function check(){
 				<?php echo "<a href='./index.php?m=projects&a=view&tab=1&project_id=$project_id'>".$AppUI->_('Modify')."</a>";?>&nbsp;&nbsp;&nbsp;
 				</td>
 				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
-				<select name="append_order_c" class="text">
-					<option value="3" <?echo ($_POST['append_order_c']=="3")? "selected":""?>>3
-					<option value="1" <?echo ($_POST['append_order_c']=="1")? "selected":""?>>1
-					<option value="2" <?echo ($_POST['append_order_c']=="2")? "selected":""?>>2
-					<option value="4" <?echo ($_POST['append_order_c']=="4")? "selected":""?>>4
+				<select class="report_page_selector" name="append_order_c" class="text" onchange="selectorSwitch(this);">
+					<option value="3" <?echo ($_POST['append_order_c']=="3")? "selected":""?>>3</option>
+					<option value="1" <?echo ($_POST['append_order_c']=="1")? "selected":""?>>1</option>
+					<option value="2" <?echo ($_POST['append_order_c']=="2")? "selected":""?>>2</option>
+					<option value="4" <?echo ($_POST['append_order_c']=="4")? "selected":""?>>4</option>
 				</select>
 				</td>
 				<td nowrap='nowrap' align="center" style="border-top: outset #d1d1cd 1px">
@@ -312,7 +344,7 @@ function check(){
 				<td nowrap='nowrap'>
 				</td>
 				<td nowrap='nowrap'>
-					<? $task_actual = CReport::getTaskReport($project_id, 2); ?>
+					<? $task_actual = CReport::getTaskReport($project_id, PMPDF_ACTUAL); ?>
 				</td>
 				<td nowrap='nowrap' colspan="4">
 				</td>
@@ -324,10 +356,12 @@ function check(){
 			</tr>
 			<tr>
 				<td nowrap='nowrap' align="left" style="border-top: outset #d1d1cd 1px">
-					<input type="checkbox" name="add_log" <?echo ($_POST['add_log'])?"checked":"";echo ($disable_report[0]['l_report_sdate'])?"":"disabled";?>>
+					<input id="add_log" type="checkbox" name="add_log" <?echo ($_POST['add_log'])?"checked":"";echo ($disable_report[0]['l_report_sdate'])?"":"disabled";?>>
 				</td>
 				<td nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
-					<strong><?php echo $AppUI->_( 'Task Logs' );?></strong>
+					<label for="add_log">
+						<strong><?php echo $AppUI->_( 'Task Logs' );?></strong>
+					</label>
 				</td>
 				<td width="100%" style="border-top: outset #d1d1cd 1px">
 				&nbsp;
@@ -337,11 +371,11 @@ function check(){
 				<?php echo "<a href='./index.php?m=projects&a=view&tab=3&project_id=$project_id'>".$AppUI->_('Modify')."</a>";?>&nbsp;&nbsp;&nbsp;
 				</td>
 				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
-				<select name="append_order_d" class="text">
-					<option value="4" <?echo ($_POST['append_order_d']=="4")? "selected":""?>>4
-					<option value="1" <?echo ($_POST['append_order_d']=="1")? "selected":""?>>1
-					<option value="2" <?echo ($_POST['append_order_d']=="2")? "selected":""?>>2
-					<option value="3" <?echo ($_POST['append_order_d']=="3")? "selected":""?>>3
+				<select class="report_page_selector" name="append_order_d" class="text" onchange="selectorSwitch(this);">
+					<option value="4" <?echo ($_POST['append_order_d']=="4")? "selected":""?>>4</option>
+					<option value="1" <?echo ($_POST['append_order_d']=="1")? "selected":""?>>1</option>
+					<option value="2" <?echo ($_POST['append_order_d']=="2")? "selected":""?>>2</option>
+					<option value="3" <?echo ($_POST['append_order_d']=="3")? "selected":""?>>3</option>
 				</select>
 				</td>
 				<td nowrap='nowrap' align="center" style="border-top: outset #d1d1cd 1px">
@@ -365,6 +399,7 @@ function check(){
 		</table>
 	</td>
 </tr>
+
 <?php
 $image_path='modules/report/logos/';
 
@@ -459,7 +494,6 @@ else $image_file=$image_path.'nologo.gif';
 
 if(($_POST['do']==1)&&(!$_POST['load_image'])){
 	include('modules/report/makePDF.php');
-	include('modules/tasks/tasks.class.php');
 	if($image_file==$image_path.'nologo.gif') $image_file='';
 	$pdf = PM_headerPdf($name,$page,$border,$group_name,$image_file);
 	$i=0;
@@ -470,25 +504,36 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 			if($task_properties){
 			 	$i++;
 			 	if(isset($_POST['new_page_a'])) $pdf->AddPage($page);
-				PM_makePropPdf($pdf, $task_properties, $project_id, $page);
+				PM_makePropPdf($pdf, $project_id, $task_properties, $page);
 				$pdf->Ln(8);
 			} else $msg.="No Tasks Properties computed!  -  ";
 		}
 
 		if(isset($_POST['add_planned'])&&($_POST['append_order_b']==$k)){
-			if($task_planned!=0){
+			if($task_planned){
 			 	$i++;
 				if(isset($_POST['new_page_b'])) $pdf->AddPage($page);
-				PM_makeTaskPdf($pdf, $project_id, $task_planned[5], $task_planned[1], $task_planned[0], $task_planned[4], false, $task_planned[2], $task_planned[3], $task_planned[6],$_POST['page']);
+				
+				$t = $task_planned; 
+				PM_makeTaskPdf($pdf, $project_id, PMPDF_PLANNED, $t['level'],
+				               $t['closed'], $t['opened'], $t['roles'],
+				               $t['start_date'], $t['end_date'],
+				               $t['show_incomplete'], $t['show_mine']);
 				$pdf->Ln(8);
 			} else $msg.="No Planned Tasks Report defined!  -  ";
 		}
 
 		if(isset($_POST['add_actual'])&&($_POST['append_order_c']==$k)){
-			if($task_actual!=0){
+			if($task_actual){
 			 	$i++;
 			 	if(isset($_POST['new_page_c'])) $pdf->AddPage($page);
-				PM_makeTaskPdf($pdf, $project_id, $task_actual[5], $task_actual[1], $task_actual[0], $task_actual[4], true, $task_actual[2], $task_actual[3], $task_actual[6],$_POST['page']);
+			 	
+			 	$t = $task_actual;
+				PM_makeTaskPdf($pdf, $project_id, PMPDF_ACTUAL, $t['level'],
+				               $t['closed'], $t['opened'], $t['roles'],
+				               $t['start_date'], $t['end_date'],
+				               $t['show_incomplete'], $t['show_mine']);
+			 	
 				$pdf->Ln(8);
 			} else $msg.="No Actual Tasks Report defined!  -  ";
 		}
@@ -497,7 +542,9 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 		 	if($task_log!=0){
 			  $i++;
 			  if(isset($_POST['new_page_d'])) $pdf->AddPage($page);
-			  PM_makeLogPdf($pdf, $project_id, $task_log[0], $task_log[1], $task_log[2], $task_log[3], $task_log[4]);
+
+			  PM_makeLogPdf($pdf, $project_id, $task_log['user'], $task_log['hide_inactive'],
+			                $task_log['hide_complete'], $task_log['start_date'], $task_log['end_date']);
 			  $pdf->Ln(8);
 			}else $msg.="No Tasks Log Report defined!";
 		}
@@ -517,4 +564,14 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 </tr>
 </table>
 </form>
+
+<script type="text/javascript">
+function updateSelectorsState() {
+	$("select.report_page_selector").each(function(i) {
+		selectors_values[i] = $(this).val();
+	});
+}
+
+$(document).ready(updateSelectorsState());
+</script>
 

@@ -50,7 +50,8 @@
 -------------------------------------------------------------------------------------------
 */
 
-require_once( $AppUI->getSystemClass ('dp' ) );
+require_once($AppUI->getSystemClass('dp'));
+require_once($AppUI->getModuleClass('tasks'));
 $AppUI->savePlace();
 /**
  * The Reoprt Class
@@ -74,131 +75,192 @@ class CReport extends CDpObject {
 		}
 	}
 
-	function getWBS($tid, $isRootChildren = false) {
-			if (is_null($tid))
-				return "";
-			$sql = "SELECT task_parent, task_wbs_index FROM tasks WHERE $tid = task_id";
-			$r = db_loadList($sql);
-			
-			$currentTask = $tid;
-			$wbs = $r[0]['task_wbs_index'];
-			if ($r[0]['task_parent']==$tid && $isRootChildren)
-				return "";
-				
-			while ($currentTask != $r[0]['task_parent']) {
-				$currentTask = $r[0]['task_parent'];
-				if (!is_null($currentTask)) {
-					$sql = "SELECT task_wbs_index, task_parent FROM tasks WHERE $currentTask = task_id";
-					$r = db_loadList($sql);
-					if ($r[0]['task_wbs_index'] == "")
-						return strrev($wbs);
-					$wbs .= ".".$r[0]['task_wbs_index'];
-				}
-			}
-			return strrev($wbs);
-		}
-
-
-	function getTaskReport($pid, $report_id=1){
+	function getTaskReport($project_id, $report_type = PMPDF_PLANNED){
 		
 		GLOBAL $AppUI;
 		$user_id = $AppUI->user_id;
-		$project_id=$pid;
-		$rep_id=$report_id;
 		
 
-		if($rep_id==1){
-		$sql="SELECT p_is_incomplete as is_incomplete, p_report_level as report_level, p_report_roles as report_roles, p_report_sdate as report_sdate, p_report_edate as report_edate, p_report_opened as report_opened, p_report_closed as report_closed FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;}
-		else if($rep_id==2){
-		$sql="SELECT a_is_incomplete as is_incomplete, a_report_level as report_level, a_report_roles as report_roles, a_report_sdate as report_sdate, a_report_edate as report_edate, a_report_opened as report_opened, a_report_closed as report_closed FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;	
+		if ($report_type == PMPDF_PLANNED) {
+			$sql = "SELECT p_is_incomplete as is_incomplete, p_show_mine as show_mine, ".
+		                  "p_report_level as report_level, p_report_roles as report_roles, ".
+		                  "p_report_sdate as report_sdate, p_report_edate as report_edate, ".
+		                  "p_report_opened as report_opened, p_report_closed as report_closed ".
+		            "FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+		} else if ($report_type == PMPDF_ACTUAL) {
+			$sql = "SELECT a_is_incomplete as is_incomplete, a_show_mine as show_mine, ".
+			              "a_report_level as report_level, a_report_roles as report_roles, ".
+			              "a_report_sdate as report_sdate, a_report_edate as report_edate, ".
+			              "a_report_opened as report_opened, a_report_closed as report_closed ".
+			       "FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;	
 		}
+		
 		$param = db_loadList($sql);
 		
+		$lev = $param[0]['report_level'];
+		$role = $param[0]['report_roles'];
 		
-		$lev=$param[0]['report_level'];
-		$role=$param[0]['report_roles'];
-		if($role!=null){
-		switch($role){
-			case "N": $showrole="Person Number";
-			break;
-			case "P": $showrole="Person Name";
-			break;
-			case "R": $showrole="Person Role";
-			break;
-			case "A": $showrole="Person Name and Role";
-			break;
+		if($role != null){
+			switch($role){
+				case "N": $showrole="Person Number";
+				break;
+				case "P": $showrole="Person Name";
+				break;
+				case "R": $showrole="Person Role";
+				break;
+				case "A": $showrole="Person Name and Role";
+				break;
 		}
+			
+		$tasks_opened = !empty($param[0]['report_opened']) ? explode('/', $param[0]['report_opened']) : array();
+		$tasks_closed = !empty($param[0]['report_closed']) ? explode('/', $param[0]['report_closed']) : array();
 		
-		$tasks_opened=explode("/",$param[0]['report_opened']);
-		$tasks_closed=explode("/",$param[0]['report_closed']);
-		
-		$opened_wbs=array();
-		$closed_wbs=array();
-		$opened_name=array();
-		$closed_name=array();
-		
-		for($i=0;$i<count($tasks_opened);$i++){
-		if($tasks_opened[$i]!=""){
-		  	$sql="SELECT task_name FROM tasks WHERE task_id=".$tasks_opened[$i];
-			$name = db_loadList($sql);
-		  	$opened_name[]=$name[0][0];
-			$opened_wbs[]=CReport::getWBS($tasks_opened[$i]);
+		$opened_info = array();
+		$closed_info = array();
+
+		if (count($tasks_opened))
+		  	$sql="SELECT task_name, task_id FROM tasks WHERE task_id in (".implode(",", $tasks_opened).")";
+			foreach (@db_loadList($sql) as $task) {
+				$opened_info[] = array('wbs' => CTask::getWBS($task['task_id']),
+				                       'name' => $task['task_name']);
 			}
 		}
-	
-		for($i=0;$i<count($tasks_closed);$i++){
-		if($tasks_closed[$i]!=""){
-			$sql="SELECT task_name FROM tasks WHERE task_id=".$tasks_closed[$i];
-			$name = db_loadList($sql);
-		  	$closed_name[]=$name[0][0];
-			$closed_wbs[]=CReport::getWBS($tasks_closed[$i]);
+		
+		if (count($tasks_closed)) {
+		  	$sql="SELECT task_name, task_id FROM tasks WHERE task_id in (".implode(",", $tasks_closed).")";
+			foreach (@db_loadList($sql) as $task) { 
+		  		$closed_info[] = array('wbs' => CTask::getWBS($task['task_id']),
+				                       'name' => $task['task_name']);
 			}
 		}
 
-		$sdate=new CDate($param[0]['report_sdate']);
-		$edate=new CDate($param[0]['report_edate']);	
-	
-		$s="<table border='0' cellpadding='1' cellspacing='2'><tr><td nowrap='nowrap'>Show Incomplete</td><td nowrap='nowrap'>";
-		$s .= ($param[0]['is_incomplete']) ? "<img border='0' src='./images/icons/stock_ok-16.gif'>" : "<img border='0' src='./images/icons/stock_cancel-16.gif'>";
-		$s .="</td></tr><tr><td nowrap='nowrap'>Explode Task</td><td nowrap='nowrap'>Level ".$lev."</td></tr>";
-		$s .="<tr><td nowrap='nowrap'>Show Roles</td><td nowrap='nowrap'>".$showrole."</td></tr>";
-		$s .="<tr><td nowrap='nowrap'>Date Period</td><td nowrap='nowrap'>".$sdate->format( FMT_REGULAR_DATE ).' - '.$edate->format( FMT_REGULAR_DATE )."</td></tr>";
-		$s .="<tr><td valign='top'nowrap='nowrap'>Exploded Tasks</td><td>";
-							
-		if(count($opened_wbs)>0){
-		 	$s .="<table>";
-			for($i=0;$i<count($opened_wbs);$i++){
-			 	$s .="<tr><td nowrap='nowrap'>";
-				$s .=$opened_wbs[$i]."</td><td nowrap='nowrap'>- ".$opened_name[$i];
-				$s .="</td></tr>";
+		$sdate = new CDate($param[0]['report_sdate']);
+		$edate = new CDate($param[0]['report_edate']);	
+
+		$s = "<table border='0' cellpadding='1' cellspacing='2'>
+				<tr>
+					<td nowrap='nowrap'>Show Incomplete</td>
+					<td nowrap='nowrap'>
+						<img border='0' src='./images/icons/".($param[0]['is_incomplete'] ? 'stock_ok-16.png' : 'stock_cancel-16.png')."' />
+					</td>
+				</tr>
+				<tr>
+					<td nowrap='nowrap'>Show Mine</td>
+					<td nowrap='nowrap'>
+						<img border='0' src='./images/icons/".($param[0]['show_mine'] ? 'stock_ok-16.png' : 'stock_cancel-16.png')."' />
+					</td>
+				</tr>
+				<tr>
+					<td nowrap='nowrap'>Explosion Level</td>
+					<td nowrap='nowrap'>Level ".$lev."</td>
+				</tr>
+				<tr>
+					<td nowrap='nowrap'>Show Roles</td>
+					<td nowrap='nowrap'>".$showrole."</td>
+				</tr>
+				<tr>
+					<td nowrap='nowrap'>Date Period</td>
+					<td nowrap='nowrap'>".$sdate->format( FMT_REGULAR_DATE ).' - '.$edate->format( FMT_REGULAR_DATE )."</td>
+				</tr>
+				<tr>
+					<td valign='top'>Exploded Tasks</td>
+					<td>
+						<a href='#' onclick='$(\"#rep_exploded_tasks\").slideToggle()'>
+							".count($opened_info)."
+							<img src='./modules/report/images/details.gif' alt='Show Details' title='Show Details' border='0'>
+						</a>
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td>";
+
+		if (count($opened_info)){
+		 	$s .="		<div id='rep_exploded_tasks' style='display: none;'>
+		 					<table>";
+			foreach ($opened_info as $task){
+			 	$s .="
+				 				<tr>
+				 					<td nowrap='nowrap'>".$task['wbs']."
+				 					</td>
+				 					<td nowrap='nowrap'>- ".$task['name']."</td>
+				 				</tr>";
 				}
-			$s .="</table>";
-			}else {$s .="<img border='0' src='./images/icons/stock_cancel-16.gif'>"; }
+				
+			$s .="
+							</table>
+						</div>";
+		} else {
+			$s .= "<img border='0' src='./images/icons/stock_cancel-16.png'>";
+		}
 			 
-		$s .="</td></tr><tr><td valign='top'>Closed Tasks</td><td>";
+		$s .= "
+					</td>
+				</tr>
+				<tr>
+					<td valign='top'>Closed Tasks</td>
+					<td>
+						<a href='#' onclick='$(\"#rep_closed_tasks\").slideToggle()'>
+							".count($closed_info)."
+							<img src='./modules/report/images/details.gif' alt='Show Details' title='Show Details' border='0'>
+						</a>
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td>";
 		
-		if(count($closed_wbs)>0){
-		 	$s .="<table>";
-			for($i=0;$i<count($closed_wbs);$i++){
-			 	$s .="<tr><td nowrap='nowrap'>";
-				$s .=$closed_wbs[$i]."</td><td nowrap='nowrap'>- ".$closed_name[$i];
-				$s .="</td></tr>";
+		if (count($closed_info)){
+		 	$s .="
+		 			<div id='rep_closed_tasks' style='display: none;'>
+		 				<table>";
+			foreach ($closed_info as $task){
+			 	$s .="
+			 				<tr>
+			 					<td nowrap='nowrap'>".$task['wbs']."
+			 					</td>
+			 					<td nowrap='nowrap'>- ".$task['name']."</td>
+			 				</tr>";
 				}
-			$s .="</table>";
-			}else {$s .="<img border='0' src='./images/icons/stock_cancel-16.gif'>" ;}
+				
+			$s .="
+						</table>
+					</div>";
+		} else {
+			$s .= "<img border='0' src='./images/icons/stock_cancel-16.png'>";
+		}
 			 
-		$s .="</td></tr><tr><td nowrap='nowrap' colspan='4'></td></tr></table>";}
-		else {
-		 	if($rep_id==1) $s="<br>No Task Planned Report defined";
-			if($rep_id==2) $s="<br>No Task Actual Report defined";
-			}
+		$s .="
+					</td>
+				</tr>
+				<tr>
+					<td nowrap='nowrap' colspan='4'>&nbsp;</td>
+				</tr>
+			</table>";
+		
+		if (!$lev) {
+	 		if ($report_type == PMPDF_PLANNED) $s="<br>No Task Planned Report defined";
+			else if ($report_type == PMPDF_ACTUAL) $s="<br>No Task Actual Report defined";
+		}
 		
 		echo $s;
-		if($role!=null){
+		
+		if($role!=null) {
 			$is_incomplete=$param[0]['is_incomplete'];
-			$values=array($tasks_opened, $tasks_closed, $sdate, $edate, $role, $lev, $is_incomplete);
-			return $values;}
-		else return 0;
+			$show_mine = $param[0]['show_mine'];
+			
+			$values = array('opened' => $tasks_opened,
+			                'closed' => $tasks_closed,
+			                'start_date' => $sdate,
+			                'end_date' => $edate,
+			                'roles' => $role,
+			                'level' => $lev,
+			                'show_incomplete' => $is_incomplete,
+			                'show_mine' => $show_mine);
+			
+			return $values;
+		}
+		else return null;
 	}
 
 	function getLogReport($pid){
@@ -207,40 +269,68 @@ class CReport extends CDpObject {
 		$user_id = $AppUI->user_id;
 		$project_id=$pid;
 
-		$sql="SELECT l_hide_complete, l_hide_inactive, l_user_id, l_report_sdate, l_report_edate FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+		$sql = "SELECT l_hide_complete, l_hide_inactive, l_user_id, l_report_sdate, ".
+		              "l_report_edate FROM reports WHERE reports.project_id=$project_id ".
+		                                                "AND user_id=$user_id";
 		$log_param = db_loadList($sql);
 		
 		
 		$ruser_id=$log_param[0]['l_user_id'];
-		if($log_param[0]['l_user_id']!=null){
-		$sql="SELECT concat(user_first_name,' ',user_last_name) FROM users WHERE user_id=$ruser_id";
-		$ruser = db_loadList($sql);
-		if($ruser_id==-2) $ruser[0][0]= "Grouped by User";
-		if($ruser_id==-1) $ruser[0][0]= "All Users";
+		
+		if ($log_param[0]['l_user_id'] != null) {
+			
+			$sql="SELECT concat(user_first_name,' ',user_last_name) FROM users WHERE user_id=$ruser_id";
+			$ruser = db_loadList($sql);
+			
+			if($ruser_id==-2) $ruser[0][0]= "Grouped by User";
+			if($ruser_id==-1) $ruser[0][0]= "All Users";
+		
+			$sdate=new CDate($log_param[0]['l_report_sdate']);
+			$edate=new CDate($log_param[0]['l_report_edate']);	
 	
-		$sdate=new CDate($log_param[0]['l_report_sdate']);
-		$edate=new CDate($log_param[0]['l_report_edate']);	
-	
-		$s="<table border='0' cellpadding='1' cellspacing='2'><tr><td nowrap='nowrap'>Hide Inactive</td><td nowrap='nowrap'>";
-		$s .= ($log_param[0]['l_hide_inactive']) ? "<img border='0' src='./images/icons/stock_ok-16.gif'>" : "<img border='0' src='./images/icons/stock_cancel-16.gif'>";
-		$s .="</td></tr>";
-		$s .="<tr><td nowrap='nowrap'>Incomplete Tasks</td><td nowrap='nowrap'>";
-		$s .= ($log_param[0]['l_hide_complete']) ? "<img border='0' src='./images/icons/stock_ok-16.gif'>" : "<img border='0' src='./images/icons/stock_cancel-16.gif'>";
-		$s .="</td></tr>";
-		$s .="<tr><td nowrap='nowrap'>User Filter</td><td nowrap='nowrap'>".$ruser[0][0]."</td></tr>";
-		$s .="<tr><td nowrap='nowrap'>Date Period</td><td nowrap='nowrap'>".$sdate->format( FMT_REGULAR_DATE ).' - '.$edate->format( FMT_REGULAR_DATE )."</td></tr>";
-		$s .="<tr><td nowrap='nowrap' colspan='4'></td></tr></table>";}
-		else $s="<br>No Task Log Report defined";
+			$s = "
+				<table border='0' cellpadding='1' cellspacing='2'>
+					<tr>
+						<td nowrap='nowrap'>Hide Inactive</td>
+						<td nowrap='nowrap'>
+							<img border='0' src='./images/icons/".($log_param[0]['l_hide_inactive'] ? "stock_ok-16.png" : "stock_cancel-16.png")."'>
+						</td>
+					</tr>
+					<tr>
+						<td nowrap='nowrap'>Incomplete Tasks</td>
+						<td nowrap='nowrap'>
+							<img border='0' src='./images/icons/".($log_param[0]['l_hide_complete'] ? "stock_ok-16.png" : "stock_cancel-16.png")."'>
+						</td>
+					</tr>
+					<tr>
+						<td nowrap='nowrap'>User Filter</td>
+						<td nowrap='nowrap'>".$ruser[0][0]."</td>
+					</tr>
+					<tr>
+						<td nowrap='nowrap'>Date Period</td>
+						<td nowrap='nowrap'>".$sdate->format( FMT_REGULAR_DATE ).' - '.$edate->format( FMT_REGULAR_DATE )."</td>
+					</tr>
+					<tr>
+						<td nowrap='nowrap' colspan='4'>&nbsp;</td>
+					</tr>
+				</table>";
+		} else {
+			$s = "<br>No Task Log Report defined";
+		}
 		
 		echo $s;
 		
-		if($log_param[0]['l_user_id']!=null){
-			$values=array($ruser_id, $log_param[0]['l_hide_inactive'], $log_param[0]['l_hide_complete'], $sdate, $edate);
-			return $values;}
-		else return 0;
+		if($log_param[0]['l_user_id'] != null) {
+			$values = array('user' => $ruser_id,
+			                'hide_inactive' => $log_param[0]['l_hide_inactive'],
+			                'hide_complete' => $log_param[0]['l_hide_complete'],
+			                'start_date' => $sdate,
+			                'end_date' => $edate);
+			return $values;
+		} else return null;
 	}
 	
-	function getWBSReport($pid){
+	function getProjectReport($pid){
 		
 		GLOBAL $AppUI;
 		$user_id = $AppUI->user_id;
@@ -249,7 +339,7 @@ class CReport extends CDpObject {
 		$sql="SELECT properties, prop_summary FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
 		$wbs_param = db_loadList($sql);
 
-		if($wbs_param[0]['properties']!=null){
+		if ( $wbs_param[0]['properties'] != null) {
 				$string=str_replace("@","'",$wbs_param[0]['properties']);
 				$summary=explode("|",$wbs_param[0]['prop_summary']);
 				$string2="Project isn't ";
@@ -258,16 +348,28 @@ class CReport extends CDpObject {
 				if($i<count($summary)-2)
 					$string2.=" and ";
 				}
-			if($wbs_param[0]['prop_summary']!=null){	
-				$s ="<table><tr><td nowrap='nowrap'>";
-				$s .="<font color='red'><strong>".$string2."</strong></font>&nbsp;&nbsp;";
-				$s.="<a href=\"javascript:showhide('agent99')\"><img src='./modules/report/images/details.gif' alt='Show Details' title='Show Details' border='0'></a>";
-				$s.="<div id='agent99' style='display:none;'>".$string."></div>";
-				$s .="</td></tr></table>";}
-			else{
-				$s ="<table><tr><td nowrap='nowrap'>";
-				$s.=$string;
-				$s .="</td></tr></table>";	
+			if ($wbs_param[0]['prop_summary'] != null) {	
+				$s = "
+						<table>
+							<tr>
+								<td nowrap='nowrap'>
+									<a href='#' onclick='$(\"#prop_summary\").slideToggle();'>
+										<font color='red'><strong>".$string2."</strong></font>&nbsp;&nbsp;
+										<img src='./modules/report/images/details.gif' alt='Show Details' title='Show Details' border='0'>
+									</a>
+									<div id='prop_summary' style='display:none;'>
+										$string
+									</div>
+								</td>
+							</tr>
+						</table>";
+			} else {
+				$s = "
+						<table>
+							<tr>
+								<td nowrap='nowrap'>$string</td>
+							</tr>
+						</table>";	
 			}
 		}
 		else $s="<br>No Properties Computed";
