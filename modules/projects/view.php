@@ -169,9 +169,9 @@ if(count($exist)==0){
 	db_exec( $sql ); db_error();
 }
 
-if (isset($_POST['properties']) && getProjectState('Properties') &&
+if (dPgetBoolParam($_POST, 'add_prop_report') && getProjectState('Properties') &&
 	!getProjectState('PropertiesComputed') && !dPgetBoolParam($_POST, 'make_prop_pdf')) {
-	print_r($_POST);
+
 	$properties = str_replace("'", "@", getProjectState('Properties'));
 	$sql = "UPDATE reports SET properties='$properties', ".
 	       "prop_summary='".$_POST['summary']."' WHERE project_id=$project_id ".
@@ -202,6 +202,7 @@ $(function() {
 
 function makeProjectPDF() {
 	document.prop_report.make_prop_pdf.value = "true";
+	document.prop_report.add_prop_report.value = "false";
 	generatePDF('prop_report', 'project_pdf_span');
 	document.prop_report.make_prop_pdf.value = "false";
 }
@@ -212,9 +213,11 @@ function addProjectReport() {
 		alert('<? echo $AppUI->_('Nothing to report here, compute something.'); ?>');
 		return;
 	}
-	
+
+	document.prop_report.add_prop_report.value = "true";
 	document.prop_report.make_prop_pdf.value = "false";
 	addReport("prop_report", "project_to_report");
+	document.prop_report.add_prop_report.value = "false";
 }
 
 function computeProp() {
@@ -225,8 +228,6 @@ function computeProp() {
 
 	properties.hide();
 	properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
-
-	document.prop_report.make_prop_pdf.value = "false";
 	
 	$.ajax({
 	   type: form.attr("method"),
@@ -562,11 +563,12 @@ function computeProp() {
 								</td>
 								<td width="0%">
 									<? 
-									$string=urlencode($string);
+									$string = urlencode($string);
 									?>
 									
-										<input type="hidden" name="summary" value="<?php echo $message;?>" />
-										<input onclick="addProjectReport();" id="project_to_report" type="button" class="button" value="<?php echo $AppUI->_('Add to Report');?>">
+									<input type="hidden" name="summary" value="<?php echo $message;?>" />
+									<input type="hidden" name="add_prop_report" value="false">
+									<input onclick="addProjectReport();" id="project_to_report" type="button" class="button" value="<?php echo $AppUI->_('Add to Report');?>">
 								</td>
 							</tr>
 						</table>
