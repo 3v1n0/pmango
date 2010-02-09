@@ -167,9 +167,9 @@ if (isset($_POST['sdate'])) {
 	$pre_tasks = getProjectState('Tasks');
 	$pre_date = getProjectState('TaskDates');
 	
-	setProjectSubState('Tasks', 'ShowIncomplete', dPgetBoolParam($_POST, 'show_incomplete', false));
-	setProjectSubState('Tasks', 'ShowMine', dPgetBoolParam($_POST, 'show_mine', false));
-	setProjectSubState('Tasks', 'Explode', dPgetParam($_POST, 'explode_tasks', '1'));
+	setProjectSubState('Tasks', 'ShowIncomplete', dPgetBoolParam($_POST, 'show_incomplete'));
+	setProjectSubState('Tasks', 'ShowMine', dPgetBoolParam($_POST, 'show_mine'));
+	setProjectSubState('Tasks', 'Explode', dPgetParam($_POST, 'explode_tasks', 1));
 	setProjectSubState('Tasks', 'PersonsRoles', dPgetParam($_POST, 'roles', 'N'));
 	setProjectSubState('TaskDates', 'Start', dPgetParam($_POST, 'sdate', $db_start_date[0]['project_start_date']));
 	setProjectSubState('TaskDates', 'End', dPgetParam($_POST, 'edate', $db_start_date[0]['project_finish_date']));
@@ -403,8 +403,7 @@ $canEdit = false;
 
 <script type="text/JavaScript">
 function toggle_users(id){
-  var element = document.getElementById(id);
-  element.style.display = (element.style.display == '' || element.style.display == "none") ? "inline" : "none";
+  $("#"+id).slideToggle();
 }
 
 <?php
@@ -625,12 +624,78 @@ function addTasksReport(type) {
 	document.pdf_options.addreport.value = type;
 	addReport('pdf_options', 'tasks_report_btn');
 }
+
+function updateTasksList() {
+
+	if (compareDate(document.task_list_options.show_sdate,
+			       document.task_list_options.show_edate)) {
+	       document.task_list_options.display_option.value="custom";
+	} else {
+		return;
+	}
+
+	var form = $("#task_list_options");
+	var tasks = $("#project_tasks");
+	var old_tasks = tasks.clone().text();
+
+	addAJAX("#task_list_options");
+
+	tasks.animate({
+			height: "toggle",
+			opacity: "toggle"
+		},
+
+		function() {
+			tasks.html('<img id="tasks_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+	
+			$.ajax({
+			   type: form.attr("method"),
+			   url:  form.attr("action"),
+			   data: form.serialize(),
+			   success: function(html) {
+		        	$("#tasks_loader").fadeOut("fast", function() {
+						if (!$(html).find("#tasks_pdf_span").children().size()) {
+							$("#tasks_pdf_span").fadeOut();
+						}
+		
+						topMsgUpdate(html);
+		
+		        		var data = $(html).find("#project_tasks");
+		        		data.hide();
+		
+		        		if (data.size() == 1) {
+		        			tasks.replaceWith(data);
+		        			data.animate({
+		        				height: "toggle",
+		        				opacity: "toggle"
+		        			});
+		
+		        			if (old_tasks != data.clone().text()) {
+		            			//TODO check also for form!
+		        				$("#tasks_report_btn").fadeIn();
+		        			}
+		
+		        		} else {
+		        			delAJAX("#task_list_options");
+		            		form.submit();
+		            		return;
+		        		}
+		            });
+		  	   },
+		  	   error: function() {
+		  		 	delAJAX("#task_list_options");
+		  		 	form.submit();
+		  	   }
+			});
+		}
+	);
+}
 </script>
 <?php
 if ($project_id) {
 	?>
 
-<form name='task_list_options' method='post'
+<form id="task_list_options" name='task_list_options' method='post'
 	action="<?php echo $query_string; ?>"><input type='hidden'
 	name='show_task_options' value='1'> <input type="hidden"
 	name="reset_level" value="1" /> <input type="hidden"
@@ -704,7 +769,7 @@ if ($project_id) {
 			<tr>
 				<td class="tab_setting_item">&nbsp; <input type="button"
 					class="button" value="<?php echo $AppUI->_( 'Update' );?>"
-					onclick='if(compareDate(document.task_list_options.show_sdate,document.task_list_options.show_edate)) { document.task_list_options.display_option.value="custom"; submit();}'>
+					onclick='updateTasksList();'>
 				</td>
 			</tr>
 			<tr>
@@ -774,6 +839,7 @@ if ($project_id) {
 			$task_level=$explodeTasks;
 			?>
 
+<div id="project_tasks">
 <table width="100%" border="0" cellpadding="2" cellspacing="1"
 	class="tbl">
 	<tr>
@@ -952,6 +1018,7 @@ if ($project_id) {
 	if ($tview) {
 		?>
 </table>
+</div>
 <table cellpadding="2" cellspacing="1">
 	<tr>
 		<td><?php echo $AppUI->_('Key');?>:</td>
