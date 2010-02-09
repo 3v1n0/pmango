@@ -153,11 +153,30 @@ function displayItemSwitch(id1, id2) {
 	*/
 }
 
+function addAJAX(form_selector) {
+	var form = $(form_selector);
+	var ajax = $(form_selector+" input[name=ajax]");
+
+	if (!ajax.size())
+		form.append('<input type="hidden" name="ajax" value="true" />');
+	else
+		ajax.val("true");
+}
+
+function delAJAX(form_selector) {
+	var form = $(form_selector);
+	var ajax = $(form_selector+" input[name=ajax]");
+
+	if (ajax.size())
+		ajax.remove();
+}
+
 function generatePDF(form_id, parent_id) {
 	var parent = $('#'+parent_id);
 	var loader = parent_id+"_pdf_loader";
 	var form = $("#"+form_id);
 	
+	addAJAX("#"+form_id);
 	
 	parent.hide();
 	parent.html('<img id="'+loader+'" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
@@ -173,11 +192,13 @@ function generatePDF(form_id, parent_id) {
 	            	parent.replaceWith(data);
 	        		data.fadeIn("fast");
             	} else {
+            		delAJAX("#"+form_id);
             		form.submit();
             	}
             });
   	   },
 	   error: function() {
+  		   	delAJAX("#"+form_id);
   		 	parent.hide();
   		 	form.submit();
   	   }
@@ -190,6 +211,7 @@ function addReport(form_id, button_id) {
 	var button = $("#"+button_id);
 	var old_name = button.val();
 	
+	addAJAX("#"+form_id);
 	button.val("Loading...");
 	
 	$.ajax({
@@ -201,6 +223,7 @@ function addReport(form_id, button_id) {
 
 		   if (!data.size()) {
 			   button.val("Error, reloading...");
+			   delAJAX("#"+form_id);
 			   form.submit();
 		   } else {
 			   button.val("Done!");
@@ -213,6 +236,7 @@ function addReport(form_id, button_id) {
   	   },
 	   error: function() {
   		   button.val(old_name);
+  		   delAJAX("#"+form_id);
   		   form.submit();
   	   }
 	});

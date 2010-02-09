@@ -229,6 +229,8 @@ function computeProp() {
 	var properties = $("#properties_div");
 	var old_properties = properties.clone().text();
 
+	addAJAX("#frmProp");
+
 	properties.hide();
 	properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
 	
@@ -265,6 +267,7 @@ function computeProp() {
     					$("input[name=summary]").val(new_sum.val());
 
         		} else {
+        			delAJAX("#frmProp");
             		form.submit();
             		return;
         		}
@@ -281,6 +284,7 @@ function computeProp() {
             });
   	   },
   	   error: function() {
+  		 	delAJAX("#frmProp");
   		 	form.submit();
   	   }
 	});
