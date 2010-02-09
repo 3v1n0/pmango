@@ -118,19 +118,23 @@ class CReport extends CDpObject {
 		$opened_info = array();
 		$closed_info = array();
 
-		if (count($tasks_opened))
+		if (!empty($tasks_opened))
 		  	$sql="SELECT task_name, task_id FROM tasks WHERE task_id in (".implode(",", $tasks_opened).")";
 			foreach (@db_loadList($sql) as $task) {
-				$opened_info[] = array('wbs' => CTask::getWBS($task['task_id']),
-				                       'name' => $task['task_name']);
+				if (!empty($task['task_name'])) {
+					$opened_info[] = array('wbs' => CTask::getWBS($task['task_id']),
+					                       'name' => $task['task_name']);
+				}
 			}
 		}
-		
-		if (count($tasks_closed)) {
+
+		if (!empty($tasks_closed)) {
 		  	$sql="SELECT task_name, task_id FROM tasks WHERE task_id in (".implode(",", $tasks_closed).")";
-			foreach (@db_loadList($sql) as $task) { 
-		  		$closed_info[] = array('wbs' => CTask::getWBS($task['task_id']),
-				                       'name' => $task['task_name']);
+			foreach (@db_loadList($sql) as $task) {
+				if (!empty($task['task_name'])) {
+		  			$closed_info[] = array('wbs' => CTask::getWBS($task['task_id']),
+				    	                   'name' => $task['task_name']);
+				}
 			}
 		}
 
@@ -164,7 +168,9 @@ class CReport extends CDpObject {
 				</tr>
 				<tr>
 					<td valign='top'>Exploded Tasks</td>
-					<td>
+					<td>";
+			if (count($opened_info)) {
+				$s .= "
 						<a href='#' onclick='$(\"#rep_exploded_tasks\").slideToggle()'>
 							".count($opened_info)."
 							<img src='./modules/report/images/details.gif' alt='Show Details' title='Show Details' border='0'>
@@ -173,10 +179,8 @@ class CReport extends CDpObject {
 				</tr>
 				<tr>
 					<td>&nbsp;</td>
-					<td>";
-
-		if (count($opened_info)){
-		 	$s .="		<div id='rep_exploded_tasks' style='display: none;'>
+					<td>
+						<div id='rep_exploded_tasks' style='display: none;'>
 		 					<table>";
 			foreach ($opened_info as $task){
 			 	$s .="
@@ -199,7 +203,10 @@ class CReport extends CDpObject {
 				</tr>
 				<tr>
 					<td valign='top'>Closed Tasks</td>
-					<td>
+					<td>";
+
+			if (count($closed_info)) {
+				$s .= "
 						<a href='#' onclick='$(\"#rep_closed_tasks\").slideToggle()'>
 							".count($closed_info)."
 							<img src='./modules/report/images/details.gif' alt='Show Details' title='Show Details' border='0'>
@@ -208,20 +215,17 @@ class CReport extends CDpObject {
 				</tr>
 				<tr>
 					<td>&nbsp;</td>
-					<td>";
-		
-		if (count($closed_info)){
-		 	$s .="
+					<td>
 		 			<div id='rep_closed_tasks' style='display: none;'>
 		 				<table>";
-			foreach ($closed_info as $task){
+			foreach ($closed_info as $task) {
 			 	$s .="
 			 				<tr>
 			 					<td nowrap='nowrap'>".$task['wbs']."
 			 					</td>
 			 					<td nowrap='nowrap'>- ".$task['name']."</td>
 			 				</tr>";
-				}
+			}
 				
 			$s .="
 						</table>

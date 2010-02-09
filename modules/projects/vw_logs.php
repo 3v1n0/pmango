@@ -172,6 +172,7 @@ if (dPgetBoolParam($_POST, 'addreport')) {
 	       "WHERE reports.project_id=".$project_id." AND reports.user_id=".$AppUI->user_id;
 	
 	$db_roles = db_loadList($sql);
+	unsetProjectSubState('PDFReports', PMPDF_REPORT);
 }
 
 ?>

@@ -177,7 +177,8 @@ if (dPgetBoolParam($_POST, 'add_prop_report') && getProjectState('Properties') &
 	$sql = "UPDATE reports SET properties='$properties', ".
 	       "prop_summary='$summary' WHERE project_id=$project_id ".
 	       "AND reports.user_id=$user_id";
-	$db_roles = db_loadList($sql);						
+	$db_roles = db_loadList($sql);	
+	unsetProjectSubState('PDFReports', PMPDF_REPORT);					
 }
 
 $titleBlock->show();

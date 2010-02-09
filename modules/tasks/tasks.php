@@ -583,7 +583,7 @@ if(dPgetParam( $_POST, 'addreport', '' )&&dPgetParam( $_POST, 'addreport', '' )!
 			$db_roles = db_loadList($sql);
 		}
 		
-		echo $sql;
+		unsetProjectSubState('PDFReports', PMPDF_REPORT);
 }
 ?>
 <SCRIPT SRC="js/dateControl.js"></SCRIPT>

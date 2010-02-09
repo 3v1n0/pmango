@@ -51,6 +51,8 @@
 
 -------------------------------------------------------------------------------------------
 */
+include('modules/report/makePDF.php');
+
 $project_id = intval( dPgetParam( $_GET, "project_id", 0 ) );
 $projects = $AppUI->getState('Projects');
 
@@ -106,6 +108,18 @@ $titleBlock = new CTitleBlock( 'Project Reports', 'applet-report.png', $m, "$m.$
 $titleBlock->addCrumb( "?m=projects&a=view&project_id=$project_id", "View project" );
 $titleBlock->addCell();
 
+if (!empty($_POST) && dPgetBoolParam($_POST, 'make_report_pdf')) {
+	setProjectSubState('ReportOptions', 'add_properties', dPgetBoolParam($_POST, 'add_properties'));
+	setProjectSubState('ReportOptions', 'add_planned', dPgetBoolParam($_POST, 'add_planned'));
+	setProjectSubState('ReportOptions', 'add_actual', dPgetBoolParam($_POST, 'add_actual'));
+	setProjectSubState('ReportOptions', 'add_log', dPgetBoolParam($_POST, 'add_log'));
+}
+
+$add_properties = getProjectSubState('ReportOptions', 'add_properties', false);
+$add_planned = getProjectSubState('ReportOptions', 'add_planned', false);
+$add_actual = getProjectSubState('ReportOptions', 'add_actual', false);
+$add_log = getProjectSubState('ReportOptions', 'add_log', false);
+
 $titleBlock->show();
 
 GLOBAL $AppUI, $canRead, $canEdit, $m;
@@ -119,29 +133,42 @@ $user_id = $AppUI->user_id;
 $sql="SELECT * FROM reports WHERE project_id=".$project_id." AND user_id=".$user_id;
 $exist=db_loadList($sql);
 
-if(count($exist)==0){
-$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete`, `p_show_mine`, `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete`, `a_show_mine`, `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary` )
-VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL, NULL, NULL);";
-
-db_exec( $sql ); db_error();
-}
-
-
-if($_GET['reset']){
-	if($_GET['reset']=='actual'){
-		$sql="UPDATE reports SET a_is_incomplete = NULL, a_show_mine = NULL, a_report_level = NULL ,a_report_roles = NULL ,a_report_sdate = NULL ,a_report_edate = NULL ,a_report_opened = NULL ,a_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
-
-	if($_GET['reset']=='planned'){
-		$sql="UPDATE reports SET p_is_incomplete = NULL, p_show_mine = NULL, p_report_level = NULL ,p_report_roles = NULL ,p_report_sdate = NULL ,p_report_edate = NULL ,p_report_opened = NULL ,p_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
-
-	if($_GET['reset']=='properties'){
-		$sql="UPDATE reports SET properties = NULL ,prop_summary = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
-
-	if($_GET['reset']=='log'){
-		$sql="UPDATE reports SET l_hide_inactive = NULL ,l_hide_complete = NULL ,l_user_id = NULL ,l_report_sdate = NULL ,l_report_edate = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;}
+if (!count($exist)) {
+	$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete`, `p_show_mine`, `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete`, `a_show_mine`, `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary` )
+	VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL, NULL, NULL);";
 
 	db_exec( $sql ); db_error();
+	
+	unsetProjectSubState('PDFReports', PMPDF_REPORT);
+}
 
+if (dPgetParam($_GET, 'reset', false)) {
+	$reset = false;
+	
+	if ($_GET['reset']=='actual') {
+		$sql="UPDATE reports SET a_is_incomplete = NULL, a_show_mine = NULL, a_report_level = NULL ,a_report_roles = NULL ,a_report_sdate = NULL ,a_report_edate = NULL ,a_report_opened = NULL ,a_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;
+		$reset = true;
+	}
+
+	if ($_GET['reset']=='planned') {
+		$sql="UPDATE reports SET p_is_incomplete = NULL, p_show_mine = NULL, p_report_level = NULL ,p_report_roles = NULL ,p_report_sdate = NULL ,p_report_edate = NULL ,p_report_opened = NULL ,p_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;
+		$reset = true;
+	}
+
+	if ($_GET['reset']=='properties') {
+		$sql="UPDATE reports SET properties = NULL ,prop_summary = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;
+		$reset = true;
+	}
+
+	if ($_GET['reset']=='log') {
+		$sql="UPDATE reports SET l_hide_inactive = NULL ,l_hide_complete = NULL ,l_user_id = NULL ,l_report_sdate = NULL ,l_report_edate = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;
+		$reset = true;
+	}
+
+	db_exec( $sql ); db_error();
+	
+	if ($reset)
+		unsetProjectSubState('PDFReports', PMPDF_REPORT);
 }
 
 
@@ -149,6 +176,7 @@ $sql="SELECT p_report_sdate, a_report_sdate, l_report_sdate, properties FROM rep
 $disable_report = db_loadList($sql);
 ?>
 
+<script type="text/javascript" src="./modules/projects/view.js"></script>
 <script language="javascript">
 var state = 'hidden';
 
@@ -168,17 +196,6 @@ function showhide(layer_ref) {
 	if (document.getElementById && !document.all) {
 		maxwell_smart = document.getElementById(layer_ref);
 		maxwell_smart.style.display = state;
-	}
-}
-
-function check(){
-	if ((!document.make_pdf_options.add_properties.checked) && 
-		  (!document.make_pdf_options.add_planned.checked) &&
-		  (!document.make_pdf_options.add_actual.checked) && 
-		  (!document.make_pdf_options.add_log.checked)) {
-		alert("Please, select a Report.");
-	} else {
-		document.make_pdf_options.submit();
 	}
 }
 
@@ -202,9 +219,24 @@ function selectorSwitch(me) {
 	updateSelectorsState();
 }
 
+function makeReportPDF() {
+	if ($("form[name=make_pdf_form] input[id^=add_]:checked").length == 0) {
+		alert("Please, select a Report.");
+		return;
+	}
+
+	document.make_pdf_form.make_report_pdf.value = "true";
+	document.make_pdf_form.load_image.value = "false";
+	document.make_pdf_form.delete_image.value = "false";
+
+	generatePDF('make_pdf_form', 'report_pdf_span');
+
+	document.make_pdf_form.make_report_pdf.value = "false";
+}
+
 </script>
 
-<form name='make_pdf_options' method='POST' action=<? echo '?m=report&a=view&project_id='.$project_id;?> enctype="multipart/form-data">
+<form id="make_pdf_form" name='make_pdf_form' method='POST' action=<? echo '?m=report&a=view&project_id='.$project_id;?> enctype="multipart/form-data">
 <table border="0" cellpadding="1" cellspacing="0" width="100%" class="std">
 <tr>
 	<td >
@@ -231,7 +263,7 @@ function selectorSwitch(me) {
 			</tr>
 			<tr>
 				<td nowrap='nowrap' align="left">
-					<input id="add_properties" type="checkbox" name="add_properties" <?echo ($_POST['add_properties'])?"checked":"";echo ($disable_report[0]['properties'])?"":"disabled";?> >
+					<input id="add_properties" type="checkbox" name="add_properties" <?echo ($add_properties)?"checked":"";echo ($disable_report[0]['properties'])?"":"disabled";?> >
 				</td>
 				<td nowrap="nowrap">
 					<label for="add_properties">
@@ -272,7 +304,7 @@ function selectorSwitch(me) {
 			</tr>
 			<tr>
 				<td nowrap='nowrap' align="left" style="border-top: outset #d1d1cd 1px">
-				<input id="add_planned" type="checkbox" name="add_planned" <?echo ($_POST['add_planned'])?"checked":"";echo ($disable_report[0]['p_report_sdate'])?"":"disabled";?>>
+				<input id="add_planned" type="checkbox" name="add_planned" <?echo ($add_planned)?"checked":"";echo ($disable_report[0]['p_report_sdate'])?"":"disabled";?>>
 				</td>
 				<td nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
 					<label for="add_planned">
@@ -314,7 +346,7 @@ function selectorSwitch(me) {
 			</tr>
 			<tr>
 				<td nowrap='nowrap' align="left" style="border-top: outset #d1d1cd 1px">
-				<input id="add_actual" type="checkbox" name="add_actual" <?echo ($_POST['add_actual'])?"checked":"";echo ($disable_report[0]['a_report_sdate'])?"":"disabled";?>>
+				<input id="add_actual" type="checkbox" name="add_actual" <?echo ($add_actual)?"checked":"";echo ($disable_report[0]['a_report_sdate'])?"":"disabled";?>>
 				</td>
 				<td nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
 					<label for="add_actual">
@@ -356,7 +388,7 @@ function selectorSwitch(me) {
 			</tr>
 			<tr>
 				<td nowrap='nowrap' align="left" style="border-top: outset #d1d1cd 1px">
-					<input id="add_log" type="checkbox" name="add_log" <?echo ($_POST['add_log'])?"checked":"";echo ($disable_report[0]['l_report_sdate'])?"":"disabled";?>>
+					<input id="add_log" type="checkbox" name="add_log" <?echo ($add_log)?"checked":"";echo ($disable_report[0]['l_report_sdate'])?"":"disabled";?>>
 				</td>
 				<td nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
 					<label for="add_log">
@@ -403,7 +435,7 @@ function selectorSwitch(me) {
 <?php
 $image_path='modules/report/logos/';
 
-if($_POST['delete_image']){
+if(dPgetBoolParam($_POST, 'delete_image')) {
 	if(file_exists($image_path.$project_id.'.gif')) unlink($image_path.$project_id.".gif");
 	if(file_exists($image_path.$project_id.'.jpg')) unlink($image_path.$project_id.".jpg");
 	if(file_exists($image_path.$project_id.'.png')) unlink($image_path.$project_id.".png");
@@ -469,18 +501,18 @@ else $image_file=$image_path.'nologo.gif';
 		<td align="left" nowrap="nowrap">
 		</td>
   		<td nowrap="nowrap">
-		  	<input type="hidden" name="do" value="1">
-		  	<input type="button" class="button" value="<?php echo $AppUI->_( 'Make PDF' );?>" onclick='check();'>
+		  	<input type="hidden" name="make_report_pdf" value="false">
+		  	<input type="button" class="button" value="<?php echo $AppUI->_( 'Make PDF' );?>" onclick='makeReportPDF();'>
   		</td>
   	</tr>
   	<tr>
   	<td align="left" nowrap="nowrap">
-  			<input type="hidden" name="load_image" value="">
-			<input  class="button" name="upload" type="button" value="Load Image" onclick='document.make_pdf_options.load_image.value=1;submit();'/>
+  			<input type="hidden" name="load_image" value="false">
+			<input  class="button" name="upload" type="button" value="Load Image" onclick='document.make_pdf_form.load_image.value=true;submit();'/>
 		</td>
 		<td align="right" nowrap="nowrap">
-			<input type="hidden" name="delete_image" value="">
-			<input  class="button" name="upload" type="button" value="Delete Image" onclick='document.make_pdf_options.delete_image.value=1;submit();'/>
+			<input type="hidden" name="delete_image" value="false">
+			<input  class="button" name="upload" type="button" value="Delete Image" onclick='document.make_pdf_form.delete_image.value=true;submit();'/>
 		</td>
 		<td align="left" width="100%" nowrap="nowrap">
 		</td>
@@ -490,29 +522,29 @@ else $image_file=$image_path.'nologo.gif';
   		<td align="left" nowrap="nowrap">
 		</td>
   		<td align='center' nowrap="nowrap">
-		  	<?
 
-if(($_POST['do']==1)&&(!$_POST['load_image'])){
-	include('modules/report/makePDF.php');
+<?
+
+if (dPgetBoolParam($_POST, 'make_report_pdf') && !dPgetBoolParam($_POST, 'load_image')) {
 	if($image_file==$image_path.'nologo.gif') $image_file='';
 	$pdf = PM_headerPdf($name,$page,$border,$group_name,$image_file);
-	$i=0;
+	$populated = false;
 
-	for($k=1;$k<=4;$k++){
+	for($k=1;$k<=4;$k++) {
 
-	 	if(isset($_POST['add_properties'])&&($_POST['append_order_a']==$k)){
-			if($task_properties){
-			 	$i++;
-			 	if(isset($_POST['new_page_a'])) $pdf->AddPage($page);
+	 	if ($add_properties && ($_POST['append_order_a'] == $k)) {
+			if ($task_properties){
+			 	$populated = true;
+			 	if (isset($_POST['new_page_a'])) $pdf->AddPage($page);
 				PM_makePropPdf($pdf, $project_id, $task_properties, $page);
 				$pdf->Ln(8);
 			} else $msg.="No Tasks Properties computed!  -  ";
 		}
 
-		if(isset($_POST['add_planned'])&&($_POST['append_order_b']==$k)){
-			if($task_planned){
-			 	$i++;
-				if(isset($_POST['new_page_b'])) $pdf->AddPage($page);
+		if ($add_planned && ($_POST['append_order_b'] == $k)) {
+			if ($task_planned) {
+			 	$populated = true;
+				if (isset($_POST['new_page_b'])) $pdf->AddPage($page);
 				
 				$t = $task_planned; 
 				PM_makeTaskPdf($pdf, $project_id, PMPDF_PLANNED, $t['level'],
@@ -523,10 +555,10 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 			} else $msg.="No Planned Tasks Report defined!  -  ";
 		}
 
-		if(isset($_POST['add_actual'])&&($_POST['append_order_c']==$k)){
-			if($task_actual){
-			 	$i++;
-			 	if(isset($_POST['new_page_c'])) $pdf->AddPage($page);
+		if ($add_actual && ($_POST['append_order_c'] == $k)) {
+			if ($task_actual) {
+			 	$populated = true;
+			 	if (isset($_POST['new_page_c'])) $pdf->AddPage($page);
 			 	
 			 	$t = $task_actual;
 				PM_makeTaskPdf($pdf, $project_id, PMPDF_ACTUAL, $t['level'],
@@ -538,25 +570,43 @@ if(($_POST['do']==1)&&(!$_POST['load_image'])){
 			} else $msg.="No Actual Tasks Report defined!  -  ";
 		}
 
-		if(isset($_POST['add_log'])&&($_POST['append_order_d']==$k)){
-		 	if($task_log!=0){
-			  $i++;
-			  if(isset($_POST['new_page_d'])) $pdf->AddPage($page);
+		if ($add_log && ($_POST['append_order_d'] == $k)) {
+		 	if ($task_log!=0) {
+			  $populated = true;
+			  if (isset($_POST['new_page_d'])) $pdf->AddPage($page);
 
 			  PM_makeLogPdf($pdf, $project_id, $task_log['user'], $task_log['hide_inactive'],
 			                $task_log['hide_complete'], $task_log['start_date'], $task_log['end_date']);
 			  $pdf->Ln(8);
 			}else $msg.="No Tasks Log Report defined!";
 		}
+	}
+
+	if ($populated == true) {
+		$filename = PM_footerPdf($pdf, $name, PMPDF_REPORT);
+		setProjectSubState('PDFReports', PMPDF_REPORT, $filename);
+	} else {
+		unset($pdf);
+		unsetProjectSubState('PDFReports', PMPDF_REPORT);
+	}
+
+	if($msg!=null) $AppUI->setMsg($msg,UI_MSG_PROP_KO);
 }
 
-	$filename = PM_footerPdf($pdf, $name, PMPDF_REPORT);
+$pdf_file = getProjectSubState('PDFReports', PMPDF_REPORT);
+?>
+			<span id="report_pdf_span" style="vertical-align: middle">
+<?
+if ($pdf_file) {
+?>
+				<a id="report_pdf_link" href="<?echo $pdf_file;?>" target="_blank">
+					<img id="report_pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0">
+				</a>
+<?
+}
 
-	if($msg!=null) $AppUI->setMsg($msg,6);
-
-	if($i>0){?>
-	<a href="<?echo $filename;?>" TARGET="_new"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="absbottom"></a><?}
-}?>
+?>
+			</span>
   		</td>
   	</tr>
 	</table>
