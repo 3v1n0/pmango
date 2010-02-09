@@ -73,12 +73,12 @@ $sql="SELECT projects.project_start_date FROM projects WHERE project_id ='$proje
 $db_start_date = db_loadColumn($sql);
 $sql="SELECT projects.project_finish_date FROM projects WHERE project_id ='$project_id'";
 $db_finish_date = db_loadColumn($sql);
-$tab = dPgetParam($_REQUEST, 'tab', 0);
+$tab = dPgetParam($_REQUEST, 'tab', $tab);
 
 if (isset($_POST['sdate']))	;
 if (isset($_POST['edate']))	;
 
-if (!empty($_POST) && !dPgetBoolParam($_POST, 'make_pdf')) {
+if (!empty($_POST) && !dPgetBoolParam($_POST, 'make_pdf') && !dPgetBoolParam($_POST, 'addreport')) {
 	$pre = getProjectState('TaskLogs');
 	$pre_date = getProjectState('TasksDate');
 	
@@ -162,13 +162,16 @@ if ($display_option == 'custom') {
 	$end_date->addMonths( $scroll_date );
 }
 
-if((dPgetParam( $_POST, 'addreport', '' )==3) && (dPgetParam( $_POST, 'addreport', '' )!=4)){
- 
- $sd=$start_date->format(FMT_DATETIME_MYSQL);
- $ed=$end_date->format(FMT_DATETIME_MYSQL);
+if (dPgetBoolParam($_POST, 'addreport')) {
+	$sd = $start_date->format(FMT_DATETIME_MYSQL);
+ 	$ed = $end_date->format(FMT_DATETIME_MYSQL);
 
-		$sql="UPDATE reports SET l_hide_complete='$hide_complete', l_hide_inactive='$hide_inactive', l_user_id='$user_id', l_report_sdate='$sd', l_report_edate='$ed' WHERE reports.project_id=".$project_id." AND reports.user_id=".$AppUI->user_id;
-		$db_roles = db_loadList($sql);
+	$sql = "UPDATE reports SET l_hide_complete='$hide_complete', ".
+	       "l_hide_inactive='$hide_inactive', l_user_id='$user_id', ".
+	       "l_report_sdate='$sd', l_report_edate='$ed' ".
+	       "WHERE reports.project_id=".$project_id." AND reports.user_id=".$AppUI->user_id;
+	
+	$db_roles = db_loadList($sql);
 }
 
 ?>
@@ -202,14 +205,17 @@ function showFullProject() {
 
 function makeLogsPDF() {
 	document.pdfFilter.make_pdf.value = "true";
+	document.pdfFilter.addreport.value = "false";
+
 	generatePDF('pdfFilter', 'logs_pdf_span');
 	document.pdfFilter.make_pdf.value = "false";
 }
 
 function addLogsReport() {
-	document.pdfFilter.addreport.value = "3";
+	document.pdfFilter.addreport.value = "true";
 	document.pdfFilter.make_pdf.value = "false";
 	addReport('pdfFilter', 'logs_report_btn');
+	document.pdfFilter.addreport.value = "false";
 }
 </script>
 
@@ -325,7 +331,7 @@ function addLogsReport() {
 					</span>		
 				    <input type="hidden" name="make_pdf" value="false" />
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF ' );?>" onclick='makeLogsPDF();'>
-					<input type="hidden" name="addreport" value="-1" />
+					<input type="hidden" name="addreport" value="false" />
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>" onclick='addLogsReport();' id="logs_report_btn">
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 				</td>
