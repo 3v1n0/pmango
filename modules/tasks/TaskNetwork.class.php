@@ -1365,30 +1365,6 @@ class TaskNetwork {
 	}
 	
 	
-	private function centerString($str,$len){
-		$s;
-		$strl = strlen($str);
-
-		for($i=0;$i<intval(($len-$strl)/2);$i++){
-			$s[sizeof($s)] = " ";
-		}
-		
-		$s[sizeof($s)] = $str;
-		for($i=0;$i<intval(($len-$strl)/2);$i++){
-			$s[sizeof($s)] = " ";
-		}
-		
-		$out = implode('',$s);
-		
-		if(strlen($out) < $len){
-			$s[sizeof($s)] = " ";		
-			$out = implode('',$s);
-		}
-		
-		
-		return $out;
-	}
-	
 	private function mergeTableCrPath(){
 		$cPath = $this->crPath;
 		$imgTN = $this->img;
@@ -1406,6 +1382,9 @@ class TaskNetwork {
 		
 		$y=25;
 		for($i=0;$i<sizeof($cPath);$i++){
+			if($i== $this->pCriticalPathIndex-1){
+				imagefilledpolygon($imgtable,array(40,$y+22,40,$y+32,48,$y+27),3,$black);
+			}
 			imagestring($imgtable,5,50,$y+10,"+--------------------------------------------------------+",$black);
 			imagestring($imgtable,5,50,$y+20,"|   ".($i+1)."   ||".TaskNetwork::centerString($cPath[$i]["duration"],12)."||".TaskNetwork::centerString($cPath[$i]["effort"],10)."||".TaskNetwork::centerString($cPath[$i]["cost"],8)."||".TaskNetwork::centerString($cPath[$i]["lastgap"],11)."|",$black);
 			imagestring($imgtable,5,50,$y+30,"+--------------------------------------------------------+",$black);
@@ -1430,6 +1409,30 @@ class TaskNetwork {
 //------Funzioni di merging------------fine
 	
 //------Funzioni di setting------------
+	private function centerString($str,$len){
+		$s;
+		$strl = strlen($str);
+
+		for($i=0;$i<intval(($len-$strl)/2);$i++){
+			$s[sizeof($s)] = " ";
+		}
+		
+		$s[sizeof($s)] = $str;
+		for($i=0;$i<intval(($len-$strl)/2);$i++){
+			$s[sizeof($s)] = " ";
+		}
+		
+		$out = implode('',$s);
+		
+		if(strlen($out) < $len){
+			$s[sizeof($s)] = " ";		
+			$out = implode('',$s);
+		}
+		
+		
+		return $out;
+	}
+	
 	private function terminateWithError(){
 		$img = imagecreate(950,80);
 		$white = imagecolorallocate($img,255,255,255);

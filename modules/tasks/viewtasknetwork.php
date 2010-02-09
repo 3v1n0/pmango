@@ -328,7 +328,7 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 								for ($i = 1; $i <= 5; $i++) {
 ?>
 									<option value="<? echo $i ?>"<? echo $cr_path_index == $i ? ' selected="selected"' : '' ?>>
-										<? echo $AppUI->_('Critical path index')." ".$i ?>
+										<? echo $AppUI->_('Critical path ')." ".$i ?>
 									</option>
 <?
 								}
