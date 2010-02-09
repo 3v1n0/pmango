@@ -106,7 +106,6 @@ class CTabBox extends CTabBox_core {
 				$sel = ($k == $this->active) ? 'Selected' : '';
 				$s .= '<td height="28" valign="middle" width="3"><img src="./style/' . $uistyle . '/images/tab'.$sel.'Left.png" width="3" height="28" border="0" alt="" /></td>'."\n";
 				$s .= '<td id="toptab_'.$k.'" valign="middle" nowrap="nowrap"';
-				if ($v[1] == "Tasks TODO") $s .= ' style="opacity: .50;"';
 				if ($js_tabs)
 					$s .= " class=\"$class\"";
 				else
