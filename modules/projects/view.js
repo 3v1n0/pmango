@@ -99,15 +99,19 @@ function projectViewSwitch() {
 	var pr_c = $("div.project_infos_childs");
 	
 	if (pr_hidden) {
-		img.attr('src', 'images/icons/collapse.gif');
-		img.hide();
-		img.fadeIn();
+		img.fadeOut(250, function() {
+			img.attr('src', 'images/icons/collapse.gif');
+			img.fadeIn();
+		});
+		
 		pr.show();
 		pr_c.slideDown();
 	} else {
-		img.attr('src', 'images/icons/expand.gif');
-		img.hide();
-		img.fadeIn();
+		img.fadeOut(250, function() {
+			img.attr('src', 'images/icons/expand.gif');
+			img.fadeIn();
+		});
+
 		pr_c.slideUp(function() { pr.hide(); });
 	}
 	
