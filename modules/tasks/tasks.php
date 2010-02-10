@@ -658,11 +658,12 @@ function updateTasksList() {
 			   data: form.serialize(),
 			   success: function(html) {
 		        	$("#tasks_loader").fadeOut("fast", function() {
-						if (!$(html).find("#tasks_pdf_span").children().size()) {
-							$("#tasks_pdf_span").fadeOut();
-						}
 		
 						topMsgUpdate(html);
+
+						if (!$(html).find("#tasks_pdf_span").children().size()) {
+							$("#tasks_pdf_span").empty();
+						}
 		
 		        		var data = $(html).find("#project_tasks");
 		        		data.hide();
@@ -675,8 +676,7 @@ function updateTasksList() {
 		        			});
 		
 		        			if (old_tasks != data.clone().text()) {
-		            			//TODO check also for form!
-		        				$("#tasks_report_btn").fadeIn();
+		        				$("#tasks_report_btn").show();
 		        			}
 		
 		        		} else {
