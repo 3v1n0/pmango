@@ -192,7 +192,15 @@ if ((isset($old_user_id) && (isset($_GET['logout'])) || $just_logged_in)) {
 	include_once "$baseDir/modules/report/generatePDF.php";
     purgeUserPDFs($user);
     
-    $sql="DELETE FROM reports WHERE user_id = ".$user;
+    $sql="SELECT gantt, wbs, task_network FROM reports WHERE user_id = $user";
+    $list = db_loadList($sql);
+    foreach (@$list as $item) {
+    	if (file_exists($item['gantt'])) @unlink($item['gantt']);
+    	if (file_exists($item['wbs'])) @unlink($item['wbs']);
+    	if (file_exists($item['task_network'])) @unlink($item['task_network']);
+    }
+    
+    $sql="DELETE FROM reports WHERE user_id = $user";
     db_exec($sql); db_error();
     
     if (!$just_logged_in)
