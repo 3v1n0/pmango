@@ -268,8 +268,7 @@ function makeReportPDF() {
 	document.make_pdf_form.load_image.value = "false";
 	document.make_pdf_form.delete_image.value = "false";
 
-//	generatePDF('make_pdf_form', 'report_pdf_span');
-document.make_pdf_form.submit();
+	generatePDF('make_pdf_form', 'report_pdf_span');
 
 	document.make_pdf_form.make_report_pdf.value = "false";
 }
@@ -845,7 +844,7 @@ if (dPgetBoolParam($_POST, 'make_report_pdf') && !dPgetBoolParam($_POST, 'load_i
 			  $populated = true;
 			  $pdf->AddPage('P');
 
-			  PM_makeImgPDF($pdf, $gantt, false, true, true);
+			  PM_makeImgPDF($pdf, $gantt, false, true, false);
 
 			}else $msg.="No GANTT Report defined!";
 		}
