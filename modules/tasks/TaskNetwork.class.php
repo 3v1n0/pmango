@@ -800,7 +800,7 @@ class TaskNetwork implements PMGraph {
 					$points[1]["x"]= $tbx1rx-($tbx1x/2)-($tbx1shift/2) ;$points[1]["y"]=$tbx1BlankDown;
 					}
 					
-				if(abs($tbx1BlankDown-$tbx2BlankUp)>50){
+				if(abs($tbx1BlankDown-$tbx2BlankUp)>60){
 					if($tbx1rx>($TaskNetwork->x/2) or $tbx2lx>($TaskNetwork->x/2)){//se tbx1 o tbx2 è nella metà di destra della TN
 						$points[3]["x"]= ($vertical and !($tbx2))?$tbx2BlankLast:$tbx1BlankLast	;$points[3]["y"]=$tbx1BlankDown;
 						$points[4]["x"]= ($vertical and !($tbx2))?$tbx2BlankLast:$tbx1BlankLast	;$points[4]["y"]=$tbx2BlankUp;
