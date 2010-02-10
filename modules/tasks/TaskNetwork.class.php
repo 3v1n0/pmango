@@ -1388,7 +1388,7 @@ class TaskNetwork implements PMGraph {
 		$imgtabley = 200;
 		$bianco = ImageColorAllocate($imgtable,255,255,255);
 		$black = ImageColorAllocate($imgtable,0,0,0);
-		imagestring($imgtable,5,50,0,"+---------------------Critical Path----------------------+",$black);
+		imagestring($imgtable,5,50,0,"+-------------------- Critical Path ---------------------+",$black);
 		imagestring($imgtable,5,50,15,"| Index ||  Duration  ||  Effort  ||  Cost  ||  Last Gap |",$black);
 		imagestring($imgtable,5,50,25,"+========================================================+",$black);
 		
@@ -1403,13 +1403,13 @@ class TaskNetwork implements PMGraph {
 			$y = $y +30;
 		}		
 		$outx = $imgTNx + $imgtablex;
-		$outy = $imgTNy;
+		$outy = max($imgTNy,$imgtabley);
 		
 		$out = ImageCreate($outx , $outy);
 		$bianco = ImageColorAllocate($out,255,255,255);
 
-		imagecopy($out,$imgTN,0,0,0,0,$imgTNx,$imgTNy);
-		imagecopy($out,$imgtable,$imgTNx,$imgTNy/2,0,0,$imgtablex,$imgtabley);
+		imagecopy($out,$imgTN,0,($outy/2)-($imgTNy/2),0,0,$imgTNx,$imgTNy);
+		imagecopy($out,$imgtable,$imgTNx,($outy/2)-($imgtabley/2),0,0,$imgtablex,$imgtabley);
 
 
 		imagedestroy($imgtable);
