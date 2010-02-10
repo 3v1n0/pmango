@@ -97,6 +97,12 @@ define('CONSTRAIN_STARTSTART',0);
 define('CONSTRAIN_STARTEND',1);
 define('CONSTRAIN_ENDSTART',2);
 define('CONSTRAIN_ENDEND',3);
+define('CONSTRAIN_STARTMIDDLE',4);
+define('CONSTRAIN_ENDMIDDLE',5);
+define('CONSTRAIN_MIDDLESTART',6);
+define('CONSTRAIN_MIDDLEEND',7);
+define('CONSTRAIN_MIDDLEMIDDLE',8);
+define('CONSTRAIN_ENDSTARTMIDDLE',9);
 
 // Arrow direction for constrain links
 define('ARROW_DOWN',0);
@@ -1095,6 +1101,10 @@ class GanttGraph extends Graph {
                                 }
                                 $link->SetPath(3);
                                 break;
+                            case CONSTRAIN_ENDSTARTMIDDLE:
+                                $link = new GanttLink($c1[2],$c1[1]+($c1[3]-$c1[1])/2,$c2[0],$c2[1]+($c2[3]-$c2[1])/2);
+                                $link->SetPath(4);
+                                break;
                             case CONSTRAIN_STARTEND:
                                 if( $c1[1] < $c2[1] ) {
                                     $link = new GanttLink($c1[0],$c1[3],$c2[2],$c2[1]);
@@ -1121,6 +1131,51 @@ class GanttGraph extends Graph {
                                     $link = new GanttLink($c1[0],$c1[1],$c2[0],$c2[3]);
                                 }
                                 $link->SetPath(3);
+                                break;
+                             case CONSTRAIN_STARTMIDDLE:
+                                if( $c1[1] < $c2[1] ) {
+                                    $link = new GanttLink($c1[0],$c1[3],$c2[0]+($c2[2]-$c2[0])/2,$c2[1]);
+                                }
+                                else {
+                                    $link = new GanttLink($c1[0],$c1[1],$c2[0]+($c2[2]-$c2[0])/2,$c2[3]);
+                                }
+                                $link->SetPath(0);
+                                break;
+                             case CONSTRAIN_ENDMIDDLE:
+                                if( $c1[1] < $c2[1] ) {
+                                    $link = new GanttLink($c1[2],$c1[3],$c2[0]+($c2[2]-$c2[0])/2,$c2[1]);
+                                }
+                                else {
+                                    $link = new GanttLink($c1[2],$c1[1],$c2[0]+($c2[2]-$c2[0])/2,$c2[3]);
+                                }
+                                $link->SetPath(0);
+                                break;
+                             case CONSTRAIN_MIDDLESTART:
+                                if( $c1[1] < $c2[1] ) {
+                                    $link = new GanttLink($c1[0]+($c1[2]-$c1[0])/2,$c1[3],$c2[0],$c2[1]+($c2[3]-$c2[1])/2);
+                                }
+                                else {
+                                    $link = new GanttLink($c1[0]+($c1[2]-$c1[0])/2,$c1[1],$c2[0],$c2[1]+($c2[3]-$c2[1])/2);
+                                }
+                                $link->SetPath(0);
+                                break;
+                             case CONSTRAIN_MIDDLEEND:
+                                if( $c1[1] < $c2[1] ) {
+                                    $link = new GanttLink($c1[0]+($c1[2]-$c1[0])/2,$c1[3],$c2[2],$c2[1]);
+                                }
+                                else {
+                                    $link = new GanttLink($c1[0]+($c1[2]-$c1[0])/2,$c1[1],$c2[2],$c2[3]);
+                                }
+                                $link->SetPath(0);
+                                break;
+                             case CONSTRAIN_MIDDLEMIDDLE:
+                                if( $c1[1] < $c2[1] ) {
+                                    $link = new GanttLink($c1[0]+($c1[2]-$c1[0])/2,$c1[3],$c2[0]+($c2[2]-$c2[0])/2,$c2[1]);
+                                }
+                                else {
+                                    $link = new GanttLink($c1[0]+($c1[2]-$c1[0])/2,$c1[1],$c2[0]+($c2[2]-$c2[0])/2,$c2[3]);
+                                }
+                                $link->SetPath(0);
                                 break;
                             default:
                                 JpGraphError::RaiseL(6009,$this->iObj[$i]->iVPos,$vpos);
@@ -3841,6 +3896,15 @@ class GanttLink {
                     case 3:
                         $c = array($x1,$y1,$x2,$y1,$x2,$y2);
                         break;
+                    case 4:
+                         $c = array($x1,$y1,
+                            $x1+$this->iPathExtend,$y1,
+                            $x1+$this->iPathExtend,$midy,
+                            $x2-$this->iPathExtend,$midy,
+                            $x2-$this->iPathExtend,$y2,
+                            $x2,$y2);
+                        $arrowtype = ARROW_RIGHT;
+                        break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
                         //('Internal error: Unknown path type (='.$this->iPathType .') specified for link.');
@@ -3875,6 +3939,15 @@ class GanttLink {
                             $c = array($x1,$y1,$x1,$midy,$x2,$midy,$x2,$y2);
                         }
                         break;
+                    case 4:
+                        $c = array($x1,$y1,
+                            $x1+$this->iPathExtend,$y1,
+                            $x1+$this->iPathExtend,$midy,
+                            $x2-$this->iPathExtend,$midy,
+                            $x2-$this->iPathExtend,$y2,
+                            $x2,$y2);
+                        $arrowtype = ARROW_RIGHT;
+                        break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
                         //('Internal error: Unknown path type specified for link.');
@@ -3902,6 +3975,15 @@ class GanttLink {
                         else {
                             $c = array($x1,$y1,$x1,$midy,$x2,$midy,$x2,$y2);
                         }
+                        break;
+                    case 4:
+                        $c = array($x1,$y1,
+                            $x1+$this->iPathExtend,$y1,
+                            $x1+$this->iPathExtend,$midy,
+                            $x2-$this->iPathExtend,$midy,
+                            $x2-$this->iPathExtend,$y2,
+                            $x2,$y2);
+                        $arrowtype = ARROW_RIGHT;
                         break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
@@ -3931,6 +4013,15 @@ class GanttLink {
                         else {
                             $c = array($x1,$y1,$x1,$midy,$x2,$midy,$x2,$y2);
                         }
+                        break;
+                    case 4:
+                        $c = array($x1,$y1,
+                            $x1+$this->iPathExtend,$y1,
+                            $x1+$this->iPathExtend,$midy,
+                            $x2-$this->iPathExtend,$midy,
+                            $x2-$this->iPathExtend,$y2,
+                            $x2,$y2);
+                        $arrowtype = ARROW_RIGHT;
                         break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
