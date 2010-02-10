@@ -1001,7 +1001,7 @@ class PMGantt implements PMGraph {
 				while($dep = db_fetch_assoc($deps)) {
 					for($d = 0; $d < count($this->pTasks); $d++ ) {
 						if($this->pTasks[$d]["task_id"] == $dep[0]) {
-							$task['bar']->SetConstrain($this->pTasks[$d]['bar']->GetLineNbr(), CONSTRAIN_ENDSTART, $this->pUseColors ? 'brown' : 'gray4');
+							$task['bar']->SetConstrain($this->pTasks[$d]['bar']->GetLineNbr(), CONSTRAIN_ENDSTARTMIDDLE, $this->pUseColors ? 'brown' : 'gray4');
 							break;
 						}
 					}
