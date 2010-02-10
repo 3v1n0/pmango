@@ -842,7 +842,7 @@ if (dPgetBoolParam($_POST, 'make_report_pdf') && !dPgetBoolParam($_POST, 'load_i
 		if ($add_gantt && ($_POST['append_order_e'] == $k)) {
 		 	if (file_exists($gantt)) {
 			  $populated = true;
-			  $pdf->AddPage('P');
+//			  $pdf->AddPage('P');
 
 			  PM_makeImgPDF($pdf, $gantt, false, true, false);
 
