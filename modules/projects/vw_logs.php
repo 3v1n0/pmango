@@ -182,7 +182,7 @@ var calendarField = '';
 
 function popCalendar( field ){
 	calendarField = field;
-	idate = eval( 'document.frmFilter.' + field + '.value' );
+	idate = eval( 'document.logs_list_options.' + field + '.value' );
 	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scollbars=false' );
 }
 
@@ -191,17 +191,17 @@ function popCalendar( field ){
  *	@param string Formatted date
  */
 function setCalendar( idate, fdate ) {
-	fld_date = eval( 'document.frmFilter.' + calendarField );
-	fld_fdate = eval( 'document.frmFilter.show_' + calendarField );
+	fld_date = eval( 'document.logs_list_options.' + calendarField );
+	fld_fdate = eval( 'document.logs_list_options.show_' + calendarField );
 	fld_date.value = idate;
 	fld_fdate.value = fdate;
 }
 
 function showFullProject() {
-	document.frmFilter.show_sdate.value = "<?php echo $whole_start->format($df);?>";
-	document.frmFilter.show_edate.value = "<?php echo $whole_finish->format($df);?>";
-	document.frmFilter.sdate.value = "<?php echo $whole_start->format($df);?>";
-	document.frmFilter.edate.value = "<?php echo $whole_finish->format($df);?>";
+	document.logs_list_options.show_sdate.value = "<?php echo $whole_start->format($df);?>";
+	document.logs_list_options.show_edate.value = "<?php echo $whole_finish->format($df);?>";
+	document.logs_list_options.sdate.value = "<?php echo $whole_start->format($df);?>";
+	document.logs_list_options.edate.value = "<?php echo $whole_finish->format($df);?>";
 }
 
 function makeLogsPDF() {
@@ -218,9 +218,79 @@ function addLogsReport() {
 	addReport('pdfFilter', 'logs_report_btn');
 	document.pdfFilter.addreport.value = "false";
 }
+
+function updateLogsList() {
+
+	if (compareDate(document.logs_list_options.show_sdate,
+			       document.logs_list_options.show_edate)) {
+	       document.logs_list_options.display_option.value = "custom";
+	} else {
+		return;
+	}
+
+	var form = $("#logs_list_options");
+	var logs = $("#project_logs");
+	var old_logs = logs.clone().text();
+
+	addAJAX("#logs_list_options");
+
+	logs.animate({
+			height: "toggle",
+			opacity: "toggle"
+		},
+
+		function() {
+			logs.html('<img id="logs_loader" src="style/default/images/ajax-loader-horizontal.gif" alt="loader" />')
+				 .attr('align', 'center')
+			     .css('padding-top', '20px')
+			     .css('padding-bottom', '20px')
+			     .slideDown();
+	
+			$.ajax({
+			   type: form.attr("method"),
+			   url:  form.attr("action"),
+			   data: form.serialize(),
+			   success: function(html) {
+		        	$("#logs_loader").fadeOut("fast", function() {
+		
+						topMsgUpdate(html);
+
+						if (!$(html).find("#logs_pdf_span").children().size()) {
+							$("#logs_pdf_span").empty();
+						}
+		
+		        		var data = $(html).find("#project_logs");
+		        		data.hide();
+		
+		        		if (data.size() == 1) {
+		        			logs.replaceWith(data);
+		        			data.animate({
+		        				height: "toggle",
+		        				opacity: "toggle"
+		        			});
+		
+		        			if (old_logs != data.clone().text()) {
+		        				$("#logs_report_btn").show();
+		        			}
+		
+		        		} else {
+		        			delAJAX("#logs_list_options");
+		            		form.submit();
+		            		return;
+		        		}
+		            });
+		  	   },
+		  	   error: function() {
+		  		 	delAJAX("#logs_list_options");
+		  		 	form.submit();
+		  	   }
+			});
+		}
+	);
+}
 </script>
 
-<form name="frmFilter" method='post' action="?m=projects&a=view&project_id=<?=$project_id?>&tab=<?=$tab?>">
+<form id="logs_list_options" name="logs_list_options" method='post' action="?m=projects&a=view&project_id=<?=$project_id?>&tab=<?=$tab?>">
 	<input type='hidden' name='show_log_options' value='1'>
 	<input type="hidden" name="display_option" value="<?php echo $display_option;?>" />
 	<input type="hidden" name="roles" value="N" />
@@ -260,7 +330,7 @@ function addLogsReport() {
 							</td>
 							<td class="tab_setting_item">
 								<input type="hidden" name="sdate" value="<?php echo $start_date->format( FMT_TIMESTAMP_DATE );?>" />
-								<input type="text" disabled="disabled" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" onchange='document.frmFilter.sdate.value=this.value; validateDate(this);' />
+								<input type="text" disabled="disabled" class="text" name="show_sdate" value="<?php echo $start_date->format( $df );?>" size="12" onchange='document.logs_list_options.sdate.value=this.value; validateDate(this);' />
 								<a href="#" onclick="popCalendar('sdate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
 							</td>
 						</tr>
@@ -270,7 +340,7 @@ function addLogsReport() {
 							</td>
 							<td class="tab_setting_item">
 							    <input type="hidden" name="edate" value="<?php echo $end_date->format( FMT_TIMESTAMP_DATE );?>" />
-							    <input type="text" disabled="disabled" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" onchange='document.frmFilter.edate.value=this.value; validateDate(this);' />
+							    <input type="text" disabled="disabled" class="text" name="show_edate" value="<?php echo $end_date->format( $df );?>" size="12" onchange='document.logs_list_options.edate.value=this.value; validateDate(this);' />
 							    <a href="#" onclick="popCalendar('edate')"><img src="./images/calendar.gif" width="24" height="12" alt="" border="0"></a>
 							</td>
 						</tr>
@@ -289,7 +359,7 @@ function addLogsReport() {
 					<table border="0" cellspacing="0">
 						<tr>
 							<td class="tab_setting_item">
-								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='if(compareDate(document.frmFilter.show_sdate,document.frmFilter.show_edate)) { document.frmFilter.display_option.value="custom"; submit();}'>
+								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Update' );?>"  onclick='updateLogsList();'>
 							</td>
 						</tr>
 						<tr>
@@ -341,6 +411,7 @@ function addLogsReport() {
 	</div>
 </form>
 
+<div id="project_logs">
 <table border="0" cellpadding="2" cellspacing="1" width="100%" class="tbl">
 <form name="frmDelete2" action="./index.php?m=tasks" method="post">
 	<input type="hidden" name="dosql" value="do_updatetask">
@@ -484,3 +555,4 @@ if($user_id!=-2){
 echo $s;
 ?>
 </table>
+</div>
