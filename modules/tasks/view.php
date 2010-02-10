@@ -276,7 +276,10 @@ function computeTaskProp() {
 		return;
 
 	properties.hide();
-	properties.html('<img id="task_prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+	properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />')
+              .attr('align', 'center')
+              .css('padding-top', '10px')
+              .fadeIn();
 
 	$.ajax({
 	   type: form.attr("method"),

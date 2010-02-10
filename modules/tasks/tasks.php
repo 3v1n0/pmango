@@ -646,7 +646,11 @@ function updateTasksList() {
 		},
 
 		function() {
-			tasks.html('<img id="tasks_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+			tasks.html('<img id="tasks_loader" src="style/default/images/ajax-loader-horizontal.gif" alt="loader" />')
+				 .attr('align', 'center')
+			     .css('padding-top', '20px')
+			     .css('padding-bottom', '20px')
+			     .slideDown();
 	
 			$.ajax({
 			   type: form.attr("method"),

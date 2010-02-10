@@ -206,7 +206,7 @@ function generatePDF(form_id, parent_id) {
 	addAJAX("#"+form_id);
 	
 	parent.hide();
-	parent.html('<img id="'+loader+'" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+	parent.html('<img id="'+loader+'" src="style/default/images/ajax-loader.gif" alt="loader" />').fadeIn();
 	
 	$.ajax({
 	   type: form.attr('method'),

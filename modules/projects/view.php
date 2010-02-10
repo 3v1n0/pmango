@@ -236,8 +236,10 @@ function computeProp() {
 		height: "toggle",
 		opacity: "toggle"
 	}, 250, function() {
-		properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
-		properties.attr('align', 'center');
+		properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />')
+		          .attr('align', 'center')
+		          .css('padding-top', '10px')
+		          .fadeIn();
 		
 		$.ajax({
 		   type: form.attr("method"),
