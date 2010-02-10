@@ -522,7 +522,15 @@ loadGraph('<?php echo $graph_img_src; ?>');
 						if (dPgetBoolParam($_POST, 'make_graph_pdf')) {
 	                    	generateGraphPDF($project_id, $gantt, PMPDF_GRAPH_GANTT);
 						} else if (dPgetBoolParam($_POST, 'add_graph_report')) {
-	                    	$gantt->draw("png", $file);
+	                    	$file = "./modules/report/img/".$project_id.PMPDF_GRAPH_GANTT.$AppUI->user_id.".png";
+							$gantt->draw("png", $file);
+							
+							if (file_exists($file)) {
+								$sql = "UPDATE reports SET gantt = '$file' ".
+								       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
+								db_exec($sql);
+								db_error();
+							}
 						}
 
 	                    ini_restore('memory_limit');

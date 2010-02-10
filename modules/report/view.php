@@ -115,12 +115,19 @@ if (!empty($_POST) && dPgetBoolParam($_POST, 'make_report_pdf')) {
 	setProjectSubState('ReportOptions', 'add_planned', dPgetBoolParam($_POST, 'add_planned'));
 	setProjectSubState('ReportOptions', 'add_actual', dPgetBoolParam($_POST, 'add_actual'));
 	setProjectSubState('ReportOptions', 'add_log', dPgetBoolParam($_POST, 'add_log'));
+	setProjectSubState('ReportOptions', 'add_gantt', dPgetBoolParam($_POST, 'add_gantt'));
+	setProjectSubState('ReportOptions', 'add_wbs', dPgetBoolParam($_POST, 'add_wbs'));
+	setProjectSubState('ReportOptions', 'add_tasknetwork', dPgetBoolParam($_POST, 'add_tasknetwork'));
 }
 
 $add_properties = getProjectSubState('ReportOptions', 'add_properties', false);
 $add_planned = getProjectSubState('ReportOptions', 'add_planned', false);
 $add_actual = getProjectSubState('ReportOptions', 'add_actual', false);
 $add_log = getProjectSubState('ReportOptions', 'add_log', false);
+
+$add_gantt = getProjectSubState('ReportOptions', 'add_gantt', false);
+$add_wbs = getProjectSubState('ReportOptions', 'add_wbs', false);
+$add_tasknetwork = getProjectSubState('ReportOptions', 'add_tasknetwork', false);
 
 $titleBlock->show();
 
@@ -136,8 +143,8 @@ $sql="SELECT * FROM reports WHERE project_id=".$project_id." AND user_id=".$user
 $exist=db_loadList($sql);
 
 if (!count($exist)) {
-	$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete`, `p_show_mine`, `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete`, `a_show_mine`, `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary` )
-	VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL, NULL, NULL);";
+	$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete`, `p_show_mine`, `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete`, `a_show_mine`, `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary`, `gantt`, `wbs`, `task_network`)
+	VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL, NULL, NULL, NULL, NULL, NULL);";
 
 	db_exec( $sql ); db_error();
 	
@@ -146,6 +153,7 @@ if (!count($exist)) {
 
 if (dPgetParam($_GET, 'reset', false)) {
 	$reset = false;
+	$clean = false;
 	
 	if ($_GET['reset']=='actual') {
 		$sql="UPDATE reports SET a_is_incomplete = NULL, a_show_mine = NULL, a_report_level = NULL ,a_report_roles = NULL ,a_report_sdate = NULL ,a_report_edate = NULL ,a_report_opened = NULL ,a_report_closed = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;
@@ -166,6 +174,32 @@ if (dPgetParam($_GET, 'reset', false)) {
 		$sql="UPDATE reports SET l_hide_inactive = NULL ,l_hide_complete = NULL ,l_user_id = NULL ,l_report_sdate = NULL ,l_report_edate = NULL WHERE reports.project_id =".$project_id." AND reports.user_id=".$user_id;
 		$reset = true;
 	}
+	
+	if ($_GET['reset']=='gantt') {
+		$sql="UPDATE reports SET gantt = NULL WHERE reports.project_id = $project_id AND reports.user_id = $user_id";
+		$content = "SELECT gantt FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+		$reset = true;
+		$clean = true;
+	}
+	
+	if ($_GET['reset']=='wbs') {
+		$sql="UPDATE reports SET wbs = NULL WHERE reports.project_id = $project_id AND reports.user_id = $user_id";
+		$content = "SELECT wbs FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+		$reset = true;
+		$clean = true;
+	}
+	
+	if ($_GET['reset']=='task_network') {
+		$sql="UPDATE reports SET task_network = NULL WHERE reports.project_id = $project_id AND reports.user_id = $user_id";
+		$content = "SELECT task_network FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+		$reset = true;
+		$clean = true;
+	}
+	
+	if ($clean) {
+		$file = db_loadResult($content);
+		@unlink($file);
+	}
 
 	db_exec( $sql ); db_error();
 	
@@ -174,8 +208,11 @@ if (dPgetParam($_GET, 'reset', false)) {
 }
 
 
-$sql="SELECT p_report_sdate, a_report_sdate, l_report_sdate, properties FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+$sql="SELECT p_report_sdate, a_report_sdate, l_report_sdate, properties, gantt, wbs, task_network FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
 $disable_report = db_loadList($sql);
+
+$report_items = 7;
+$item = 0;
 ?>
 
 <script type="text/javascript" src="./modules/projects/view.js"></script>
@@ -231,7 +268,8 @@ function makeReportPDF() {
 	document.make_pdf_form.load_image.value = "false";
 	document.make_pdf_form.delete_image.value = "false";
 
-	generatePDF('make_pdf_form', 'report_pdf_span');
+//	generatePDF('make_pdf_form', 'report_pdf_span');
+document.make_pdf_form.submit();
 
 	document.make_pdf_form.make_report_pdf.value = "false";
 }
@@ -300,10 +338,16 @@ function deleteGroupImage() {
 				</td>
 				<td nowrap="nowrap" align="center">
 				<select class="report_page_selector" name="append_order_a" class="text" onchange="selectorSwitch(this);">
-					<option value="1" <?echo ($_POST['append_order_a']=="1")? "selected":""?>>1</option>
-					<option value="2" <?echo ($_POST['append_order_a']=="2")? "selected":""?>>2</option>
-					<option value="3" <?echo ($_POST['append_order_a']=="3")? "selected":""?>>3</option>
-					<option value="4" <?echo ($_POST['append_order_a']=="4")? "selected":""?>>4</option>
+<?
+					$order = $_POST['append_order_a'];
+					if (!$order) $order = ++$item;
+						
+					for ($i = 1; $i <= $report_items; $i++) {
+?>
+					<option value="<? echo $i ?>" <?echo ($i == $order)? "selected":""?>><? echo $i ?></option>
+<?
+					}
+?>
 				</select>
 				</td>
 				<td nowrap="nowrap" align="center">
@@ -342,10 +386,16 @@ function deleteGroupImage() {
 				</td>
 				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
 				<select class="report_page_selector" name="append_order_b" class="text" onchange="selectorSwitch(this);">
-					<option value="2" <?echo ($_POST['append_order_b']=="2")? "selected":""?>>2</option>
-					<option value="1" <?echo ($_POST['append_order_b']=="1")? "selected":""?>>1</option>
-					<option value="3" <?echo ($_POST['append_order_b']=="3")? "selected":""?>>3</option>
-					<option value="4" <?echo ($_POST['append_order_b']=="4")? "selected":""?>>4</option>
+<?
+					$order = $_POST['append_order_b'];
+					if (!$order) $order = ++$item;
+						
+					for ($i = 1; $i <= $report_items; $i++) {
+?>
+					<option value="<? echo $i ?>" <?echo ($i == $order)? "selected":""?>><? echo $i ?></option>
+<?
+					}
+?>
 				</select>
 				</td>
 				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
@@ -384,10 +434,16 @@ function deleteGroupImage() {
 				</td>
 				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
 				<select class="report_page_selector" name="append_order_c" class="text" onchange="selectorSwitch(this);">
-					<option value="3" <?echo ($_POST['append_order_c']=="3")? "selected":""?>>3</option>
-					<option value="1" <?echo ($_POST['append_order_c']=="1")? "selected":""?>>1</option>
-					<option value="2" <?echo ($_POST['append_order_c']=="2")? "selected":""?>>2</option>
-					<option value="4" <?echo ($_POST['append_order_c']=="4")? "selected":""?>>4</option>
+<?
+					$order = $_POST['append_order_b'];
+					if (!$order) $order = ++$item;
+						
+					for ($i = 1; $i <= $report_items; $i++) {
+?>
+					<option value="<? echo $i ?>" <?echo ($i == $order)? "selected":""?>><? echo $i ?></option>
+<?
+					}
+?>
 				</select>
 				</td>
 				<td nowrap='nowrap' align="center" style="border-top: outset #d1d1cd 1px">
@@ -422,14 +478,20 @@ function deleteGroupImage() {
 				</td>
 				<td nowrap="nowrap" align="left" style="border-top: outset #d1d1cd 1px">
 				<?php echo "<a href='./index.php?m=report&a=view&reset=log&project_id=$project_id'>".$AppUI->_('Reset')."</a>";?>&nbsp;&nbsp;&nbsp;
-				<?php echo "<a href='./index.php?m=projects&a=view&tab=3&project_id=$project_id'>".$AppUI->_('Modify')."</a>";?>&nbsp;&nbsp;&nbsp;
+				<?php echo "<a href='./index.php?m=projects&a=view&tab=5&project_id=$project_id'>".$AppUI->_('Modify')."</a>";?>&nbsp;&nbsp;&nbsp;
 				</td>
 				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
 				<select class="report_page_selector" name="append_order_d" class="text" onchange="selectorSwitch(this);">
-					<option value="4" <?echo ($_POST['append_order_d']=="4")? "selected":""?>>4</option>
-					<option value="1" <?echo ($_POST['append_order_d']=="1")? "selected":""?>>1</option>
-					<option value="2" <?echo ($_POST['append_order_d']=="2")? "selected":""?>>2</option>
-					<option value="3" <?echo ($_POST['append_order_d']=="3")? "selected":""?>>3</option>
+<?
+					$order = $_POST['append_order_d'];
+					if (!$order) $order = ++$item;
+						
+					for ($i = 1; $i <= $report_items; $i++) {
+?>
+					<option value="<? echo $i ?>" <?echo ($i == $order)? "selected":""?>><? echo $i ?></option>
+<?
+					}
+?>
 				</select>
 				</td>
 				<td nowrap='nowrap' align="center" style="border-top: outset #d1d1cd 1px">
@@ -441,6 +503,179 @@ function deleteGroupImage() {
 				</td>
 				<td nowrap='nowrap'>
 					<? $task_log = CReport::getLogReport($project_id); ?>
+				</td>
+				<td nowrap='nowrap' colspan="4">
+				</td>
+			</tr>
+			<tr>
+				<td colspan='6'>
+				<br>
+				</td>
+			</tr>
+			<tr>
+				<td nowrap='nowrap' align="left" style="border-top: outset #d1d1cd 1px">
+					<input id="add_gantt" type="checkbox" name="add_gantt" <?echo ($add_log)?"checked":"";echo ($disable_report[0]['gantt'])?"":"disabled";?>>
+				</td>
+				<td nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
+					<label for="add_gantt">
+						<strong><?php echo $AppUI->_( 'Gantt Chart' );?></strong>
+					</label>
+				</td>
+				<td width="100%" style="border-top: outset #d1d1cd 1px">
+				&nbsp;
+				</td>
+				<td nowrap="nowrap" align="left" style="border-top: outset #d1d1cd 1px">
+				<?php echo "<a href='./index.php?m=report&a=view&reset=gantt&project_id=$project_id'>".$AppUI->_('Reset')."</a>";?>&nbsp;&nbsp;&nbsp;
+				<?php echo "<a href='./index.php?m=projects&a=view&tab=2&project_id=$project_id'>".$AppUI->_('Modify')."</a>";?>&nbsp;&nbsp;&nbsp;
+				</td>
+				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
+				<select class="report_page_selector" name="append_order_e" class="text" onchange="selectorSwitch(this);">
+<?
+					$order = $_POST['append_order_e'];
+					if (!$order) $order = ++$item;
+						
+					for ($i = 1; $i <= $report_items; $i++) {
+?>
+					<option value="<? echo $i ?>" <?echo ($i == $order)? "selected":""?>><? echo $i ?></option>
+<?
+					}
+?>
+				</select>
+				</td>
+				<td nowrap='nowrap' align="center" style="border-top: outset #d1d1cd 1px">
+				<input type="checkbox" name="new_page_e" checked="checked" disabled="disabled">
+				</td>
+			</tr>
+			<tr >
+				<td nowrap='nowrap'>
+				</td>
+				<td nowrap='nowrap'>
+<?
+					$gantt = CReport::getGanttReport($project_id);
+					if (file_exists($gantt)) {
+?>
+					<a href="<? echo $gantt ?>" target="_blank">
+						<img src="<? echo $gantt ?>" height="100" width="100" />
+					</a>
+<?
+					}
+?>
+				</td>
+				<td nowrap='nowrap' colspan="4">
+				</td>
+			</tr>
+			<tr>
+				<td colspan='6'>
+				<br>
+				</td>
+			</tr>
+			
+			<tr>
+				<td nowrap='nowrap' align="left" style="border-top: outset #d1d1cd 1px">
+					<input id="add_wbs" type="checkbox" name="add_wbs" <?echo ($add_log)?"checked":"";echo ($disable_report[0]['wbs'])?"":"disabled";?>>
+				</td>
+				<td nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
+					<label for="add_wbs">
+						<strong><?php echo $AppUI->_( 'WBS Chart' );?></strong>
+					</label>
+				</td>
+				<td width="100%" style="border-top: outset #d1d1cd 1px">
+				&nbsp;
+				</td>
+				<td nowrap="nowrap" align="left" style="border-top: outset #d1d1cd 1px">
+				<?php echo "<a href='./index.php?m=report&a=view&reset=wbs&project_id=$project_id'>".$AppUI->_('Reset')."</a>";?>&nbsp;&nbsp;&nbsp;
+				<?php echo "<a href='./index.php?m=projects&a=view&tab=3&project_id=$project_id'>".$AppUI->_('Modify')."</a>";?>&nbsp;&nbsp;&nbsp;
+				</td>
+				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
+				<select class="report_page_selector" name="append_order_f" class="text" onchange="selectorSwitch(this);">
+<?
+					$order = $_POST['append_order_f'];
+					if (!$order) $order = ++$item;
+						
+					for ($i = 1; $i <= $report_items; $i++) {
+?>
+					<option value="<? echo $i ?>" <?echo ($i == $order)? "selected":""?>><? echo $i ?></option>
+<?
+					}
+?>
+				</select>
+				</td>
+				<td nowrap='nowrap' align="center" style="border-top: outset #d1d1cd 1px">
+				<input type="checkbox" name="new_page_f" checked="checked" disabled="disabled">
+				</td>
+			</tr>
+			<tr >
+				<td nowrap='nowrap'>
+				</td>
+				<td nowrap='nowrap'>
+<?
+					$wbs = CReport::getWbsReport($project_id);
+					if (file_exists($wbs)) {
+?>
+					<a href="<? echo $wbs ?>" target="_blank">
+						<img src="<? echo $wbs ?>" height="100" width="100" />
+					</a>
+<?
+					}
+?>
+				</td>
+				<td nowrap='nowrap' colspan="4">
+				</td>
+			</tr>
+			<tr>
+				<td colspan='6'>
+				<br>
+				</td>
+			</tr>
+			
+			<tr>
+				<td nowrap='nowrap' align="left" style="border-top: outset #d1d1cd 1px">
+					<input id="add_tasknetwork" type="checkbox" name="add_tasknetwork" <?echo ($add_log)?"checked":"";echo ($disable_report[0]['task_network'])?"":"disabled";?>>
+				</td>
+				<td nowrap="nowrap" style="border-top: outset #d1d1cd 1px">
+					<label for="add_tasknetwork">
+						<strong><?php echo $AppUI->_( 'TaskNetwork Chart' );?></strong>
+					</label>
+				</td>
+				<td width="100%" style="border-top: outset #d1d1cd 1px">
+				&nbsp;
+				</td>
+				<td nowrap="nowrap" align="left" style="border-top: outset #d1d1cd 1px">
+				<?php echo "<a href='./index.php?m=report&a=view&reset=task_network&project_id=$project_id'>".$AppUI->_('Reset')."</a>";?>&nbsp;&nbsp;&nbsp;
+				<?php echo "<a href='./index.php?m=projects&a=view&tab=4&project_id=$project_id'>".$AppUI->_('Modify')."</a>";?>&nbsp;&nbsp;&nbsp;
+				</td>
+				<td nowrap="nowrap" align="center" style="border-top: outset #d1d1cd 1px">
+				<select class="report_page_selector" name="append_order_g" class="text" onchange="selectorSwitch(this);">
+<?
+					$order = $_POST['append_order_g'];
+					if (!$order) $order = ++$item;
+						
+					for ($i = 1; $i <= $report_items; $i++) {
+?>
+					<option value="<? echo $i ?>" <?echo ($i == $order)? "selected":""?>><? echo $i ?></option>
+<?
+					}
+?>
+				</select>
+				</td>
+				<td nowrap='nowrap' align="center" style="border-top: outset #d1d1cd 1px">
+				<input type="checkbox" name="new_page_g" checked="checked" disabled="disabled"
+				</td>
+			</tr>
+			<tr >
+				<td nowrap='nowrap'>
+				</td>
+				<td nowrap='nowrap'>
+<?
+					$tasknetwork = CReport::getTaskNetworkReport($project_id);
+					if (file_exists($tasknetwork)) {
+?>
+					<a href="<? echo $tasknetwork ?>" target="_blank">
+						<img src="<? echo $tasknetwork ?>" height="100" width="100" />
+					</a>
+<?
+					}
+?>
 				</td>
 				<td nowrap='nowrap' colspan="4">
 				</td>
@@ -554,7 +789,7 @@ if (dPgetBoolParam($_POST, 'make_report_pdf') && !dPgetBoolParam($_POST, 'load_i
 	$pdf = PM_headerPdf($name,$page,$border,$group_name,$image_file);
 	$populated = false;
 
-	for($k=1;$k<=4;$k++) {
+	for($k=1;$k<=$report_items;$k++) {
 
 	 	if ($add_properties && ($_POST['append_order_a'] == $k)) {
 			if ($task_properties){
@@ -603,6 +838,36 @@ if (dPgetBoolParam($_POST, 'make_report_pdf') && !dPgetBoolParam($_POST, 'load_i
 			                $task_log['hide_complete'], $task_log['start_date'], $task_log['end_date']);
 			  $pdf->Ln(8);
 			}else $msg.="No Tasks Log Report defined!";
+		}
+		
+		if ($add_gantt && ($_POST['append_order_e'] == $k)) {
+		 	if (file_exists($gantt)) {
+			  $populated = true;
+			  $pdf->AddPage('P');
+
+			  PM_makeImgPDF($pdf, $gantt, false, true, true);
+
+			}else $msg.="No GANTT Report defined!";
+		}
+		
+		if ($add_wbs && ($_POST['append_order_f'] == $k)) {
+		 	if (file_exists($wbs)) {
+			  $populated = true;
+			  $pdf->AddPage('L');
+
+			  PM_makeImgPDF($pdf, $wbs, false, true, true);
+
+			}else $msg.="No WBS Report defined!";
+		}
+		
+		if ($add_tasknetwork && ($_POST['append_order_g'] == $k)) {
+		 	if (file_exists($tasknetwork)) {
+			  $populated = true;
+			  $pdf->AddPage('L');
+
+			  PM_makeImgPDF($pdf, $tasknetwork, false, true, true);
+
+			}else $msg.="No TaskNetwork Report defined!";
 		}
 	}
 

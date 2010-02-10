@@ -75,7 +75,7 @@ class CReport extends CDpObject {
 		}
 	}
 
-	function getTaskReport($project_id, $report_type = PMPDF_PLANNED){
+	function getTaskReport($project_id, $report_type = PMPDF_PLANNED) {
 		
 		GLOBAL $AppUI;
 		$user_id = $AppUI->user_id;
@@ -383,6 +383,37 @@ class CReport extends CDpObject {
 	
 	}
 	
+	function getGanttReport($pid) {
+		GLOBAL $AppUI;
+		$user_id = $AppUI->user_id;
+		$project_id=$pid;
+		
+		$sql="SELECT gantt FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+		$gantt = db_loadResult($sql);
 
+		return $gantt;	
+	}
+	
+	function getWbsReport($pid) {
+		GLOBAL $AppUI;
+		$user_id = $AppUI->user_id;
+		$project_id=$pid;
+		
+		$sql="SELECT wbs FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+		$gantt = db_loadResult($sql);
+
+		return $gantt;	
+	}
+	
+	function getTaskNetworkReport($pid) {
+		GLOBAL $AppUI;
+		$user_id = $AppUI->user_id;
+		$project_id=$pid;
+		
+		$sql="SELECT task_network FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+		$gantt = db_loadResult($sql);
+
+		return $gantt;	
+	}
 }
 ?>

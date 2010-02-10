@@ -272,8 +272,8 @@ function makeTNPDF() {
 
 function addTNReport() {
 	document.tn_options.make_graph_pdf.value = "false"; 
-	document.rn_options.add_graph_report.value = "true";
-	addReport('tn_options', 'tn_report_btn');
+	document.tn_options.add_graph_report.value = "true";
+	addReport('tn_options', 'tasknetwork_report_btn');
 	document.tn_options.add_graph_report.value = "false";
 }
 
@@ -504,7 +504,15 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 						if (dPgetBoolParam($_POST, 'make_graph_pdf')) {
 	                    	generateGraphPDF($project_id, $TN, PMPDF_GRAPH_TN);
 						} else if (dPgetBoolParam($_POST, 'add_graph_report')) {
-	                    	$TN->draw("png", $file);
+	                    	$file = "./modules/report/img/".$project_id.PMPDF_GRAPH_TN.$AppUI->user_id.".png";
+							$TN->draw("png", $file);
+							
+							if (file_exists($file)) {
+								$sql = "UPDATE reports SET task_network = '$file' ".
+								       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
+								db_exec($sql);
+								db_error();
+							}
 						}
 
 	                    ini_restore('memory_limit');
@@ -530,7 +538,7 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 					<input type="hidden" name="add_graph_report" value="false" />
 					
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='makeTNPDF();'>
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='addTNReport();' id="tn_report_btn">
+					<input id="tasknetwork_report_btn" type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='addTNReport();'>
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 				</td>
 			</tr>

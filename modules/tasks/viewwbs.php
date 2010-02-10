@@ -425,7 +425,15 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 						if (dPgetBoolParam($_POST, 'make_graph_pdf')) {
 	                    	generateGraphPDF($project_id, $wbs, PMPDF_GRAPH_WBS);
 						} else if (dPgetBoolParam($_POST, 'add_graph_report')) {
-	                    	$wbs->draw("png", $file);
+							$file = "./modules/report/img/".$project_id.PMPDF_GRAPH_WBS.$AppUI->user_id.".png";
+							$wbs->draw("png", $file);
+							
+							if (file_exists($file)) {
+								$sql = "UPDATE reports SET wbs = '$file' ".
+								       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
+								db_exec($sql);
+								db_error();
+							}
 						}
 
 	                    ini_restore('memory_limit');

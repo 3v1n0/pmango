@@ -1211,6 +1211,37 @@ function PM_makeGraphPDF(PM_FPDF $pdf, PMGraph $graph, $fit = false, $h_center =
 		$y = ($pdf->h + $pdf->tMargin - $pdf->bMargin - $h)/2;
 
 	$pdf->GDImage($image, $x, $y, $w, $h);
+}
+
+function PM_makeImgPDF(PM_FPDF $pdf, $image_file, $fit = false, $h_center = true, $v_center = false) {
+
+	$pdf_w = $pdf->w - $pdf->lMargin - $pdf->rMargin;
+	$pdf_h = $pdf->h - $pdf->tMargin - $pdf->bMargin - $pdf->getY();
+	
+	$image = imagecreatefrompng($image_file);
+	$img_w = imagesx($image);
+	$img_h = imagesy($image);
+
+	if ($img_w > $pdf_w || $img_h > $pdf_h || $fit) {
+		if ($img_w > $img_h)  {
+			$w = $pdf_w;
+			$h = intval($img_h * $w / $img_w);
+		} else {
+			$h = $pdf_h;
+			$w = intval($img_w * $h / $img_h);
+		}
+	} else {
+		$w = $img_w;
+		$h = $img_h;
+	}
+	
+	if ($h_center)
+		$x = ($pdf->w + $pdf->lMargin - $pdf->rMargin - $w)/2;
+
+	if ($v_center)
+		$y = ($pdf->h + $pdf->tMargin - $pdf->bMargin - $h)/2;
+
+	$pdf->GDImage($image, $x, $y, $w, $h);
 } 
 
 ?>
