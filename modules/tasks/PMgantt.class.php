@@ -61,7 +61,6 @@ define('TTF_DIR', "./fonts/Droid/");
 include_once "./classes/PMGraph.interface.php";
 include "./lib/jpgraph/src/jpgraph.php";
 include "./lib/jpgraph/src/jpgraph_gantt.php";
-include_once "TaskBoxDB.class.php";
 
 ########################################
 ////////////////////////////////////////
@@ -651,6 +650,51 @@ class PMGantt implements PMGraph {
 		else
 			$this->pToday = date("Y-m-d", strtotime($this->pProject['project_today']))." 12:00:00";
 	}
+	
+	private function getTaskResources($tid) {
+
+		$q = new DBQuery();
+		$q->clear();
+		$q->addQuery('ut.user_id as uid, ut.proles_id as rid, '.
+		             'CONCAT_WS(" ", u.user_last_name, SUBSTRING(u.user_first_name,1,1)) as name, '.
+		             'pr.proles_name as role, ut.effort as planned_effort');
+		$q->addTable('user_tasks','ut');
+		$q->addJoin('users', 'u', 'u.user_id = ut.user_id');
+		$q->addJoin('project_roles', 'pr', 'pr.proles_id = ut.proles_id');
+		$q->addWhere('ut.proles_id > 0 and ut.task_id = '.$tid);
+
+		$resources = $q->loadList();
+
+		$q->clear();
+		$q->addQuery('task_log_creator as uid, task_log_proles_id as rid, '.
+		             'sum(task_log_hours) as actual_effort');
+		$q->addTable('task_log','tl');
+		$q->addWhere('task_log_proles_id > 0 and '.
+		             (!CTask::isLeafSt($tid) ? '(SELECT COUNT(*) FROM tasks AS tt WHERE '.
+		                                     'tl.task_log_creator != tt.task_id'.
+			                    '&& tt.task_parent = tl.task_log_task) < 1 and ' : '').
+			         'task_log_task '.(!CTask::isLeafSt($tid) ? 'in ('.CTask::getChild($tid, $this->pProjectID).')' : '= '.$tid));
+		$q->addGroup('task_log_creator, task_log_proles_id');
+
+		$a_resources = $q->loadList();
+
+		foreach ($resources as &$pres) {
+			$found = false;
+
+			foreach($a_resources as $ares) {
+				if ($ares['uid'] == $pres['uid'] && $ares['rid'] == $pres['rid']) {
+					$pres['actual_effort'] = $ares['actual_effort'];
+					$found = true;
+					break;
+				}
+			}
+
+			if ($found == false)
+				$pres['actual_effort'] = 0;
+		}
+
+		return $resources;
+	}
 
 	private function initGraph() {
 		global $AppUI;
@@ -934,28 +978,31 @@ class PMGantt implements PMGraph {
 				if (!$task_leaf) {
 					$caption = CTask::getActualEffort($a['task_id'], $child)."/".CTask::getEffort($a['task_id'])." ph";
 				} else {
-					$tbxdb = new TaskBoxDB($a['task_id']);
 
-					$res = $tbxdb->getActualResources();
+					$res = $this->getTaskResources($a['task_id']);
 
 					$tst = new Image();
 					$tst->ttf->SetUserFont3('DroidSansMono.ttf');
 
 					$caption = '';
 					foreach($res as $r) {
-						$cap = trim($r['actual_effort'].'/'.$r['planned_effort']." ph, ".$r['name'].", ".$r['role'])."; ";
+						$cap = trim($r['name'].",".$r['role']).";";
 
 						$bar->caption = new TextProperty($cap);
 						$bar->caption->SetFont(FF_USERFONT3, FS_NORMAL, 7);
+						
+						$fixed = $r['actual_effort'].'/'.$r['planned_effort']."ph,";
+						$bar->caption->Set($fixed);
+						$fixed_size = $bar->caption->GetWidth($tst);
 
 						$cut = 2;
-						while ($bar->caption->GetWidth($tst) >= $this->getWidth()/3/count($res) && $cut < strlen($cap)) {
+						while ($bar->caption->GetWidth($tst) + $fixed_size >= $this->pWidth/(3*count($res)) && $cut < strlen($cap)-1) {
 							$cap = substr($cap, 0, strlen($cap)-(1+$cut))."...";
 							$bar->caption->Set($cap);
 							$cut++;
 						}
 
-						$caption .= $cap;
+						$caption .= $fixed.$cap;
 					}
 				}
 
