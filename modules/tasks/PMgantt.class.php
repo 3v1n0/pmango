@@ -56,12 +56,12 @@
  ---------------------------------------------------------------------------
  */
 
-define('TTF_DIR', "{$dPconfig['root_dir']}/fonts/Droid/");
+define('TTF_DIR', "./fonts/Droid/");
 
-include "{$dPconfig['root_dir']}/classes/PMGraph.interface.php";
-include "{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php";
-include "{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php";
-include "TaskBoxDB.class.php";
+include_once "./classes/PMGraph.interface.php";
+include "./lib/jpgraph/src/jpgraph.php";
+include "./lib/jpgraph/src/jpgraph_gantt.php";
+include_once "TaskBoxDB.class.php";
 
 ########################################
 ////////////////////////////////////////

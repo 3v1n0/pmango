@@ -58,7 +58,8 @@ function purgeUserPDFs($user_id) {
 	
 	foreach (getUserProjects($user_id) as $pid) {
 		$pname = getProjectName($pid);
-		$types = array(PMPDF_ACTUAL, PMPDF_LOG, PMPDF_PLANNED, PMPDF_PROPERTIES, PMPDF_REPORT);
+		$types = array(PMPDF_REPORT, PMPDF_ACTUAL, PMPDF_LOG, PMPDF_PLANNED, PMPDF_PROPERTIES,
+		               PMPDF_GRAPH_GANTT, PMPDF_GRAPH_TN, PMPDF_GRAPH_WBS);
 		foreach ($types as $type) {
 			$file = PM_filenamePdf($pname, $type, $user_id);
 			if (file_exists($file)) @unlink($file);
@@ -73,10 +74,12 @@ function generateLogPDF($project_id, $user_id, $hide_inactive, $hide_complete, $
 
 	$pname = getProjectName($project_id);
 	
-	$pdf = PM_headerPdf($pname);
+	$pdf = PM_headerPdf($pname, 'P', 1, null, null, PMPDF_LOG);
 	PM_makeLogPdf($pdf, $project_id, $user_id, $hide_inactive, $hide_complete, $start_date, $end_date);
 	$filename = PM_footerPdf($pdf, $pname, PMPDF_LOG);
 	setProjectSubState('PDFReports', PMPDF_LOG, $filename);
+	
+	return $filename;
 }
 
 function generateTasksPDF($project_id, $tview, $task_level, $tasks_closed, $tasks_opened, $roles,
@@ -86,22 +89,42 @@ function generateTasksPDF($project_id, $tview, $task_level, $tasks_closed, $task
 	$group_name = getGroupName($project_id);
 	$type = $tview ? PMPDF_ACTUAL : PMPDF_PLANNED;
 
-	$pdf = PM_headerPdf($name, 'P', 1, $group_name);
+	$pdf = PM_headerPdf($name, 'P', 1, $group_name, null, $type);
 	PM_makeTaskPdf($pdf, $project_id, $tview, $task_level, $tasks_closed, $tasks_opened,
 	               $roles, $start_date, $end_date, $showIncomplete, $showMine);
 	$filename = PM_footerPdf($pdf, $name, $type);
 	setProjectSubState('PDFReports', $type, $filename);
+	
+	return $filename;
 }
 
 function generatePropertiesPDF($project_id, $properties, $page = 'P') {
 
 	$name = getProjectName($project_id);
 
-	$pdf = PM_headerPdf($name);
+	$pdf = PM_headerPdf($name, 'P', 1, null, null, PMPDF_PROPERTIES);
 	PM_makePropPdf($pdf, $project_id, $properties, $page);
 	
 	$filename = PM_footerPdf($pdf, $name, PMPDF_PROPERTIES);
 	setProjectSubState('PDFReports', PMPDF_PROPERTIES, $filename);
+	
+	return $filename;
 }
+
+function generateGraphPDF($project_id, PMGraph $graph, $type) {
+
+	$name = getProjectName($project_id);
+	
+	$page = $type == PMPDF_GRAPH_GANTT ? 'P' : 'L';
+
+	$pdf = PM_headerPdf($name, $page, 1, null, null, $type);
+
+	PM_makeGraphPDF($pdf, $graph, true);
+	$filename = PM_footerPdf($pdf, $name, $type);
+	setProjectSubState('PDFReports', $type, $filename);
+	
+	return $filename;
+}
+
 
 ?>

@@ -51,6 +51,8 @@
 ---------------------------------------------------------------------------
 */
 
+include "TaskNetwork.class.php";
+
 global $m, $a, $tab;
 
 $project_id = dPgetParam($_REQUEST, 'project_id', 0);
@@ -210,9 +212,9 @@ $(function() {
 
 function resourceSelectSwap(actual) {
 	if (actual) {
-		document.editFrm.show_p_res.checked = false;
+		document.tn_options.show_p_res.checked = false;
 	} else {
-		document.editFrm.show_a_res.checked = false;
+		document.tn_options.show_a_res.checked = false;
 	}
 }
 
@@ -256,16 +258,30 @@ function buildGraphUrl() {
 }
 
 function doSubmit() {
-//	document.editFrm.submit(); //TODO enable on old browsers 
+//	document.tn_options.submit(); //TODO enable on old browsers 
 	loadPlaceHolder(loader);
 	loadGraph(buildGraphUrl());
+}
+
+function makeTNPDF() {
+	document.tn_options.make_graph_pdf.value = "true";
+	document.tn_options.add_graph_report.value = "false";
+	generatePDF('tn_options', 'tn_pdf_span');
+	document.tn_options.make_graph_pdf.value = "false";
+}
+
+function addTNReport() {
+	document.tn_options.make_graph_pdf.value = "false"; 
+	document.rn_options.add_graph_report.value = "true";
+	addReport('tn_options', 'tn_report_btn');
+	document.tn_options.add_graph_report.value = "false";
 }
 
 loadPlaceHolder(loader);
 loadGraph('<?php  echo $graph_img_src; ?>');
 </script>
 
-<form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
+<form id="tn_options" name="tn_options" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
 	<div id='tab_settings_content' style="display: none;">
 		<table border='0' cellpadding='1' cellspacing='3' align="center">
 			<tr>
@@ -454,15 +470,67 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 			</tr>
 		</table>
 	</div>
-</form>
 
-<form name='tn_options' method='post' action="?">
 	<div id='tab_content'>
 		<table id='' width='100%' border='0' cellpadding='1' cellspacing='0' style="border-top: solid transparent 2px;">
 			<tr>
 				<td align="right">
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'>
+<?
+					if (dPgetBoolParam($_POST, 'make_graph_pdf') ||
+					    dPgetBoolParam($_POST, 'add_graph_report'))	{
+
+					    ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
+
+						$TN = new TaskNetwork($project_id);
+						$TN->setOpenedTasks(getProjectSubState('Tasks', 'opened'));
+						$TN->setClosedTasks(getProjectSubState('Tasks', 'closed'));
+						$TN->setTaskLevel(getProjectSubState('Tasks', 'Explode'));
+						$TN->showNames($show_names);
+						$TN->showProgress($show_progress);
+						$TN->showAlerts($show_alerts);
+						$TN->showPlannedData($show_p_data);
+						$TN->showActualData($show_a_data);
+						$TN->showPlannedResources($show_p_res);
+						$TN->showActualResources($show_a_res);
+						$TN->showPlannedTimeframe($show_p_time);
+						$TN->showActualTimeframe($show_a_time);
+						$TN->showVertical($show_vertical);
+						$TN->showDefaultDependencies($show_def_dep);
+						$TN->showDependencies($show_dep);
+						$TN->showAllArrow($show_all_arrow);
+						$TN->showTimeGaps($show_time_gaps);
+						$TN->setCriticalPathIndex($cr_path_index);
+						
+						if (dPgetBoolParam($_POST, 'make_graph_pdf')) {
+	                    	generateGraphPDF($project_id, $TN, PMPDF_GRAPH_TN);
+						} else if (dPgetBoolParam($_POST, 'add_graph_report')) {
+	                    	$TN->draw("png", $file);
+						}
+
+	                    ini_restore('memory_limit');
+				    }
+					
+                    $pdf = getProjectSubState('PDFReports', PMPDF_GRAPH_TN);
+?>
+					
+					<span id="tn_pdf_span" style="vertical-align: middle">	
+<?							
+					if ($pdf && file_exists($pdf)) {
+?>
+						<a id="tn_pdf_link" href="<?echo $pdf;?>">
+							<img id="tn_pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0">
+						</a>
+<?
+					}
+?>
+					</span>
+	
+	
+					<input type="hidden" name="make_graph_pdf" value="false" />
+					<input type="hidden" name="add_graph_report" value="false" />
+					
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='makeTNPDF();'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='addTNReport();' id="tn_report_btn">
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 				</td>
 			</tr>

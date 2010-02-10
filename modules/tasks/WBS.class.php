@@ -66,10 +66,10 @@
 ---------------------------------------------------------------------------
 */
 
-include "TaskBox.class.php";
-include "TaskBoxDB.class.php";
-include "{$dPconfig['root_dir']}/lib/phptreegraph/GDRenderer.php";
-include "{$dPconfig['root_dir']}/classes/PMGraph.interface.php";
+include_once "TaskBox.class.php";
+include_once "TaskBoxDB.class.php";
+include_once "{$dPconfig['root_dir']}/lib/phptreegraph/GDRenderer.php";
+include_once "{$dPconfig['root_dir']}/classes/PMGraph.interface.php";
 
 class WBS implements PMGraph {
 	private $pProject;

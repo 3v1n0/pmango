@@ -53,6 +53,8 @@
 ---------------------------------------------------------------------------
 */
 
+include "PMgantt.class.php";
+
 GLOBAL $min_view, $m, $a, $tab;
 
 $min_view = defVal(@$min_view, false);
@@ -75,6 +77,9 @@ $sql = "SELECT project_start_date, project_finish_date FROM projects WHERE proje
 $tmp = db_loadList($sql);
 $project_dates = $tmp[0];
 
+//if (!dPgetBoolParam($_POST, 'make_graph_pdf') && !dPgetBoolParam($_POST, 'add_graph_report')
+// use session!
+
 // sdate and edate passed as unix time stamps
 $sdate = dPgetParam( $_POST, 'sdate', 0 );
 $edate = dPgetParam( $_POST, 'edate', 0 );
@@ -83,10 +88,6 @@ $showLabels = dPgetParam( $_POST, 'showLabels', '0' );
 if ($showLabels!='0') {
     $showLabels='1';
 }
-$showWork = dPgetParam( $_POST, 'showWork', '0' );
-if ($showWork!='0') {
-    $showWork='1';
-}
 
 $show_names = dPgetParam($_POST, 'show_names', false);
 if (empty($_POST)) $show_names = true;
@@ -94,6 +95,7 @@ if (empty($_POST)) $show_names = true;
 $show_deps = dPgetBoolParam($_POST, 'show_dependencies');
 $show_bw = dPgetBoolParam($_POST, 'show_bw');
 $show_res = dPgetBoolParam($_POST, 'show_res');
+$make_pdf = dPgetBoolParam($_REQUEST, 'make_gantt_pdf');
 
 // months to scroll
 $scroll_date = 1;
@@ -164,7 +166,7 @@ var graph_load_error = './style/default/images/graph_loading_error.png';
 
 function popCalendar( field ){
 	calendarField = field;
-	idate = eval( 'document.editFrm.' + field + '.value' );
+	idate = eval( 'document.gantt_options.' + field + '.value' );
 	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scollbars=false' );
 }
 
@@ -173,12 +175,12 @@ function popCalendar( field ){
  *	@param string Formatted date
  */
 function setCalendar( idate, fdate ) {
-	fld_date = eval( 'document.editFrm.' + calendarField );
-	fld_fdate = eval( 'document.editFrm.show_' + calendarField );
+	fld_date = eval( 'document.gantt_options.' + calendarField );
+	fld_fdate = eval( 'document.gantt_options.show_' + calendarField );
 	fld_date.value = idate;
 	fld_fdate.value = fdate;
 
-	var radios = document.editFrm.time_interval;
+	var radios = document.gantt_options.time_interval;
 
 	for(var i = 0; i < radios.length; i++) {
 		radios[i].checked = false;
@@ -187,11 +189,11 @@ function setCalendar( idate, fdate ) {
 		}
 	}
 
-	document.editFrm.display_option.value = 'custom';
+	document.gantt_options.display_option.value = 'custom';
 }
 
 function scrollPrev() {
-	f = document.editFrm;
+	f = document.gantt_options;
 <?php
 	$new_start = $start_date;
 	$new_end = $end_date;
@@ -200,12 +202,12 @@ function scrollPrev() {
 	echo "f.sdate.value='".$new_start->format( FMT_TIMESTAMP_DATE )."';";
 	echo "f.edate.value='".$new_end->format( FMT_TIMESTAMP_DATE )."';";
 ?>
-	document.editFrm.display_option.value = 'custom';
+	document.gantt_options.display_option.value = 'custom';
 	f.submit();
 }
 
 function scrollNext() {
-	f = document.editFrm;
+	f = document.gantt_options;
 <?php
 	$new_start = $start_date;
 	$new_end = $end_date;
@@ -219,35 +221,35 @@ function scrollNext() {
 }
 
 function showFromStart() {
-	document.editFrm.display_option.value = "from_start";
-	document.editFrm.sdate.value = '<?php echo $start_dates['from_start']->format("%Y%m%d"); ?>';
-	document.editFrm.edate.value = '<?php echo $end_dates['from_start']->format("%Y%m%d"); ?>';
+	document.gantt_options.display_option.value = "from_start";
+	document.gantt_options.sdate.value = '<?php echo $start_dates['from_start']->format("%Y%m%d"); ?>';
+	document.gantt_options.edate.value = '<?php echo $end_dates['from_start']->format("%Y%m%d"); ?>';
 	doSubmit();
-//	document.editFrm.submit();
+//	document.gantt_options.submit();
 }
 
 function showToEnd() {
-	document.editFrm.display_option.value = "to_end";
-	document.editFrm.sdate.value = '<?php echo $start_dates['to_end']->format("%Y%m%d"); ?>';
-	document.editFrm.edate.value = '<?php echo $end_dates['to_end']->format("%Y%m%d"); ?>';
+	document.gantt_options.display_option.value = "to_end";
+	document.gantt_options.sdate.value = '<?php echo $start_dates['to_end']->format("%Y%m%d"); ?>';
+	document.gantt_options.edate.value = '<?php echo $end_dates['to_end']->format("%Y%m%d"); ?>';
 	doSubmit();
-//	document.editFrm.submit();
+//	document.gantt_options.submit();
 }
 
 function showThisMonth() {
-	document.editFrm.display_option.value = "this_month";
-	document.editFrm.sdate.value = '<?php echo $start_dates['this_month']->format("%Y%m%d"); ?>';
-	document.editFrm.edate.value = '<?php echo $end_dates['this_month']->format("%Y%m%d"); ?>';
+	document.gantt_options.display_option.value = "this_month";
+	document.gantt_options.sdate.value = '<?php echo $start_dates['this_month']->format("%Y%m%d"); ?>';
+	document.gantt_options.edate.value = '<?php echo $end_dates['this_month']->format("%Y%m%d"); ?>';
 	doSubmit();
-//	document.editFrm.submit();
+//	document.gantt_options.submit();
 }
 
 function showFullProject() {
-	document.editFrm.display_option.value = "all";
-	document.editFrm.sdate.value = '<?php echo $start_dates['all']->format("%Y%m%d"); ?>';
-	document.editFrm.edate.value = '<?php echo $end_dates['all']->format("%Y%m%d"); ?>';
+	document.gantt_options.display_option.value = "all";
+	document.gantt_options.sdate.value = '<?php echo $start_dates['all']->format("%Y%m%d"); ?>';
+	document.gantt_options.edate.value = '<?php echo $end_dates['all']->format("%Y%m%d"); ?>';
 	doSubmit();
-//	document.editFrm.submit();
+//	document.gantt_options.submit();
 }
 
 $(function(){
@@ -294,9 +296,9 @@ function buildGraphUrl() {
 	var show_deps = $("#show_deps:checked").val();
 	var show_bw = $("#show_bw:checked").val();
 	var show_res = $("#show_res:checked").val();
-	var start_date = document.editFrm.sdate.value;
-	var end_date = document.editFrm.edate.value;
-	var explode = document.editFrm.explode_tasks.value;
+	var start_date = document.gantt_options.sdate.value;
+	var end_date = document.gantt_options.edate.value;
+	var explode = document.gantt_options.explode_tasks.value;
 
 	var url = '?m=tasks&a=gantt&suppressHeaders=1&project_id='+projectID+
 	          '&show_names='+(show_names ? 'true' : 'false')+
@@ -305,7 +307,7 @@ function buildGraphUrl() {
 			  '&show_res='+(show_res ? 'true' : 'false')+
 			  '&explode_tasks='+explode;
 
-	if (document.editFrm.display_option.value != 'all') {
+	if (document.gantt_options.display_option.value != 'all') {
 		url += '&start_date='+start_date+'&finish_date='+end_date;
 	}
 
@@ -314,20 +316,34 @@ function buildGraphUrl() {
 
 function doSubmit() {
 
-	if (document.editFrm.edate.value < document.editFrm.sdate.value)
+	if (document.gantt_options.edate.value < document.gantt_options.sdate.value)
 		alert("Start date must before end date");
 	else {
-		//document.editFrm.submit(); //TODO enable on old browsers
+		//document.gantt_options.submit(); //TODO enable on old browsers
 		$('#graph').empty();
 		$('#graphloader').fadeIn();
 		loadGraph(buildGraphUrl());
 	}
 }
 
+function makeGANTTPDF() {
+	document.gantt_options.make_graph_pdf.value = "true";
+	document.gantt_options.add_graph_report.value = "false";
+	generatePDF('gantt_options', 'gantt_pdf_span');
+	document.gantt_options.make_graph_pdf.value = "false";
+}
+
+function addGANTTReport() {
+	document.gantt_options.make_graph_pdf.value = "false"; 
+	document.gantt_options.add_graph_report.value = "true";
+	addReport('gantt_options', 'gantt_report_btn');
+	document.gantt_options.add_graph_report.value = "false";
+}
+
 loadGraph('<?php echo $graph_img_src; ?>');
 </script>
 
-<form name="editFrm" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
+<form id="gantt_options" name="gantt_options" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
 	<input type="hidden" name="display_option" value="<?php echo $display_option;?>" />
 	
 	<div id="tab_settings_content" style="display: none;">
@@ -475,9 +491,7 @@ loadGraph('<?php echo $graph_img_src; ?>');
 			</tr>
 		</table>
 	</div>
-</form>
 
-<form name='pdf_options' method='post' action='<?php echo $query_string; ?>'>
 	<div id='tab_content'>
 		<table id='' width='100%' border='0' cellpadding='1' cellspacing='0'>
 			<tr align="right">
@@ -487,41 +501,54 @@ loadGraph('<?php echo $graph_img_src; ?>');
 			</tr>
 			<tr>
 				<td align="right">
-				<?if ($_POST['make_pdf']=="true")	{
-					include('modules/report/makePDF.php');
-	
-					$task_level=$explodeTasks;
-					$q  = new DBQuery;
-					$q->addQuery('projects.project_name');
-					$q->addTable('projects');
-					$q->addWhere("project_id = $project_id ");
-					$name = $q->loadList();
-	
-					$q  = new DBQuery;
-					$q->addTable('groups');
-					$q->addTable('projects');
-					$q->addQuery('groups.group_name');
-					$q->addWhere("projects.project_group = groups.group_id and projects.project_id = '$project_id'");
-					$group = $q->loadList();
-	
-					foreach ($group as $g){
-						$group_name=$g['group_name'];
-					}
-	
-					$pdf = PM_headerPdf($name[0]['project_name'],'P',1,$group_name);
-					PM_makeTaskPdf($pdf, $project_id, $task_level, $tasks_closed, $tasks_opened, $roles, $tview, $start_date, $end_date, $showIncomplete); //TODO show mine!
-					if ($tview) $filename=PM_footerPdf($pdf, $name[0]['project_name'], 2);
-					else $filename=PM_footerPdf($pdf, $name[0]['project_name'], 1);
-					?>
-					<a href="<?echo $filename;?>"><img src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0" align="bottom"></a><?
-				}?>
-	
-	
-					<input type="hidden" name="make_pdf" value="false" />
-					<input type="hidden" name="addreport" value="-1" />
+<?
+					if (dPgetBoolParam($_POST, 'make_graph_pdf') ||
+					    dPgetBoolParam($_POST, 'add_graph_report'))	{
+						
+					    ini_set('memory_limit', dPgetParam($dPconfig, 'reset_memory_limit', 8*1024*1024));
+
+						$gantt = new PMGantt($project_id);
+						$gantt->setTaskLevel(getProjectSubState('Tasks', 'Explode'));
+						$gantt->setOpenedTasks(getProjectSubState('Tasks', 'opened'));
+						$gantt->setClosedTasks(getProjectSubState('Tasks', 'closed'));
+						$gantt->setWidth(1000);
+						$gantt->setStartDate($start_date->format("%Y-%m-%d"));
+						$gantt->setEndDate($end_date->format("%Y-%m-%d"));
+						$gantt->showNames($show_names);
+						$gantt->showDeps($show_deps);
+						$gantt->showResources($show_res);
+						$gantt->useColors(!$show_bw);
+						
+						if (dPgetBoolParam($_POST, 'make_graph_pdf')) {
+	                    	generateGraphPDF($project_id, $gantt, PMPDF_GRAPH_GANTT);
+						} else if (dPgetBoolParam($_POST, 'add_graph_report')) {
+	                    	$gantt->draw("png", $file);
+						}
+
+	                    ini_restore('memory_limit');
+				    }
 					
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='document.pdf_options.make_pdf.value="true"; document.pdf_options.submit();'>
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='document.pdf_options.addreport.value="2"; document.pdf_options.submit();'>
+                    $pdf = getProjectSubState('PDFReports', PMPDF_GRAPH_GANTT);
+?>
+					
+					<span id="gantt_pdf_span" style="vertical-align: middle">	
+<?							
+					if ($pdf && file_exists($pdf)) {
+?>
+						<a id="gantt_pdf_link" href="<?echo $pdf;?>">
+							<img id="gantt_pdf_icon" src="./modules/report/images/pdf_report.gif" alt="PDF Report" border="0">
+						</a>
+<?
+					}
+?>
+					</span>
+	
+	
+					<input type="hidden" name="make_graph_pdf" value="false" />
+					<input type="hidden" name="add_graph_report" value="false" />
+					
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='makeGANTTPDF();'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='addGANTTReport();' id="gantt_report_btn">
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
 				</td>
 			</tr>

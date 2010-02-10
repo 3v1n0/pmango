@@ -16,6 +16,8 @@
  Further information at: http://penelope.di.unipi.it
 
  Version history.
+ - 2010.02.10 Marco Trevisan
+   Fifth version, using an AJAX submit form.
  - 2010.02.01 Marco Trevisan
    Fourth version, configuration panel redesigned.
  - 2007.05.08 Riccardo

@@ -154,7 +154,7 @@ class GDRenderer extends Tree
 		parent::render();
 		$this->img = imagecreatetruecolor($this->getWidth(), $this->getHeight());
 		imagefill($this->img, 0, 0, imagecolorallocatealpha($this->img, $this->bgColor[0], $this->bgColor[1], $this->bgColor[2], $this->bgColor[3]));
-		imagesavealpha($this->img, true);
+		//imagesavealpha($this->img, true);
 
 		$nodeBG = imagecolorallocatealpha($this->img, $this->nodeColor[0], $this->nodeColor[1], $this->nodeColor[2], $this->nodeColor[3]);
 		$linkCol = imagecolorallocatealpha($this->img, $this->linkColor[0], $this->linkColor[1], $this->linkColor[2], $this->linkColor[3]);
