@@ -3897,12 +3897,21 @@ class GanttLink {
                         $c = array($x1,$y1,$x2,$y1,$x2,$y2);
                         break;
                     case 4:
-                         $c = array($x1,$y1,
-                            $x1+$this->iPathExtend,$y1,
-                            $x1+$this->iPathExtend,$midy,
-                            $x2-$this->iPathExtend,$midy,
-                            $x2-$this->iPathExtend,$y2,
-                            $x2,$y2);
+                    	 if ($x2 > $x1 + $this->iPathExtend*2) {
+	                    	 $c = array($x1,$y1,
+	                            $x1+$this->iPathExtend,$y1,
+	                            $x1+$this->iPathExtend,$y2,
+	                            $x2-$this->iPathExtend,$y2,
+	                            $x2,$y2);
+                    	 } else {
+	                         $c = array($x1,$y1,
+	                            $x1+$this->iPathExtend,$y1,
+	                            $x1+$this->iPathExtend,$y2-$this->iPathExtend,
+	                            $x2-$this->iPathExtend,$y2-$this->iPathExtend,
+	                            $x2-$this->iPathExtend,$y2,
+	                            $x2,$y2);
+                         }
+                            
                         $arrowtype = ARROW_RIGHT;
                         break;
                     default:
@@ -3942,8 +3951,8 @@ class GanttLink {
                     case 4:
                         $c = array($x1,$y1,
                             $x1+$this->iPathExtend,$y1,
-                            $x1+$this->iPathExtend,$midy,
-                            $x2-$this->iPathExtend,$midy,
+                            $x1+$this->iPathExtend,$y2-$this->iPathExtend,
+                            $x2-$this->iPathExtend,$y2-$this->iPathExtend,
                             $x2-$this->iPathExtend,$y2,
                             $x2,$y2);
                         $arrowtype = ARROW_RIGHT;
@@ -3977,12 +3986,20 @@ class GanttLink {
                         }
                         break;
                     case 4:
-                        $c = array($x1,$y1,
-                            $x1+$this->iPathExtend,$y1,
-                            $x1+$this->iPathExtend,$midy,
-                            $x2-$this->iPathExtend,$midy,
-                            $x2-$this->iPathExtend,$y2,
-                            $x2,$y2);
+                    	if ($x2 > $x1 + $this->iPathExtend*2) {
+	                        $c = array($x1,$y1,
+	                            $x1+$this->iPathExtend,$y1,
+	                            $x1+$this->iPathExtend,$y2,
+	                            $x2-$this->iPathExtend,$y2,
+	                            $x2,$y2);
+                    	} else {
+                    		$c = array($x1,$y1,
+	                            $x1+$this->iPathExtend,$y1,
+	                            $x1+$this->iPathExtend,$y2+$this->iPathExtend,
+	                            $x2-$this->iPathExtend,$y2+$this->iPathExtend,
+	                            $x2-$this->iPathExtend,$y2,
+	                            $x2,$y2);
+                    	}
                         $arrowtype = ARROW_RIGHT;
                         break;
                     default:
@@ -4017,8 +4034,8 @@ class GanttLink {
                     case 4:
                         $c = array($x1,$y1,
                             $x1+$this->iPathExtend,$y1,
-                            $x1+$this->iPathExtend,$midy,
-                            $x2-$this->iPathExtend,$midy,
+                            $x1+$this->iPathExtend,$y2+$this->iPathExtend,
+                            $x2-$this->iPathExtend,$y2+$this->iPathExtend,
                             $x2-$this->iPathExtend,$y2,
                             $x2,$y2);
                         $arrowtype = ARROW_RIGHT;
