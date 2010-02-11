@@ -459,18 +459,18 @@ loadGraph('<?php echo $graph_img_src; ?>');
 								</select>
 							</td>
 						</tr>
-						<tr>
+<!--						<tr>
 							<td class="tab_setting_title">
 								<?php echo $AppUI->_('Size').": ";?>
 							</td>
 							<td class="tab_setting_item">&nbsp;
-								<select name="image_size" class="text" onchange=""> <!-- add custom inputs onchange -->
+								<select name="image_size" class="text" onchange="">
 									<option value="1" selected="selected">Default</option>
 									<option value="2" >Custom</option>
 									<option value="3" >Fit in Window</option>
 								</select>
 							</td>
-						</tr>
+						</tr> -->
 					</table>
 				</td>
 			
