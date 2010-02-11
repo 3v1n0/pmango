@@ -795,6 +795,7 @@ class PMGantt implements PMGraph {
 
 			$level = CTask::getTaskLevel($a["task_id"]);
 			$task_leaf = $this->pTasks[$i]['is_leaf'];
+			$task_leaf_real = CTask::isLeafSt($a["task_id"]);
 
 			if (!$this->pShowTaskGroups) $level = 0;
 
@@ -805,7 +806,7 @@ class PMGantt implements PMGraph {
 //				$name = utf8_decode($name);
 //			}
 
-			if ($task_leaf && !CTask::isLeafSt($a["task_id"]))
+			if ($task_leaf && !$task_leaf_real)
 				$name = "+".@str_repeat(" ", $level-2).$name;
 			else
 				$name = str_repeat(" ", $level).$name;
@@ -975,7 +976,7 @@ class PMGantt implements PMGraph {
 			}
 
 			if ($this->pShowResources) {
-				if (!$task_leaf) {
+				if (!$task_leaf_real) {
 					$caption = CTask::getActualEffort($a['task_id'], $child)."/".CTask::getEffort($a['task_id'])." ph";
 				} else {
 
