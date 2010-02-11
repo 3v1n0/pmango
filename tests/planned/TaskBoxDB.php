@@ -23,17 +23,20 @@ include "../TaskBoxDB.class.php";
 
 //////////////////// Test classe ////////////////////
 
-$tdb = new TaskBoxDB(86);
-echo $tdb->getWBS()."\n";
-echo $tdb->getTaskName()."\n";
-print_r($tdb->getPlannedData());
-print_r($tdb->getActualData());
-print_r($tdb->getPlannedTimeframe());
-print_r($tdb->getActualTimeframe());
-print_r($tdb->getPlannedResources());
-print_r($tdb->getActualResources());
-echo $tdb->getProgress()."\n";
-echo $tdb->isAlerted();
+$id = $_REQUEST['id'];
+if (!$id) $id = 86;
+
+$tdb = new TaskBoxDB($id);
+//echo $tdb->getWBS()."\n";
+//echo $tdb->getTaskName()."\n";
+//print_r($tdb->getPlannedData());
+//print_r($tdb->getActualData());
+//print_r($tdb->getPlannedTimeframe());
+//print_r($tdb->getActualTimeframe());
+//print_r($tdb->getPlannedResources());
+//print_r($tdb->getActualResources());
+//echo $tdb->getProgress()."\n";
+//echo $tdb->isAlerted();
 
 echo "<br><h1>1.3.1.1 </h1><br>";
 echo $tdb->getTaskName()."<br>";
@@ -70,4 +73,8 @@ echo "nome:  ".$stamp['name']."  ruolo:  ".$stamp['role']."  effort attuale:  ".
 echo "<br><h1>1.3.1.8</h1><br>";
 $array= $tdb->getProgress();
 echo $array;
+
+echo "<br><h1>1.3.1.9</h1><br>";
+$array= $tdb->isAlerted();
+echo "Alerted ?" . $array ? "true" : "false";
 ?>

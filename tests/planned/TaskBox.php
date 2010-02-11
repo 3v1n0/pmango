@@ -7,12 +7,17 @@
 
 include "../TaskBox.class.php";
 $font_path = "../../fonts/Droid";
+$dir = "./tbtests";
+
+@unlink($dir);
+@mkdir($dir);
 
 function outTest($tbx, $id) {
-	$tmp = tempnam("../../../TMP", "test");
+	global $dir;
+	$tmp = tempnam($dir, "tbtest");
 	imagepng($tbx->getImage(), $tmp);
 	echo "<h1>Prova $id</h1>\n".
-     "<img src='/TMP/".basename($tmp)."' /><br />".
+     "<img src='./".$dir."/".basename($tmp)."' /><br />".
 	 $tbx->getWidth()." x ".$tbx->getHeight()."<br />\n";
 }
 
