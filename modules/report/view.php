@@ -872,7 +872,7 @@ if (dPgetBoolParam($_POST, 'make_report_pdf') && !dPgetBoolParam($_POST, 'load_i
 		if ($add_tasknetwork && ($_POST['append_order_g'] == $k)) {
 		 	if (file_exists($tasknetwork)) {
 			  $populated = true;
-			  $pdf->AddPage('L');
+			  $pdf->AddPage('L'); //XXX use P for vertical view?
 
 			  PM_makeImgPDF($pdf, $tasknetwork, false, true, true);
 

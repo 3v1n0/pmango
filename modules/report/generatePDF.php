@@ -115,7 +115,10 @@ function generateGraphPDF($project_id, PMGraph $graph, $type) {
 
 	$name = getProjectName($project_id);
 	
-	$page = $type == PMPDF_GRAPH_GANTT ? 'P' : 'L';
+	if ($graph->getWidth() > $graph->getHeight())
+		$page = 'L';
+	else
+		$page = 'P';
 
 	$pdf = PM_headerPdf($name, $page, 1, null, null, $type);
 
