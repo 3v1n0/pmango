@@ -80,15 +80,11 @@ $show_a_res     = dPgetBoolParam($_POST, 'show_a_res');
 $show_p_time    = dPgetBoolParam($_POST, 'show_p_time');
 $show_a_time    = dPgetBoolParam($_POST, 'show_a_time');
 $show_vertical  = dPgetBoolParam($_POST, 'show_vertical');
-$show_def_dep   = dPgetBoolParam($_POST, 'show_def_dep');
-$show_dep       = dPgetBoolParam($_POST, 'show_dep');
+$show_def_dep   = dPgetBoolParam($_POST, 'show_def_dep', true);
+$show_dep       = dPgetBoolParam($_POST, 'show_dep', true);
 $show_all_arrow = dPgetBoolParam($_POST, 'show_all_arrow');
 $show_time_gaps = dPgetBoolParam($_POST, 'show_time_gaps');
 $cr_path_index  = dPgetParam($_POST, 'cr_path_index', 0);
-
-if (empty($_POST)) {
-	$show_def_dep = true;
-}
 
 $graph_img_src = "?m=tasks&suppressHeaders=1&a=tasknetwork&project_id=$project_id".
                  "&names=".($show_names ? "true" : "false").
@@ -109,106 +105,12 @@ $graph_img_src = "?m=tasks&suppressHeaders=1&a=tasknetwork&project_id=$project_i
 
 ?>
 
-<style type="text/css">
-	#graph {
-		width: 600px;
-		height: 400px;
-		border: 1px solid black;
-		position: relative;
-		background: #fff;
-		margin:0px auto;
-	}
-
-	abbr {
-		cursor: help;
-		border-bottom: 1px dotted #555;
-	}
-</style>
-
+<script type="text/javascript" src="./modules/tasks/resizable_graph_viewer.js"></script>
 <script type="text/javascript">
 
 var projectID = <?php  echo $project_id ?>;
 var loader = './style/default/images/loader.gif';
 var graph_error = './style/default/images/graph_loading_error.png';
-
-var iviewer;
-
-$(function(){
-	var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth : document.body.offsetWidth) * 0.95;
-	$("#graph").width(graphWidth);
-});
-
-function loadPlaceHolder(img_src) {
-	$(function(){
-		$("#graph").iviewer({
-	           src: img_src,
-	           zoom: 100,
-	           zoom_min: 100,
-	           zoom_max: 100,
-	           update_on_resize: true,
-	           ui_disabled: true,
-	           initCallback: function() {
-	           	   if (iviewer)
-	           	       iviewer.img_object.object.remove();
-
-	               iviewer = this;
-	           },
-		       onStartDrag: function(object, coords) {
-			       return false;
-			   }
-	      });
-	});
-}
-
-function loadGraph(graph_src) {
-	$(function () {
-		var img = new Image();
-		
-		$(img).load(function () {
-	
-			var zoom = "fit";
-	
-			if (img.width < $("#graph").width() && img.height < $("#graph").height())
-				zoom = 100;
-	
-			$("#graph").iviewer({
-				   zoom: zoom,
-		           src: img.src,
-		           zoom_min: 5,
-		           zoom_max: 1000,
-		           update_on_resize: true,
-		           ui_disabled: false,
-		           initCallback: function() {
-					   if (iviewer)
-			        	   iviewer.img_object.object.remove();
-		        	   
-					   iviewer = this;
-		           }
-		      });
-		})
-		
-	    .error(function () {
-	    	loadPlaceHolder(graph_error);
-	    })
-	
-	    .attr('src', graph_src);
-	});
-}
-
-$(function() {
-	$("#graph").resizable({
-			minHeight: 300,
-			minWidth: 400,
-
-			stop: function(event, ui) {
-				iviewer.update_container_info();
-				if (iviewer.settings.zoom == "fit")
-					iviewer.fit();
-				else
-					iviewer.set_zoom(iviewer.current_zoom);
-			}
-	});
-});
 
 function resourceSelectSwap(actual) {
 	if (actual) {
@@ -257,12 +159,6 @@ function buildGraphUrl() {
     return url;
 }
 
-function doSubmit() {
-//	document.tn_options.submit(); //TODO enable on old browsers 
-	loadPlaceHolder(loader);
-	loadGraph(buildGraphUrl());
-}
-
 function makeTNPDF() {
 	document.tn_options.make_graph_pdf.value = "true";
 	document.tn_options.add_graph_report.value = "false";
@@ -277,8 +173,19 @@ function addTNReport() {
 	document.tn_options.add_graph_report.value = "false";
 }
 
-loadPlaceHolder(loader);
-loadGraph('<?php  echo $graph_img_src; ?>');
+function doSubmit() {
+//	document.tn_options.submit(); //TODO enable on old browsers 
+	viewerLoadPlaceHolder("#task_network_graph", loader);
+	viewerLoadGraph("#task_network_graph", buildGraphUrl(), graph_error);
+}
+
+resizeItemToVisible("#task_network_graph", 0.95);
+createResizableViewer("#resizable_task_network", "#task_network_graph");
+viewerLoadPlaceHolder("#task_network_graph", loader);
+viewerLoadGraph("#task_network_graph", '<?php  echo $graph_img_src; ?>', graph_error);
+displayItemSwitchPreCallback = optionsSwitchCallBack;
+displayItemSwitchPreCallbackARGS = {container: "#resizable_task_network",
+								    graph: "#task_network_graph"}; 
 </script>
 
 <form id="tn_options" name="tn_options" method="post" action="?<?php echo "m=$m&a=$a&project_id=$project_id";?>">
@@ -462,7 +369,7 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 						</tr>
 						<tr>
 							<td align="left">
-								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='settingsTabToggle();'>
 							</td>
 						</tr>
 					</table>
@@ -539,7 +446,7 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 					
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='makeTNPDF();'>
 					<input id="tasknetwork_report_btn" type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='addTNReport();'>
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='settingsTabToggle();'>
 				</td>
 			</tr>
 		</table>
@@ -553,7 +460,9 @@ loadGraph('<?php  echo $graph_img_src; ?>');
 <?php
 if (db_loadResult( "SELECT COUNT(*) FROM tasks WHERE task_project=$project_id" )) {
 ?>
-		<div id="graph" class="graph"></div>
+		<div id="resizable_task_network" class="resizable">
+			<div id="task_network_graph" class="graph"></div>
+		</div>
 <?php
 } else {
 	echo $AppUI->_( "No tasks to display" );

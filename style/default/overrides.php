@@ -104,7 +104,10 @@ class CTabBox extends CTabBox_core {
 			foreach( $this->tabs as $k => $v ) {
 				$class = ($k == $this->active) ? 'tabon' : 'taboff';
 				$sel = ($k == $this->active) ? 'Selected' : '';
-				$s .= '<td height="28" valign="middle" width="3"><img src="./style/' . $uistyle . '/images/tab'.$sel.'Left.png" width="3" height="28" border="0" alt="" /></td>'."\n";
+				if ($js_tabs)
+					$s .= '<td id="lefttab_'.$k.'" class="left'.$class.'" height="28" valign="middle" width="3"></td>'."\n";
+				else
+					$s .= '<td id="lefttab_'.$k.'" class="left'.$class.'" height="28" valign="middle" width="3" background="./style/' . $uistyle . '/images/tab'.$sel.'Left.png"></td>'."\n";
 				$s .= '<td id="toptab_'.$k.'" valign="middle" nowrap="nowrap"';
 				if ($js_tabs)
 					$s .= " class=\"$class\"";
@@ -122,7 +125,11 @@ class CTabBox extends CTabBox_core {
 					$s .= '<img src="./images/icons/pencil.gif" onmouseover="this.style.cursor=\'pointer\';" onclick="displayItemSwitch(\'tab_content\', \'tab_settings_content\');" " border="0" />';
 				
 				$s .= "</td>\n";
-				$s .= '<td valign="middle" width="3"><img src="./style/' . $uistyle . '/images/tab'.$sel.'Right.png" width="3" height="28" border="0" alt="" /></td>'."\n";
+				if ($js_tabs)
+					$s .= '<td id="righttab_'.$k.'" class="right'.$class.'" valign="middle" width="3"></td>'."\n";
+				else
+					$s .= '<td id="righttab_'.$k.'" class="right'.$class.'" valign="middle" width="3" background="./style/' . $uistyle . '/images/tab'.$sel.'Right.png"></td>'."\n";
+					
 				$s .= '<td width="3" class="tabsp"><img src="./images/shim.gif" height="1" width="3" /></td>'."\n";
 			}
 			$s .= '</table></td></tr>'."\n";
@@ -144,13 +151,10 @@ class CTabBox extends CTabBox_core {
 					$currentTabName = $v[1];
 					require $this->baseInc.$v[0].'.php';
 					echo '</div>'."\n";
-					echo '<script language="JavaScript" type="text/javascript">
-<!--
-show_tab('.$this->active.');
-//-->
-</script>'."\n";
-
 				}
+				echo '<script language="JavaScript" type="text/javascript">
+						show_tab('.$this->active.');
+					   </script>'."\n";
 			}
 			echo '</td></tr></table>'."\n";
 		}

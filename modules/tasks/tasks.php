@@ -634,65 +634,7 @@ function updateTasksList() {
 		return;
 	}
 
-	var form = $("#task_list_options");
-	var tasks = $("#project_tasks");
-	var old_tasks = tasks.clone().text();
-
-	addAJAX("#task_list_options");
-
-	tasks.animate({
-			height: "toggle",
-			opacity: "toggle"
-		},
-
-		function() {
-			tasks.html('<img id="tasks_loader" src="style/default/images/ajax-loader-horizontal.gif" alt="loader" />')
-				 .attr('align', 'center')
-			     .css('padding-top', '20px')
-			     .css('padding-bottom', '20px')
-			     .slideDown();
-	
-			$.ajax({
-			   type: form.attr("method"),
-			   url:  form.attr("action"),
-			   data: form.serialize(),
-			   success: function(html) {
-		        	$("#tasks_loader").fadeOut("fast", function() {
-		
-						topMsgUpdate(html);
-
-						if (!$(html).find("#tasks_pdf_span").children().size()) {
-							$("#tasks_pdf_span").empty();
-						}
-		
-		        		var data = $(html).find("#project_tasks");
-		        		data.hide();
-		
-		        		if (data.size() == 1) {
-		        			tasks.replaceWith(data);
-		        			data.animate({
-		        				height: "toggle",
-		        				opacity: "toggle"
-		        			});
-		
-		        			if (old_tasks != data.clone().text()) {
-		        				$("#tasks_report_btn").show();
-		        			}
-		
-		        		} else {
-		        			delAJAX("#task_list_options");
-		            		form.submit();
-		            		return;
-		        		}
-		            });
-		  	   },
-		  	   error: function() {
-		  		 	delAJAX("#task_list_options");
-		  		 	form.submit();
-		  	   }
-			});
-		}
-	);
+	updateTabContent("task_list_options", "project_tasks", "tasks_pdf_span", "tasks_report_btn");
 }
 </script>
 <?php
@@ -779,7 +721,7 @@ if ($project_id) {
 			<tr>
 				<td class="tab_setting_item">&nbsp; <input type="button"
 					class="button" value="<?php echo $AppUI->_( 'Done' );?>"
-					onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+					onclick='settingsTabToggle();'>
 				</td>
 			</tr>
 		</table>
@@ -827,7 +769,7 @@ if ($project_id) {
 			onclick='addTasksReport(<?echo $tview ? 2 : 1?>);'>
 		<input type="button" class="button"
 			value="<?php echo $AppUI->_( 'Configure' );?>"
-			onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+			onclick='settingsTabToggle();'>
 		</td>
 	</tr>
 </table>

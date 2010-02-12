@@ -230,65 +230,7 @@ function updateLogsList() {
 		return;
 	}
 
-	var form = $("#logs_list_options");
-	var logs = $("#project_logs");
-	var old_logs = logs.clone().text();
-
-	addAJAX("#logs_list_options");
-
-	logs.animate({
-			height: "toggle",
-			opacity: "toggle"
-		},
-
-		function() {
-			logs.html('<img id="logs_loader" src="style/default/images/ajax-loader-horizontal.gif" alt="loader" />')
-				 .attr('align', 'center')
-			     .css('padding-top', '20px')
-			     .css('padding-bottom', '20px')
-			     .slideDown();
-	
-			$.ajax({
-			   type: form.attr("method"),
-			   url:  form.attr("action"),
-			   data: form.serialize(),
-			   success: function(html) {
-		        	$("#logs_loader").fadeOut("fast", function() {
-		
-						topMsgUpdate(html);
-
-						if (!$(html).find("#logs_pdf_span").children().size()) {
-							$("#logs_pdf_span").empty();
-						}
-		
-		        		var data = $(html).find("#project_logs");
-		        		data.hide();
-		
-		        		if (data.size() == 1) {
-		        			logs.replaceWith(data);
-		        			data.animate({
-		        				height: "toggle",
-		        				opacity: "toggle"
-		        			});
-		
-		        			if (old_logs != data.clone().text()) {
-		        				$("#logs_report_btn").show();
-		        			}
-		
-		        		} else {
-		        			delAJAX("#logs_list_options");
-		            		form.submit();
-		            		return;
-		        		}
-		            });
-		  	   },
-		  	   error: function() {
-		  		 	delAJAX("#logs_list_options");
-		  		 	form.submit();
-		  	   }
-			});
-		}
-	);
+	updateTabContent("logs_list_options", "project_logs", "logs_pdf_span", "logs_report_btn");
 }
 </script>
 
@@ -366,7 +308,7 @@ function updateLogsList() {
 						</tr>
 						<tr>
 							<td class="tab_setting_item">
-								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='settingsTabToggle();'>
 							</td>
 						</tr>
 					</table>
@@ -406,7 +348,7 @@ function updateLogsList() {
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF ' );?>" onclick='makeLogsPDF();'>
 					<input type="hidden" name="addreport" value="false" />
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report ' );?>" onclick='addLogsReport();' id="logs_report_btn">
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='settingsTabToggle();'>
 				</td>
 			</tr>
 		</table>

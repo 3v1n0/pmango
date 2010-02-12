@@ -320,19 +320,22 @@ a:link.hdr, a:active.hdr, a:visited.hdr {
 
 /* tabbed boxes */
 td.tabon {
-	background: #E2B969 url('images/tabSelectedBg.png');
-	 
+	background: url('./images/tabSelectedBg.png');
+}
+td.righttabon {
+	background: url('./images/tabSelectedRight.png');
+}
+td.lefttabon {
+	background: url('./images/tabSelectedLeft.png');
 }
 td.taboff {
-	background: #E9DE9C url('images/tabBg.png');
-	/*
-	border-top: solid #cccccc 1px;
-	border-left: solid #cccccc 1px;
-	border-right: solid #cccccc 1px;
-	border-bottom: solid #cccccc 2px;
-	*/
-	/* background-image: url('./style/default/images/tabBg.png'); */
-	
+	background: url('./images/tabBg.png');
+}
+td.righttaboff {
+	background: url('./images/tabRight.png');
+}
+td.lefttaboff {
+	background: url('./images/tabLeft.png');
 }
 td.tabsp {
 	border-bottom: solid #cccccc 2px;
@@ -546,4 +549,18 @@ td.tab_setting_group {
 td.tab_setting_item {
 	white-space: nowrap;
 	text-align: left;
+}
+
+div.graph {
+	width: 600px;
+	height: 400px;
+	border: 1px solid black;
+	position: relative;
+	background: #fff;
+	margin:0px auto;
+}
+
+abbr {
+	cursor: help;
+	border-bottom: 1px dotted #555;
 }

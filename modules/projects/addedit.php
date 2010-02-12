@@ -60,7 +60,7 @@ $q  = new DBQuery;
 $perms =& $AppUI->acl();
 $canEdit=0;
 $canAddProjectGr=0;
-$groupsAdd = array(); // insieme dei gruppi a cui l'utente può aggiungere un progetto
+$groupsAdd = array(); // insieme dei gruppi a cui l'utente puï¿½ aggiungere un progetto
 if ($project_id > 0) {//edit
 	if (!$group_id > 0) {
 		$q->addTable('projects');

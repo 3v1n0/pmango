@@ -15,11 +15,8 @@
  Further information at: http://penelope.di.unipi.it
 
  Version history.
- - 2010.02.08
-   0.5, added a function for placing AJAX requests for Report forms
-   0.4, added a function for placing AJAX requests for PDF forms
- - 2010.02.01
-   0.3, use jQuery's slideToggle for switching item view
+ - 2010.02.10
+   0.3, ajax functions for retriving project data
  - 2010.01.31
    0.2, jQuery toggle usage for projectViewSwitch
  - 2009.11.11 Marco Trevisan
@@ -56,29 +53,8 @@
 ---------------------------------------------------------------------------
 */
 
-function showItem(id, show) {
-	if (id) {
-		if (show)
-			document.getElementById(id).style.display = '';
-		else
-			document.getElementById(id).style.display = 'none';
-	}
-}
-
-function switchItemDisplay(id) {
-	if (!id) return;
-	
-	var item = document.getElementById(id);
-
-	if (item) {
-		if (item.style.display == 'none') {
-			item.style.display = '';
-			return true;
-		} else {
-			item.style.display = 'none';
-			return false;
-		}	
-	}
+function settingsTabToggle() {
+	displayItemSwitch("tab_content", "tab_settings_content");
 }
 
 function projectViewSwitch() {
@@ -88,7 +64,7 @@ function projectViewSwitch() {
 	
 	var pr_hidden = pr.is(":hidden");
 	
-	if (!$(".project_infos_childs").size()) { 
+	if (!$("div.project_infos_childs").size()) { 
 	  pr.children("td").each(function() {
 	    $(this).wrapInner("<div class='project_infos_childs' />");
 	    if (pr_hidden)
@@ -124,71 +100,6 @@ function projectViewSwitch() {
 //			else
 //				img.src = 'images/icons/collapse.gif';
 //	});}
-
-function displayItemSwitch(id1, id2) {
-	
-	$("#"+id1).slideToggle("normal");
-	$("#"+id2).slideToggle("normal");
-
-	/*
-	
-	switchItemDisplay(id1);
-	switchItemDisplay(id2);
-	return;
-	
-	// Alternative:
-	var item1 = document.getElementById(id1);
-	var item2 = document.getElementById(id2);
-
-	if (!id1 || !item1)
-		return;
-
-	if (item1.style.display != 'none') {
-		item1.style.display = 'none';
-
-		if (id2 && item2)
-			item2.style.display = '';
-	} else {
-		item1.style.display = '';
-
-		if (id2 && item2)
-			item2.style.display = 'none';
-	}
-	*/
-}
-
-function addAJAX(form_selector) {
-	var form = $(form_selector);
-	var ajax = $(form_selector+" input[name=ajax]");
-
-	if (!ajax.size())
-		form.append('<input type="hidden" name="ajax" value="true" />');
-	else
-		ajax.val("true");
-}
-
-function delAJAX(form_selector) {
-	var form = $(form_selector);
-	var ajax = $(form_selector+" input[name=ajax]");
-
-	if (ajax.size())
-		ajax.remove();
-}
-
-function topMsgUpdate(updated_parent) {
-	var msg = $("#ui_top_message:first");
-	var new_msg = $(updated_parent).find("#ui_top_message:first");
-
-	if (new_msg.size())
-		new_msg.hide();
-	
-	msg.fadeOut(function() {
-		if (new_msg.size() == 1) {
-			msg.replaceWith(new_msg);
-			new_msg.fadeIn();
-		}
-	});
-}
 
 function generatePDF(form_id, parent_id) {
 	var parent = $('#'+parent_id);
@@ -279,3 +190,65 @@ function addReport(form_id, button_id) {
 	});
 }
 
+function updateTabContent(form_id, content_id, pdf_span_id, report_button_id) {
+	var form = $("#"+form_id);
+	var content = $("#"+content_id);
+	var old_content = content.clone().text();
+	var content_loader_id = content_id+"_loader";
+
+	addAJAX("#"+form_id);
+
+	content.animate({
+			height: "toggle",
+			opacity: "toggle"
+		},
+
+		function() {
+			content.html('<img id="'+content_loader_id+'" src="style/default/images/ajax-loader-horizontal.gif" alt="loader" />')
+				   .attr('align', 'center')
+			       .css('padding-top', '20px')
+			       .css('padding-bottom', '20px')
+			       .slideDown();
+	 
+			$.ajax({
+			   type: form.attr("method"),
+			   url:  form.attr("action"),
+			   data: form.serialize(),
+			   success: function(html) {
+		        	$("#"+content_loader_id).fadeOut("fast", function() {
+		
+						topMsgUpdate(html);
+
+						if (!$(html).find("#"+pdf_span_id).children().size()) {
+							$("#"+pdf_span_id).empty();
+						}
+		
+		        		var newdata = $(html).find("#"+content_id);
+		        		newdata.hide();
+		
+		        		if (newdata.size() == 1) {
+		        			content.replaceWith(newdata);
+		        			newdata.animate({
+		        				height: "toggle",
+		        				opacity: "toggle"
+		        			});
+		
+		        			if (old_content != newdata.clone().text()) {
+		        				$("#"+report_button_id).show();
+		        			}
+		
+		        		} else {
+		        			delAJAX("#"+form_id);
+		            		form.submit();
+		            		return;
+		        		}
+		            });
+		  	   },
+		  	   error: function() {
+		  		   	delAJAX("#"+form_id);
+		  		 	form.submit();
+		  	   }
+			});
+		}
+	);
+}

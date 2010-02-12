@@ -483,7 +483,7 @@ loadGraph('<?php echo $graph_img_src; ?>');
 						</tr>
 						<tr>
 							<td align="left">
-								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+								&nbsp; <input type="button" class="button" value="<?php echo $AppUI->_( 'Done' );?>"  onclick='settingsTabToggle();'>
 							</td>
 						</tr>
 					</table>
@@ -557,7 +557,7 @@ loadGraph('<?php echo $graph_img_src; ?>');
 					
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='makeGANTTPDF();'>
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='addGANTTReport();' id="gantt_report_btn">
-					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='displayItemSwitch("tab_content", "tab_settings_content");'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='settingsTabToggle();'>
 				</td>
 			</tr>
 		</table>

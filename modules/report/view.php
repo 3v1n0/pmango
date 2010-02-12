@@ -293,6 +293,16 @@ function deleteGroupImage() {
 	document.make_pdf_form.delete_image.value = "false";
 }
 
+function updateSelectorsState() {
+	$(function() {
+		$("select.report_page_selector").each(function(i) {
+			selectors_values[i] = $(this).val();
+		});
+	});
+}
+
+updateSelectorsState();
+
 </script>
 
 <form id="make_pdf_form" name='make_pdf_form' method='POST' action=<? echo '?m=report&a=view&project_id='.$project_id;?> enctype="multipart/form-data">
@@ -658,7 +668,7 @@ function deleteGroupImage() {
 				</select>
 				</td>
 				<td nowrap='nowrap' align="center" style="border-top: outset #d1d1cd 1px">
-				<input type="checkbox" name="new_page_g" checked="checked" disabled="disabled"
+				<input type="checkbox" name="new_page_g" checked="checked" disabled="disabled" />
 				</td>
 			</tr>
 			<tr >
@@ -905,14 +915,3 @@ if ($pdf_file) {
 </tr>
 </table>
 </form>
-
-<script type="text/javascript">
-function updateSelectorsState() {
-	$("select.report_page_selector").each(function(i) {
-		selectors_values[i] = $(this).val();
-	});
-}
-
-$(document).ready(updateSelectorsState());
-</script>
-

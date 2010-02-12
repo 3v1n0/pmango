@@ -301,13 +301,16 @@ function dPgetParam( &$arr, $name, $def=null ) {
 /**
 * Utility function to return a bool value from a named array or a specified default
 */
-function dPgetBoolParam(&$arr, $name) {
+function dPgetBoolParam(&$arr, $name, $default = false) {
 	if (isset($arr[$name]) &&
 		 ($arr[$name] == "true" || $arr[$name] == "on" || $arr[$name] > 0)) {
 		return true;
 	}
 	
-	return false;
+	if ($default)
+		return true;
+	else
+		return false;
 }
 
 #

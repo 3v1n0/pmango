@@ -15,6 +15,8 @@
  Further information at: http://penelope.di.unipi.it
 
  Version history.
+ - 2010.02.10 Marco Trevisan
+   Using jQuery for hiding/showing tabs
  - 2006.07.26 Lorenzo
    First version, unmodified from dotProject 2.0.1.
 
@@ -121,33 +123,38 @@ function collapse_all(parent)
 var show_tab_function = null;
 var hide_tab_function = null;
 
-function show_tab(i)
-{
-	hide_tabs();
-	if (show_tab_function) {
-		show_tab_function(i);
-		return;
-	}
-	var tab = document.getElementById('tab_' + i);
-	tab.style.display = 'block';
-	tab = document.getElementById('toptab_' + i);
-	tab.className = 'tabon';
-}
-
-function hide_tabs()
-{
+function show_tab(i) {
 	if (hide_tab_function) {
 		hide_tab_function();
 		return;
 	}
-	var tabs = document.getElementsByTagName('td');
-	var i;
-	for(i = 0; i < tabs.length; i++)
-		if (tabs[i].className == 'tabon')
-			tabs[i].className = 'taboff';
+	
+	if (show_tab_function) {
+		show_tab_function(i);
+		return;
+	}
+	
+	if ($("div.tab:visible").size() != 1) {
+		hide_tabs();
+		$("div[id^=tab_]:first").show();
+		$("td[id^=toptab_]:first").removeClass('taboff').addClass('tabon').show();
+	}
+	
+	if ($("div.tab:visible").id == "tab_"+i)
+		return;
+	
+	$("td.taboff").removeClass('taboff').addClass('tabon');
+	$("td.tabon").removeClass('tabon').addClass('taboff');
+	$("td.lefttabon").removeClass('lefttabon').addClass('lefttaboff');
+	$("td.righttabon").removeClass('righttabon').addClass('righttaboff');
 
-	tabs = document.getElementsByTagName('div');
-	for(i = 0; i < tabs.length; i++)
-		if (tabs[i].className == 'tab')
-			tabs[i].style.display = 'none';
+	$("div.tab:visible").slideToggle();
+	$("div#tab_"+i).slideToggle();
+	$("td#toptab_"+i).removeClass('taboff').addClass('tabon');
+	$("td#righttab_"+i).removeClass('righttaboff').addClass('righttabon');
+	$("td#lefttab_"+i).removeClass('lefttaboff').addClass('lefttabon');
+}
+
+function hide_tabs() {
+	$("div.tab").hide();
 } 
