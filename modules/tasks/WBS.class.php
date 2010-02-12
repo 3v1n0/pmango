@@ -179,11 +179,11 @@ class WBS implements PMGraph {
 	}
 	
 	public function getWidth() {
-		return $this->pTree->getWidth();
+		return imagesx($this->getImage());
 	}
 	
 	public function getHeight() {
-		return $this->pTree->getHeight();
+		return imagesy($this->getImage());
 	}
 	
 	public function setWidth($w) {

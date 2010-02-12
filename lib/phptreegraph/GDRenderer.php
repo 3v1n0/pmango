@@ -152,7 +152,7 @@ class GDRenderer extends Tree
 			throw new Exception('GD not loaded!');
 		}
 		parent::render();
-		$this->img = imagecreatetruecolor($this->getWidth(), $this->getHeight());
+		$this->img = imagecreatetruecolor(parent::getWidth(), parent::getHeight());
 		imagefill($this->img, 0, 0, imagecolorallocatealpha($this->img, $this->bgColor[0], $this->bgColor[1], $this->bgColor[2], $this->bgColor[3]));
 		//imagesavealpha($this->img, true);
 
