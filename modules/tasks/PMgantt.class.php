@@ -16,13 +16,14 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
-
+ - 2010.02.09 Marco Trevisan
+ 0.4, added PMProgressBar and improvements in PMGanttBar
  - 2010.01.27 Marco Trevisan
-   0.3, bars joiners
-   0.2, captions work
+ 0.3, bars joiners
+ 0.2, captions work
  - 2010.01.15 Marco Trevisan
-   0.1, created the class based on the work by Lorenzo Ballini (2005.09.30)
-        and on my previous patched non-classed version (2009.11.04)
+ 0.1, created the class based on the work by Lorenzo Ballini (2005.09.30)
+ and on my previous patched non-classed version (2009.11.04)
 
  ---------------------------------------------------------------------------
 
@@ -66,8 +67,80 @@ include "./lib/jpgraph/src/jpgraph_gantt.php";
 ////////////////////////////////////////
 ########################################
 
+class PMProgressBar {
+	public $iProgress=-1;
+	public $iPattern=GANTT_SOLID;
+	public $iColor="black", $iFillColor='black', $iFrameColor="black", $iBackgroundFillColor="white";
+	public $iBackgroundPattern=GANTT_RDIAG,$iBackgroundColor="red",$iBackGroundDensity=98;
+	public $iDensity=98, $iHeight=0.15;
+	public $iStart = null, $iEnd = null;
+	public $leftMark,$rightMark;
+	public $iPadding=0,$iProgressPadding=0;
+
+	function setProgress($aProg) {
+		if( $aProg < 0.0 || $aProg > 1.0 ) {
+			JpGraphError::RaiseL(6027);
+			//("Progress value must in range [0, 1]");
+		}
+		$this->iProgress = $aProg;
+	}
+
+	function setPattern($aPattern,$aColor="blue",$aDensity=98) {
+		$this->iPattern = $aPattern;
+		$this->iColor = $aColor;
+		$this->iDensity = $aDensity;
+	}
+	
+	function setBackgroundPattern($aPattern,$aColor="red",$aDensity=98) {
+		$this->iBackgroundPattern = $aPattern;
+		$this->iBackgroundColor = $aColor;
+		$this->iBackGroundDensity = $aDensity;
+	}
+
+	function setFillColor($aColor) {
+		$this->iFillColor = $aColor;
+	}
+	
+	function setColor($aColor) {
+		$this->iFrameColor = $aColor;
+	}
+	
+	function setBackgroundFillColor($aColor) {
+		$this->iBackgroundFillColor = $aColor;
+	}
+	
+	function setPadding($aPadding) {
+		$this->iPadding = $aPadding;
+	}
+	
+	function setProgressPadding($aPadding) {
+		$this->iProgressPadding = $aPadding;
+	}
+
+	function setHeight($aHeight) {
+		$this->iHeight = $aHeight;
+	}
+	
+	function setStartEnd($aStart, $aEnd) {
+		if (is_null($aStart)) {
+			$this->iEnd = null;
+			return;
+		} else if (is_null($aEnd)) {
+			$this->iStart = null;
+			$this->iEnd = null;
+			return;
+		}
+
+		$this->iStart = strtotime($aStart);
+		if ( strpos($aEnd,':') === false )
+			$this->iEnd = strtotime($aEnd)+SECPERDAY-1;
+		else
+			$this->iEnd = strtotime($aEnd);
+	}
+}
+
 class PMGanttBar extends GanttPlotObject {
-	public $progress;
+	public $progressbar;
 	public $leftMark,$rightMark;
 	private $iEnd;
 	private $iHeightFactor=0.5;
@@ -75,7 +148,6 @@ class PMGanttBar extends GanttPlotObject {
 	private $iShadow=false,$iShadowColor="darkgray",$iShadowWidth=1,$iShadowFrame="black";
 	private $iPattern=GANTT_RDIAG,$iPatternColor="blue",$iPatternDensity=95;
 	private $iBreakStyle=false, $iBreakLineStyle='dotted',$iBreakLineWeight=1;
-	private $iLabel;
 	//---------------
 	// CONSTRUCTOR
 	function __construct($aPos,$aLabel,$aStart,$aEnd,$aCaption="",$aHeightFactor=0.6) {
@@ -97,81 +169,102 @@ class PMGanttBar extends GanttPlotObject {
 		}
 		$this->iVPos = $aPos;
 		$this->iHeightFactor = $aHeightFactor;
-		$this->iLabel = $aLabel;
-		$this->title->Set($aLabel);
+		$this->title->set($aLabel);
 		$this->caption = new TextProperty($aCaption);
 		$this->caption->Align("left","center");
-		$this->leftMark =new PlotMark();
+		$this->leftMark = new PlotMark();
 		$this->leftMark->Hide();
-		$this->rightMark=new PlotMark();
+		$this->rightMark= new PlotMark();
 		$this->rightMark->Hide();
-		$this->progress = new Progress();
+		$this->progressbar = new PMProgressBar();
+		$this->progressbar->leftMark = new PlotMark();
+		$this->progressbar->leftMark->Hide();
+		$this->progressbar->rightMark= new PlotMark();
+		$this->progressbar->rightMark->Hide();
 	}
 
 	//---------------
 	// PUBLIC METHODS
-	function SetShadow($aShadow=true,$aColor="gray") {
+	function setShadow($aShadow=true,$aColor="gray") {
 		$this->iShadow=$aShadow;
 		$this->iShadowColor=$aColor;
 	}
 
-	function SetBreakStyle($aFlg=true,$aLineStyle='dotted',$aLineWeight=1) {
+	function setBreakStyle($aFlg=true,$aLineStyle='dotted',$aLineWeight=1) {
 		$this->iBreakStyle = $aFlg;
 		$this->iBreakLineStyle = $aLineStyle;
 		$this->iBreakLineWeight = $aLineWeight;
 	}
 
-	function GetMaxDate() {
+	function getMaxDate() {
 		return $this->iEnd;
 	}
 
-	function SetHeight($aHeight) {
+	function setHeight($aHeight) {
 		$this->iHeightFactor = $aHeight;
 	}
 
-	function SetColor($aColor) {
+	function setColor($aColor) {
 		$this->iFrameColor = $aColor;
 	}
 
-	function SetFillColor($aColor) {
+	function setFillColor($aColor) {
 		$this->iFillColor = $aColor;
 	}
 
-	function GetAbsHeight($aImg) {
+	function GetAbsHeight(Image $aImg) {
+		$m=-1;
+		
 		if( is_int($this->iHeightFactor) || $this->leftMark->show || $this->rightMark->show ) {
-			$m=-1;
 			if( is_int($this->iHeightFactor) )
-			$m = $this->iHeightFactor;
+				$m = $this->iHeightFactor;
 			if( $this->leftMark->show )
-			$m = max($m,$this->leftMark->width*2);
+				$m = max($m,$this->leftMark->width*2);
 			if( $this->rightMark->show )
-			$m = max($m,$this->rightMark->width*2);
-
-			return $m;
+				$m = max($m,$this->rightMark->width*2);
 		}
-		else
-		return -1;
+		
+		if( $this->progressbar->iStart && $this->progressbar->iProgress > 0 &&
+		      (is_int($this->progressbar->iHeight) || $this->progressbar->leftMark->show ||
+		      $this->progressbar->rightMark->show)) {
+			if ($m == -1) $m = 0;
+
+			$m += $this->progressbar->iHeight + $this->progressbar->iPadding;
+
+			if( $this->progressbar->leftMark->show )
+				$m = max($m,$this->progressbar->leftMark->width*2);
+			if( $this->progressbar->rightMark->show )
+				$m = max($m,$this->progressbar->rightMark->width*2);
+		}
+		
+		return $m;
 	}
 
-	function SetPattern($aPattern,$aColor="blue",$aDensity=95) {
+	function setPattern($aPattern,$aColor="blue",$aDensity=95) {
 		$this->iPattern = $aPattern;
 		$this->iPatternColor = $aColor;
 		$this->iPatternDensity = $aDensity;
 	}
 
-	function Stroke($aImg,$aScale) {
+	function Stroke(Image $aImg, GanttScale $aScale) { 
 		$factory = new RectPatternFactory();
-		$prect = $factory->Create($this->iPattern,$this->iPatternColor);
-		$prect->SetDensity($this->iPatternDensity);
+		$bar_drawn = true;
 
-		// If height factor is specified as a float between 0,1 then we take it as meaning
-		// percetage of the scale width between horizontal line.
-		// If it is an integer > 1 we take it to mean the absolute height in pixels
-		if( $this->iHeightFactor > -0.0 && $this->iHeightFactor <= 1.1)
-		$vs = $aScale->GetVertSpacing()*$this->iHeightFactor;
-		elseif(is_int($this->iHeightFactor) && $this->iHeightFactor>2 && $this->iHeightFactor < 200 )
-		$vs = $this->iHeightFactor;
-		else {
+		if (!is_int($this->iHeightFactor) && $this->progressbar->iStart && 
+		      $this->iHeightFactor+$this->progressbar->iHeight > 0.9) {
+		      	$barH = $this->iHeightFactor+$this->progressbar->iHeight;
+		      	$this->iHeightFactor *= 0.9/$barH;
+		      	$this->progressbar->iHeight *= 0.9/$barH;
+		 }
+
+//		 If height factor is specified as a float between 0,1 then we take it as meaning
+//		 percetage of the scale width between horizontal line.
+//		 If it is an integer > 1 we take it to mean the absolute height in pixels
+		if( $this->iHeightFactor > -0.0 && $this->iHeightFactor <= 1.1) {
+			$vs = $aScale->GetVertSpacing()*$this->iHeightFactor;
+		} elseif(is_int($this->iHeightFactor) && $this->iHeightFactor>2 && $this->iHeightFactor < 200 ) {
+			$vs = $this->iHeightFactor;
+		} else {
 			JpGraphError::RaiseL(6028,$this->iHeightFactor);
 			//	("Specified height (".$this->iHeightFactor.") for gantt bar is out of range.");
 		}
@@ -185,86 +278,58 @@ class PMGanttBar extends GanttPlotObject {
 
 		$xt = round($aScale->TranslateDate($limst));
 		$xb = round($aScale->TranslateDate($limen));
-
-		static $ypre, $xtpre, $xbpre, $drawn;
-		if (strlen($this->iLabel)) {
-			$yt = round($aScale->TranslateVertPos($this->iVPos)-$vs-($aScale->GetVertSpacing()/2-$vs/2));
-			$yb = round($aScale->TranslateVertPos($this->iVPos)-($aScale->GetVertSpacing()/2-$vs/2));
-			$ypre = $yb;
-			$xtpre = $xt;
-			$xbpre = $xb;
-			$drawn = false;
-		} else {
-			$yt = $ypre;
-			$yb = $ypre+$vs;
-		}
+		
+		$yt = round($aScale->TranslateVertPos($this->iVPos)-$vs-($aScale->GetVertSpacing()/2-$vs/2));
+		$yb = round($aScale->TranslateVertPos($this->iVPos)-($aScale->GetVertSpacing()/2-$vs/2));
+		
 		$middle = round($yt+($yb-$yt)/2);
 		$this->StrokeActInfo($aImg,$aScale,$middle);
 
 		// Check if the bar is totally outside the current scale range
 		if( $en <  $aScale->iStartDate || $st > $aScale->iEndDate )
-		return;
-		
-		if (strlen($this->iLabel)) {
-			$drawn = true;
-		}
-		
-		if ($drawn && !strlen($this->iLabel) && isset($ypre) && isset($xtpre) && isset($xbpre)) {
-			$join_len = 0;
+			$bar_drawn = false;
 
-			if ($xb > $xbpre && $xt >= $xbpre) {
-				$join_len = $xb - $xbpre;
-				$join_x = $xbpre;
-			} else if ($xt < $xtpre && $xb <= $xtpre) {
-				$join_len = $xtpre - $xt;
-				$join_x = $xt;
-			}
+		if ($bar_drawn) {
+			$prect = $factory->Create($this->iPattern,$this->iPatternColor);
+			$prect->setDensity($this->iPatternDensity);
 
-			if ($join_len > 0) {
-				$join = $factory->Create($this->iPattern,$this->iFrameColor);
-				$join->SetDensity($this->progress->iDensity);
-				$join->SetBackground($this->progress->iFillColor);
-				$pos = new Rectangle($join_x, $ypre, $join_len, 1);
-				$join->SetPos($pos);
-				$join->Stroke($aImg);
-			}
-		}
-		
-		// Remember the positions for the bar
-		$this->SetConstrainPos($xt,$yt,$xb,$yb);
-
-		$prect->ShowFrame(false);
-		$prect->SetBackground($this->iFillColor);
-		if( $this->iBreakStyle ) {
-			$aImg->SetColor($this->iFrameColor);
-			$olds = $aImg->SetLineStyle($this->iBreakLineStyle);
-			$oldw = $aImg->SetLineWeight($this->iBreakLineWeight);
-			$aImg->StyleLine($xt,$yt,$xb,$yt);
-			$aImg->StyleLine($xt,$yb,$xb,$yb);
-			$aImg->SetLineStyle($olds);
-			$aImg->SetLineWeight($oldw);
-		}
-		else {
-			if( $this->iShadow ) {
-				$aImg->SetColor($this->iFrameColor);
-				$aImg->ShadowRectangle($xt,$yt,$xb,$yb,$this->iFillColor,$this->iShadowWidth,$this->iShadowColor);
-				$prect->SetPos(new Rectangle($xt+1,$yt+1,$xb-$xt-$this->iShadowWidth-2,$yb-$yt-$this->iShadowWidth-2));
-				$prect->Stroke($aImg);
+			// Remember the positions for the bar
+			$this->setConstrainPos($xt,$yt,$xb,$yb);
+	
+			$prect->ShowFrame(false);
+			$prect->setBackground($this->iFillColor);
+			if( $this->iBreakStyle ) {
+				$aImg->setColor($this->iFrameColor);
+				$olds = $aImg->setLineStyle($this->iBreakLineStyle);
+				$oldw = $aImg->setLineWeight($this->iBreakLineWeight);
+				$aImg->StyleLine($xt,$yt,$xb,$yt);
+				$aImg->StyleLine($xt,$yb,$xb,$yb);
+				$aImg->setLineStyle($olds);
+				$aImg->setLineWeight($oldw);
 			}
 			else {
-				$prect->SetPos(new Rectangle($xt,$yt,$xb-$xt+1,$yb-$yt+1));
-				$prect->Stroke($aImg);
-				$aImg->SetColor($this->iFrameColor);
-				$aImg->Rectangle($xt,$yt,$xb,$yb);
+				if( $this->iShadow ) {
+					$aImg->setColor($this->iFrameColor);
+					$aImg->ShadowRectangle($xt,$yt,$xb,$yb,$this->iFillColor,$this->iShadowWidth,$this->iShadowColor);
+					$prect->setPos(new Rectangle($xt+1,$yt+1,$xb-$xt-$this->iShadowWidth-2,$yb-$yt-$this->iShadowWidth-2));
+					$prect->Stroke($aImg);
+				}
+				else {
+					$prect->setPos(new Rectangle($xt,$yt,$xb-$xt+1,$yb-$yt+1));
+					$prect->Stroke($aImg);
+					$aImg->setColor($this->iFrameColor);
+					$aImg->Rectangle($xt,$yt,$xb,$yb);
+				}
 			}
 		}
 
 		// Draw progress bar inside activity bar
-		if( $this->progress->iProgress > 0 ) {
+		if($bar_drawn && $this->progressbar->iProgress > 0 &&
+		   !$this->progressbar->iStart && !$this->progressbar->iEnd) {
 
 			$xtp = $aScale->TranslateDate($st);
 			$xbp = $aScale->TranslateDate($en);
-			$len = ($xbp-$xtp)*$this->progress->iProgress-1;
+			$len = ($xbp-$xtp)*$this->progressbar->iProgress-1;
 
 			$endpos = $xtp+$len;
 			if( $endpos > $xt ) {
@@ -280,57 +345,179 @@ class PMGanttBar extends GanttPlotObject {
 				if( $xtp+$len-1 > $xb )
 				$len = $xb - $xtp ;
 
-				$prog = $factory->Create($this->progress->iPattern,$this->progress->iColor);
-				$prog->SetDensity($this->progress->iDensity);
-				$prog->SetBackground($this->progress->iFillColor);
+				$prog = $factory->Create($this->progressbar->iPattern,$this->progressbar->iColor);
+				$prog->setDensity($this->progressbar->iDensity);
+				$prog->setBackground($this->progressbar->iFillColor);
 				$barheight = ($yb-$yt+1);
 				if( $this->iShadow )
-				$barheight -= $this->iShadowWidth;
-				$progressheight = floor($barheight*$this->progress->iHeight);
+					$barheight -= $this->iShadowWidth;
+				$progressheight = floor($barheight*$this->progressbar->iHeight);
 				$marg = ceil(($barheight-$progressheight)/2);
 				$pos = new Rectangle($xtp+1,$yt + $marg, $len,$barheight-2*$marg);
-				$prog->SetPos($pos);
+				$prog->setPos($pos);
 				$prog->Stroke($aImg);
 			}
+		} else if ($this->progressbar->iProgress > 0) {
+			if (!$this->progressbar->iStart)
+				$this->progressbar->setStartEnd($this->iStart, $this->iEnd);
+			
+			$progress_bar_drawn = true;
+
+			$prst = $aScale->NormalizeDate($this->progressbar->iStart);
+			$pren = $aScale->NormalizeDate($this->progressbar->iEnd);
+			
+			if (!$this->progressbar->iHeight)
+				$this->progressbar->iHeight = $this->iHeight;
+			
+			if( $this->progressbar->iHeight > -0.0 && $this->progressbar->iHeight <= 1.1)
+				$prvs = $aScale->GetVertSpacing()*$this->progressbar->iHeight;
+			elseif(is_int($this->progressbar->iHeight) && $this->progressbar->iHeight>2 && $this->progressbar->iHeight < 200 )
+				$prvs = $this->progressbar->iHeight;
+			else {
+				JpGraphError::RaiseL(6028,$this->iHeightFactor);
+				//	("Specified height (".$this->iHeightFactor.") for gantt bar is out of range.");
+			}
+			
+			$limprst = max($prst,$aScale->iStartDate);
+			$limpren = min($pren,$aScale->iEndDate);
+			
+			$prxt = round($aScale->TranslateDate($limprst));
+			$prxb = round($aScale->TranslateDate($limpren));
+			$pryt = $yt+$vs+$this->progressbar->iPadding;
+			$pryb = $pryt+$prvs;
+			$prmiddle = round($pryt+($pryb-$pryt)/2);
+			
+			if($pren <  $aScale->iStartDate || $prst > $aScale->iEndDate)
+				$progress_bar_drawn = false;
+			
+			if ($progress_bar_drawn) {
+				
+				$prxtp = $aScale->TranslateDate($prst);
+				$prxbp = $aScale->TranslateDate($pren);
+				$len = ($prxbp-$prxtp)*$this->progressbar->iProgress-1;
+				
+				if( $prxtp+$len > $prxt ) {
+					$len -= ($prxt-$prxtp);
+					
+					if( $prxtp < $prxt )
+						$prxtp = $prxt;
+						
+					if( $prxtp+$len-1 > $prxb )
+						$len = $prxb - $prxtp ;
+					
+					$draw_progress = true;
+				}
+			
+				$aImg->setColor($this->progressbar->iFrameColor);
+				$aImg->Rectangle($prxt,$pryt,$prxb,$pryb);
+
+				if ($prxb-$prxt > 1) {
+					$prog = $factory->Create(GANTT_SOLID, $this->progressbar->iBackgroundFillColor);
+					$prog->setPos(new Rectangle($prxt+1,$pryt+1,$prxb-$prxt-1,$pryb-$pryt-1));
+					$prog->Stroke($aImg);
+				
+					$prog = $factory->Create($this->progressbar->iBackgroundPattern, $this->progressbar->iBackgroundColor);
+					$prog->setPos(new Rectangle($prxt+1,$pryt+1,$prxb-$prxt-1,$pryb-$pryt-1));
+					$prog->setDensity($this->progressbar->iBackGroundDensity);
+					$prog->ShowFrame(false);
+					$prog->Stroke($aImg);
+				
+					if ($draw_progress) {
+						$prog = $factory->Create(GANTT_SOLID, $this->progressbar->iFillColor);
+						$margin = ($this->progressbar->iProgressPadding > $pryb-$pryt1+1) ? 0 : $this->progressbar->iProgressPadding;
+						$prog->setPos(new Rectangle($prxt+1,$pryt+1+$margin,$len,$pryb-$pryt-1-$margin*2));
+						$prog->setDensity($this->progressbar->iDensity);
+						$prog->ShowFrame(false);
+						$prog->Stroke($aImg);
+					}
+				}
+			}
+			
+				
+			if ($prxb > $xb && $prxt >= $xb) {
+				$join_len = $prxt - $xb;
+				$join_x = $xb;
+			} else if ($prxt < $xt && $prxb <= $xt) {
+				$join_len = $xt - $prxb;
+				$join_x = $xt;
+			}
+			
+			$join_y = $pryt;
+						
+			if ($join_len > 0) {
+				if ($join_x == $xt)
+					$join_len = -$join_len;
+				
+				$x_min = $aScale->TranslateDate($aScale->iStartDate);
+				$x_max = $aScale->TranslateDate($aScale->iEndDate);
+
+				if ($join_len > 0) {				
+					if ($join_x < $x_min) {
+						$join_len -= $x_min - $join_x;
+						$join_x = $x_min;
+					}
+					
+					if ($join_x+$join_len > $x_max) {
+						$join_len = $x_max - $join_x;
+					}
+				} else {
+					if ($join_x+$join_len < $x_min) {
+						$join_len = $x_min - $join_x;
+					}
+					
+					if ($join_x > $x_max) {
+						$join_len += $join_x - $x_max;
+						$join_x = $x_max;
+					}
+				}		
+				
+				$aImg->SetColor($this->iFrameColor);
+				$aImg->Polygon(array($join_x, $yb,
+                                     $join_x, $join_y,
+                                     $join_x+$join_len, $join_y));
+			}
 		}
+		
+		if (!$bar_drawn && !$progress_bar_drawn)
+			return;
 
 		// We don't plot the end mark if the bar has been capped
-		if( $limst == $st ) {
+		if( $limst == $st && $bar_drawn) {
 			$y = $middle;
 			// We treat the RIGHT and LEFT triangle mark a little bi
 			// special so that these marks are placed right under the
 			// bar.
 
-			if( $this->leftMark->GetType() == MARK_LEFTTRIANGLE ) {
+			if( $this->leftMark->GetType() == MARK_LEFTTRIANGLE && $this->leftMark->show) {
 				$y = $yb ;
 
 				$bmark = new PlotMark();
-				$bmark->SetType($this->leftMark->GetType());
-				$bmark->SetColor($this->iFrameColor);
-				$bmark->SetFillColor($this->iFillColor);
+				$bmark->setType($this->leftMark->GetType());
+				$bmark->setColor($this->iFrameColor);
+				$bmark->setFillColor($this->iFillColor);
 				$size = $this->leftMark->GetWidth();
-				$bmark->SetSize($size % 2 == 0 ? $size+1 : $size+2);
+				$bmark->setSize($size % 2 == 0 ? $size+1 : $size+2);
 				$bmark->Show();
 				$bmark->Stroke($aImg, $xt++, $y);
 			}
 
 			$this->leftMark->Stroke($aImg,$xt,$y);
 		}
-		if( $limen == $en ) {
+		if( $limen == $en && $bar_drawn) {
 			$y = $middle;
 			// We treat the RIGHT and LEFT triangle mark a little bi
 			// special so that these marks are placed right under the
 			// bar.
 
-			if( $this->rightMark->GetType() == MARK_RIGHTTRIANGLE ) {
+			if( $this->rightMark->GetType() == MARK_RIGHTTRIANGLE && $this->rightMark->show) {
 				$y = $yb ;
 
 				$bmark = new PlotMark();
-				$bmark->SetType($this->rightMark->GetType());
-				$bmark->SetColor($this->iFrameColor);
-				$bmark->SetFillColor($this->iFillColor);
+				$bmark->setType($this->rightMark->GetType());
+				$bmark->setColor($this->iFrameColor);
+				$bmark->setFillColor($this->iFillColor);
 				$size = $this->rightMark->GetWidth();
-				$bmark->SetSize($size % 2 == 0 ? $size+1 : $size+2);
+				$bmark->setSize($size % 2 == 0 ? $size+1 : $size+2);
 				$bmark->Show();
 				$bmark->Stroke($aImg, $xb--, $y);
 			}
@@ -342,6 +529,43 @@ class PMGanttBar extends GanttPlotObject {
 			$margin += $this->rightMark->GetWidth();
 
 			$this->caption->Stroke($aImg,$xb+$margin,$middle);
+		}
+		
+		if( $limprst == $prst && $progress_bar_drawn) {
+			$y = $prmiddle;
+
+			if( $this->progressbar->leftMark->GetType() == MARK_LEFTTRIANGLE && $this->progressbar->leftMark->show) {
+				$y = $pryb ;
+
+				$bmark = new PlotMark();
+				$bmark->setType($this->progressbar->leftMark->GetType());
+				$bmark->setColor($this->progressbar->iFrameColor);
+				$bmark->setFillColor($this->progressbar->iFillColor);
+				$size = $this->progressbar->leftMark->GetWidth();
+				$bmark->setSize($size % 2 == 0 ? $size+1 : $size+2);
+				$bmark->Show();
+				$bmark->Stroke($aImg, $prxt++, $y);
+			}
+
+			$this->progressbar->leftMark->Stroke($aImg,$prxt,$y);
+		}
+		if( $limpren == $pren && $progress_bar_drawn) {
+			$y = $prmiddle;
+
+			if( $this->progressbar->rightMark->GetType() == MARK_RIGHTTRIANGLE && $this->progressbar->rightMark->show) {
+				$y = $pryb ;
+
+				$bmark = new PlotMark();
+				$bmark->setType($this->progressbar->rightMark->GetType());
+				$bmark->setColor($this->progressbar->iFrameColor);
+				$bmark->setFillColor($this->progressbar->iFillColor);
+				$size = $this->progressbar->rightMark->GetWidth();
+				$bmark->setSize($size % 2 == 0 ? $size+1 : $size+2);
+				$bmark->Show();
+				$bmark->Stroke($aImg, $prxb--, $y);
+			}
+
+			$this->progressbar->rightMark->Stroke($aImg,$prxb,$y);
 		}
 	}
 }
@@ -365,14 +589,14 @@ class PMGantt implements PMGraph {
 	private $pShowResources;
 	private $pShowTaskGroups;
 	private $pUseColors;
-	
+
 	private $pWidth;
 	private $pHeight;
 
 	private $pProject;
 	private $pTasks;
 	private $pGraph;
-	
+
 	private $pChanged;
 
 	public function PMGantt($project) {
@@ -419,7 +643,7 @@ class PMGantt implements PMGraph {
 		$this->pWidth = intval($w) > 1 ? intval($w) : 0;
 		$this->pChanged = true;
 	}
-	
+
 	public function setHeight($h) {
 		$this->pHeight = intval($h) > 1 ? intval($h) : 0;
 		$this->pChanged = true;
@@ -464,17 +688,17 @@ class PMGantt implements PMGraph {
 		$this->buildGANTT();
 			
 		if ($this->pGraph->img->width == 0)
-			$this->pGraph->AutoSize();
-		
+		$this->pGraph->AutoSize();
+
 		return $this->pGraph->img->width;
 	}
-	
+
 	public function getHeight() {
 		$this->buildGANTT();
-		
+
 		if ($this->pGraph->img->height == 0)
-			$this->pGraph->AutoSize();
-		
+		$this->pGraph->AutoSize();
+
 		return $this->pGraph->img->height;
 	}
 
@@ -508,7 +732,7 @@ class PMGantt implements PMGraph {
 	//--
 	private function buildGANTT() {
 		if ($this->pGraph != null && !$this->pChanged)
-			return;
+		return;
 
 		$this->pullProjectData();
 		$this->pullTasks();
@@ -529,7 +753,7 @@ class PMGantt implements PMGraph {
 
 	private function pullTasks() {
 		if (isset($this->pProject['tasks']))
-			unset($this->pProject['tasks']);
+		unset($this->pProject['tasks']);
 
 		$select = "tasks.task_id, task_parent, task_name, task_start_date, task_finish_date, ".
 		          "task_priority, task_order, task_project, task_milestone, project_name";
@@ -566,19 +790,19 @@ class PMGantt implements PMGraph {
 
 
 			if (CTask::getTaskLevel($row["task_id"]) <= $this->pTaskLevel &&
-				!in_array($row["task_id"], $this->pClosedTasks) ||
-			    in_array($row["task_id"], $this->pClosedTasks) &&
-			    !in_array($row["task_parent"], $this->pClosedTasks) &&
-			    !CTask::isLeafSt($row["task_id"])) {
-				   $add = true;
+			!in_array($row["task_id"], $this->pClosedTasks) ||
+			in_array($row["task_id"], $this->pClosedTasks) &&
+			!in_array($row["task_parent"], $this->pClosedTasks) &&
+			!CTask::isLeafSt($row["task_id"])) {
+				$add = true;
 			}
 
 			if (in_array($row["task_id"], $this->pOpenedTasks) ||
-				in_array($row["task_parent"], $this->pOpenedTasks))
-				$add = true;
+			in_array($row["task_parent"], $this->pOpenedTasks))
+			$add = true;
 
 			if ($add)
-				$this->pProject['tasks'][] = $row;
+			$this->pProject['tasks'][] = $row;
 		}
 	}
 
@@ -610,7 +834,7 @@ class PMGantt implements PMGraph {
 
 			foreach ($this->pTasks as $gitem) {
 				if ($task['task_id'] == $gitem['task_parent'] &&
-					$task['task_id'] != $gitem['task_id']) {
+				$task['task_id'] != $gitem['task_id']) {
 					$found = true;
 					break;
 				}
@@ -632,25 +856,25 @@ class PMGantt implements PMGraph {
 	}
 
 	private function populateTasks(&$a, $level=0) {
-			$a['level'] = $level;
-			$this->pTasks[] = $a;
+		$a['level'] = $level;
+		$this->pTasks[] = $a;
 	}
 
 	private function initDates() {
 		if (!$this->pStartDate)
-			$this->pStartDate = $this->pProject['project_start_date'];
+		$this->pStartDate = $this->pProject['project_start_date'];
 
 		if ($this->pProject["project_finish_date"] == "0000-00-00 00:00:00" ||
-		    empty($this->pProject["project_finish_date"])) {
-			 $this->pProject["project_finish_date"] = $this->pStartDate;
+		empty($this->pProject["project_finish_date"])) {
+			$this->pProject["project_finish_date"] = $this->pStartDate;
 		}
 
 		if ($this->pProject['project_active'])
-			$this->pToday = date("Y-m-d")." 12:00:00";
+		$this->pToday = date("Y-m-d")." 12:00:00";
 		else
-			$this->pToday = date("Y-m-d", strtotime($this->pProject['project_today']))." 12:00:00";
+		$this->pToday = date("Y-m-d", strtotime($this->pProject['project_today']))." 12:00:00";
 	}
-	
+
 	private function getTaskResources($tid) {
 
 		$q = new DBQuery();
@@ -670,7 +894,7 @@ class PMGantt implements PMGraph {
 		             'sum(task_log_hours) as actual_effort');
 		$q->addTable('task_log','tl');
 		$q->addWhere('task_log_proles_id > 0 and '.
-		             (!CTask::isLeafSt($tid) ? '(SELECT COUNT(*) FROM tasks AS tt WHERE '.
+		(!CTask::isLeafSt($tid) ? '(SELECT COUNT(*) FROM tasks AS tt WHERE '.
 		                                     'tl.task_log_creator != tt.task_id'.
 			                    '&& tt.task_parent = tl.task_log_task) < 1 and ' : '').
 			         'task_log_task '.(!CTask::isLeafSt($tid) ? 'in ('.CTask::getChild($tid, $this->pProjectID).')' : '= '.$tid));
@@ -690,7 +914,7 @@ class PMGantt implements PMGraph {
 			}
 
 			if ($found == false)
-				$pres['actual_effort'] = 0;
+			$pres['actual_effort'] = 0;
 		}
 
 		return $resources;
@@ -698,40 +922,42 @@ class PMGantt implements PMGraph {
 
 	private function initGraph() {
 		global $AppUI;
-		
+
 		$this->pGraph = new GanttGraph($this->pWidth, $this->pHeight);
 
-		$this->pGraph->SetUserFont1('DroidSans.ttf', 'DroidSans-Bold.ttf');
-		$this->pGraph->SetUserFont2('DroidSerif-Regular.ttf', 'DroidSerif-Bold.ttf',
+		$this->pGraph->setUserFont1('DroidSans.ttf', 'DroidSans-Bold.ttf');
+		$this->pGraph->setUserFont2('DroidSerif-Regular.ttf', 'DroidSerif-Bold.ttf',
 		                            'DroidSerif-Italic.ttf', 'DroidSerif-BoldItalic.ttf');
-		$this->pGraph->SetUserFont3('DroidSansMono.ttf');
+		$this->pGraph->setUserFont3('DroidSansMono.ttf');
 
 		$this->pGraph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HDAY | GANTT_HWEEK);
 
-		$this->pGraph->SetFrame(false);
-		$this->pGraph->SetBox(true, "#000000", 2);
-		$this->pGraph->scale->week->SetStyle(WEEKSTYLE_FIRSTDAY);
-		//$graph->scale->day->SetStyle(DAYSTYLE_SHORTDATE2);
+		$this->pGraph->setFrame(false);
+		$this->pGraph->setBox(true, "#000000", 2);
+		$this->pGraph->scale->week->setStyle(WEEKSTYLE_FIRSTDAY);
+		//$graph->scale->day->setStyle(DAYSTYLE_SHORTDATE2);
 
 		// This configuration variable may be obsolete
 		$jpLocale = dPgetConfig('jpLocale');
 		if ($jpLocale)
-			$this->pGraph->scale->SetDateLocale($jpLocale);
+		$this->pGraph->scale->setDateLocale($jpLocale);
 
 		if ($this->pStartDate && $this->pEndDate)
-			$this->pGraph->SetDateRange($this->pStartDate, $this->pEndDate);
+		$this->pGraph->setDateRange($this->pStartDate, $this->pEndDate);
 
-		$this->pGraph->scale->actinfo->vgrid->SetColor('gray');
-		$this->pGraph->scale->actinfo->SetColor('darkgray');
+		$this->pGraph->scale->actinfo->vgrid->setColor('gray');
+		$this->pGraph->scale->actinfo->setColor('darkgray');
 		$titles_size = ($this->pShowNames && $this->pWidth != 0) ? array($this->pWidth/6) : null;
-		$this->pGraph->scale->actinfo->SetColTitles(array($AppUI->_('Task', UI_OUTPUT_RAW)), $titles_size);
-		$this->pGraph->scale->actinfo->SetFont(FF_USERFONT);
+		$this->pGraph->scale->actinfo->setColTitles(array($AppUI->_('Task', UI_OUTPUT_RAW)), $titles_size);
+		$this->pGraph->scale->actinfo->setFont(FF_USERFONT);
 
-		$this->pGraph->scale->tableTitle->Set($this->pProject["project_name"]);
-		$this->pGraph->scale->tableTitle->SetFont(FF_USERFONT1, FS_BOLD, 12);
+		$this->pGraph->scale->tableTitle->set($this->pProject["project_name"]);
+		$this->pGraph->scale->tableTitle->setFont(FF_USERFONT1, FS_BOLD, 12);
 
-		if ($this->pUseColors)
-			$this->pGraph->scale->SetTableTitleBackground("#".$this->pProject["project_color_identifier"]);
+		if ($this->pUseColors) {
+			$this->pGraph->scale->setTableTitleBackground("#".$this->pProject["project_color_identifier"]);
+			$this->pGraph->scale->tableTitle->setColor(bestColor($this->pProject["project_color_identifier"]));
+		}
 
 		$this->pGraph->scale->tableTitle->Show(true);
 
@@ -742,7 +968,7 @@ class PMGantt implements PMGraph {
 			$this->pGraph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH);
 		} else if ($tinterval > 120){
 			$this->pGraph->ShowHeaders(GANTT_HYEAR | GANTT_HMONTH | GANTT_HWEEK );
-			$this->pGraph->scale->week->SetStyle(WEEKSTYLE_WNBR);
+			$this->pGraph->scale->week->setStyle(WEEKSTYLE_WNBR);
 		}
 	}
 
@@ -785,7 +1011,7 @@ class PMGantt implements PMGraph {
 	private function populateGraph() {
 		global $AppUI;
 
-//		$now = "2009-12-05 12:00:00";//date("y-m-d");
+		//		$now = "2009-12-05 12:00:00";//date("y-m-d");
 		$now = $this->pToday;
 
 		for($i = 0, $row = 0; $i < count(@$this->pTasks); $i++) {
@@ -802,14 +1028,14 @@ class PMGantt implements PMGraph {
 			$name = Ctask::getWBS($a["task_id"]).".".($this->pShowNames ? " ".$a["task_name"] : "");
 
 			// TODO locale
-//			if ($locale_char_set=='utf-8' && function_exists("utf8_decode") ) {
-//				$name = utf8_decode($name);
-//			}
+			//			if ($locale_char_set=='utf-8' && function_exists("utf8_decode") ) {
+			//				$name = utf8_decode($name);
+			//			}
 
 			if ($task_leaf && !$task_leaf_real)
-				$name = "+".@str_repeat(" ", $level-2).$name;
+			$name = "+".@str_repeat(" ", $level-2).$name;
 			else
-				$name = str_repeat(" ", $level).$name;
+			$name = str_repeat(" ", $level).$name;
 
 			//using new jpGraph determines using Date object instead of string
 			$start = $a["task_start_date"];
@@ -827,41 +1053,29 @@ class PMGantt implements PMGraph {
 			if ($progress > 100) $progress = 100;
 			else if ($progress < 0) $progress = 0;
 
-			$cap = "";
-			if(!$start || $start == "0000-00-00"){
-				$start = !$end ? date("Y-m-d") : $end;
-				$cap .= "(no start date)";
-			}
+			$title_size = 8;
+			$bar = new PMGanttBar($row++, array($name), $start, $end, null,
+			                      $task_leaf ? intval($title_size*1.6) : intval($title_size*1.2));
 
-			if(!$end) {
-				$end = $start;
-				$cap .= " (no finish date)";
-			} else {
-				$cap = "";
-			}
-
-			$bar = new PMGanttBar($row++, array($name), $start, $end, $cap, $task_leaf ? 0.5 : 0.25);//se padre sarebbe meglio 1
-			$bar->title->SetFont(FF_USERFONT2, FS_NORMAL, 8);
-//TODO use proprtional cut
+			$bar->title->setFont(FF_USERFONT2, FS_NORMAL, $title_size);
+			//TODO use proprtional cut
 			if (!$this->pUseColors) {
-				$bar->SetColor('black');
-				$bar->SetFillColor('white');
-				$bar->SetPattern(BAND_SOLID,'white');
+				$bar->setColor('black');
+				$bar->setFillColor('white');
+				$bar->setPattern(BAND_SOLID,'white');
 			}
 
 			if ($this->pShowNames) {
 				$tst = new Image();
-				$tst->ttf->SetUserFont2('DroidSerif-Regular.ttf');
+				$tst->ttf->setUserFont2('DroidSerif-Regular.ttf');
 
 				$cut = 2;
 				while ($bar->title->GetWidth($tst) >= $this->pWidth/6 && $cut < strlen($name)) {
 					$n = substr($name, 0, strlen($name)-(1+$cut))."...";
-					$bar->title->Set($n);
+					$bar->title->set($n);
 					$cut++;
 				}
 			}
-
-			$bar2 = null;
 
 			$child = CTask::getChild($a["task_id"], $this->pProjectID);
 			$tstart = CTask::getActualStartDate($a["task_id"], $child);
@@ -887,7 +1101,7 @@ class PMGantt implements PMGraph {
 					$lend = $tend['task_log_finish_date'];
 
 					if ($progress < 100 && strtotime($lend) < strtotime($now) ||
-					       strtotime($end) > strtotime($now) && strtotime($lstart) < strtotime($now)) {
+					strtotime($end) > strtotime($now) && strtotime($lstart) < strtotime($now)) {
 						$lend = substr($now, 0, 10);
 					}
 				} else {
@@ -898,80 +1112,82 @@ class PMGantt implements PMGraph {
 					$prMarkshow = true;
 
 				if (strtotime(substr($lend, 0, 10)) == strtotime(substr($now, 0, 10)))
-				    $prMarkshow = false;
+					$prMarkshow = false;
 
 				$rMarkshow = (!$prMarkshow);
 
 				if ($rMarkshow && strtotime($end) == strtotime(substr($now, 0, 10)) ||
-				    ($progress < 100 && strtotime($end) < strtotime($now))) {
+				     ($progress < 100 && strtotime($end) < strtotime($now))) {
 					$rMarkshow = false;
 				}
 
-				$bar2 = new PMGanttBar($row++, '', $lstart, $lend, '', $task_leaf ? 0.3 : 0.20);
+				$bar->progressbar->setStartEnd($lstart, $lend);
+				$bar->progressbar->setHeight($task_leaf ? $title_size : intval($title_size/2)+1);
+				$bar->progressbar->setColor('black');
+				$bar->progressbar->setBackgroundFillColor('white');
 
 				if ($task_leaf) {
-					$bar2->SetPattern(GANTT_RDIAG, $this->pUseColors ? 'red' : 'black', 95);
-				} else {
-					$bar2->SetColor('black');
-					$bar2->SetFillColor('black');
-					$bar2->SetPattern(BAND_SOLID, $this->pUseColors ? 'gray3' : 'white');
-
-					$bar2->progress->SetFillColor($this->pUseColors ? 'green' : 'gray6');
-					$bar2->progress->SetPattern(BAND_SOLID, $this->pUseColors ? 'green' : 'gray6', 98);
+					$bar->progressbar->setBackgroundPattern(GANTT_RDIAG, $this->pUseColors ? 'red' : 'black', 95);
+					$bar->progressbar->setProgressPadding(1);
+				} else {				
+					$bar->progressbar->setBackgroundPattern(BAND_SOLID, $this->pUseColors ? 'gray3' : 'white');
+					
+					$bar->progressbar->setFillColor($this->pUseColors ? 'green' : 'gray6');
+					$bar->progressbar->setPattern(BAND_SOLID, $this->pUseColors ? 'green' : 'gray6', 98);
 
 					if ($plMarkshow) {
-						$bar2->leftMark->Show();
-						$bar2->leftMark->SetType(MARK_LEFTTRIANGLE);
-						$bar2->leftMark->SetWidth(2);
+						$bar->progressbar->leftMark->Show();
+						$bar->progressbar->leftMark->setType(MARK_LEFTTRIANGLE);
+						$bar->progressbar->leftMark->setWidth(2);
 
 						if ($progress == 0) {
-							$bar2->leftMark->SetColor('black');
-							$bar2->leftMark->SetFillColor('black');
+							$bar->progressbar->leftMark->setColor('black');
+							$bar->progressbar->leftMark->setFillColor('black');
 						} else {
-							$bar2->leftMark->SetColor($this->pUseColors ? 'green' : 'gray6');
-							$bar2->leftMark->SetFillColor($this->pUseColors ? 'green' : 'gray6');
+							$bar->progressbar->leftMark->setColor($this->pUseColors ? 'green' : 'gray6');
+							$bar->progressbar->leftMark->setFillColor($this->pUseColors ? 'green' : 'gray6');
 						}
 					}
 
 					if ($prMarkshow) {
-						$bar2->rightMark->Show();
-						$bar2->rightMark->SetType(MARK_RIGHTTRIANGLE);
-						$bar2->rightMark->SetWidth(2);
+						$bar->progressbar->rightMark->Show();
+						$bar->progressbar->rightMark->setType(MARK_RIGHTTRIANGLE);
+						$bar->progressbar->rightMark->setWidth(2);
 
 						if ($progress != 100) {
-							$bar2->rightMark->SetColor($this->pUseColors ? 'gray3' : 'white');
-							$bar2->rightMark->SetFillColor($this->pUseColors ? 'gray3' : 'white');
+							$bar->progressbar->rightMark->setColor($this->pUseColors ? 'gray3' : 'white');
+							$bar->progressbar->rightMark->setFillColor($this->pUseColors ? 'gray3' : 'white');
 						} else {
-							$bar2->rightMark->SetColor($this->pUseColors ? 'green' : 'gray6');
-							$bar2->rightMark->SetFillColor($this->pUseColors ? 'green' : 'gray6');
+							$bar->progressbar->rightMark->setColor($this->pUseColors ? 'green' : 'gray6');
+							$bar->progressbar->rightMark->setFillColor($this->pUseColors ? 'green' : 'gray6');
 						}
 					}
 				}
 
-				$bar2->progress->Set($progress/100);
+				$bar->progressbar->setProgress($progress/100);
 			}
 
 
 			if (!$task_leaf) {
 
-				$bar->SetColor('black');
-				$bar->SetFillColor('black');
-				$bar->SetPattern(BAND_SOLID,'black');
+				$bar->setColor('black');
+				$bar->setFillColor('black');
+				$bar->setPattern(BAND_SOLID,'black');
 
 				if ($lMarkshow) {
 					$bar->leftMark->Show();
-					$bar->leftMark->SetType(MARK_LEFTTRIANGLE);
-					$bar->leftMark->SetWidth(1);
-					$bar->leftMark->SetColor('black');
-					$bar->leftMark->SetFillColor('black');
+					$bar->leftMark->setType(MARK_LEFTTRIANGLE);
+					$bar->leftMark->setWidth(1);
+					$bar->leftMark->setColor('black');
+					$bar->leftMark->setFillColor('black');
 				}
 
 				if ($rMarkshow) {
 					$bar->rightMark->Show();
-					$bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
-					$bar->rightMark->SetWidth(1);
-					$bar->rightMark->SetColor('black');
-					$bar->rightMark->SetFillColor('black');
+					$bar->rightMark->setType(MARK_RIGHTTRIANGLE);
+					$bar->rightMark->setWidth(1);
+					$bar->rightMark->setColor('black');
+					$bar->rightMark->setFillColor('black');
 				}
 			}
 
@@ -983,23 +1199,23 @@ class PMGantt implements PMGraph {
 					$res = $this->getTaskResources($a['task_id']);
 
 					$tst = new Image();
-					$tst->ttf->SetUserFont3('DroidSansMono.ttf');
+					$tst->ttf->setUserFont3('DroidSansMono.ttf');
 
 					$caption = '';
 					foreach($res as $r) {
 						$cap = trim($r['name'].",".$r['role']).";";
 
 						$bar->caption = new TextProperty($cap);
-						$bar->caption->SetFont(FF_USERFONT3, FS_NORMAL, 7);
-						
+						$bar->caption->setFont(FF_USERFONT3, FS_NORMAL, 7);
+
 						$fixed = $r['actual_effort'].'/'.$r['planned_effort']."ph,";
-						$bar->caption->Set($fixed);
+						$bar->caption->set($fixed);
 						$fixed_size = $bar->caption->GetWidth($tst);
 
 						$cut = 2;
 						while ($bar->caption->GetWidth($tst) + $fixed_size >= $this->pWidth/(3*count($res)) && $cut < strlen($cap)-1) {
 							$cap = substr($cap, 0, strlen($cap)-(1+$cut))."...";
-							$bar->caption->Set($cap);
+							$bar->caption->set($cap);
 							$cut++;
 						}
 
@@ -1009,36 +1225,32 @@ class PMGantt implements PMGraph {
 
 				//adding captions
 				$bar->caption = new TextProperty($caption);
-				$bar->caption->SetFont(FF_USERFONT3, FS_NORMAL, 7);
+				$bar->caption->setFont(FF_USERFONT3, FS_NORMAL, 7);
 				$bar->caption->Align("left", ($task_leaf || strtotime($end) > strtotime($lend) ? "center" : "bottom"));
 			}
 
 			// show tasks which are both finished and past in (dark)gray
 			if ($progress >= 100 && $end_date->isPast() && get_class($bar) == "PMGanttBar_DISABLED") {
-				//$bar->caption->SetColor('darkgray');
-				$bar->title->SetColor('darkgray');
+				//$bar->caption->setColor('darkgray');
+				$bar->title->setColor('darkgray');
 				$bar->setColor('darkgray');
-				$bar->SetFillColor('darkgray');
-				$bar->SetPattern(BAND_SOLID,'gray');
+				$bar->setFillColor('darkgray');
+				$bar->setPattern(BAND_SOLID,'gray');
 
-				if ($bar2 != null && get_class($bar2) == "PMGanttBar_DISABLED") {
-					//$bar2->caption->SetColor('gray5');
-					$bar2->setColor('gray5');
-					$bar2->SetFillColor('gray5');
-					$bar2->SetPattern(BAND_SOLID,'gray3');
-					$bar2->progress->SetFillColor('gray5');
-					$bar2->progress->SetPattern(BAND_SOLID,'gray3',98);
+				if ($bar->progressbar->iStart != null && get_class($bar->progressbar) == "PMProgressBar_DISABLED") {
+					$bar->progressbar->setColor('gray5');
+					$bar->progressbar->setBackgroundFillColor('gray5');
+					$bar->progressbar->setBackgroundPattern(BAND_SOLID,'gray3');
+					$bar->progressbar->setFillColor('gray5');
+					$bar->progressbar->setPattern(BAND_SOLID,'gray3',98);
 				}
 			}
 
 			if ($a["task_milestone"])
-				$bar->title->SetColor("#CC0000");
+				$bar->title->setColor("#CC0000");
 
 			$this->pTasks[$i]['bar'] = $bar;
 			$this->pGraph->Add($bar);
-
-			if ($bar2 != null)
-				$this->pGraph->Add($bar2);
 		}
 
 		if ($this->pShowDeps) {
@@ -1049,7 +1261,7 @@ class PMGantt implements PMGraph {
 				while($dep = db_fetch_assoc($deps)) {
 					for($d = 0; $d < count($this->pTasks); $d++ ) {
 						if($this->pTasks[$d]["task_id"] == $dep[0]) {
-							$task['bar']->SetConstrain($this->pTasks[$d]['bar']->GetLineNbr(), CONSTRAIN_ENDSTARTMIDDLE, $this->pUseColors ? 'brown' : 'gray4');
+							$task['bar']->setConstrain($this->pTasks[$d]['bar']->GetLineNbr(), CONSTRAIN_ENDSTARTMIDDLE, $this->pUseColors ? 'brown' : 'gray4');
 							break;
 						}
 					}
@@ -1059,7 +1271,7 @@ class PMGantt implements PMGraph {
 
 		//$today = date("y-m-d");
 		$vline = new GanttVLine(/*$today*/$now, $AppUI->_('Today', UI_OUTPUT_RAW), ($this->pUseColors ? 'darkred' : 'gray3'));
-		$vline->title->SetFont(FF_USERFONT3, FS_NORMAL, 9);
+		$vline->title->setFont(FF_USERFONT3, FS_NORMAL, 9);
 		$this->pGraph->Add($vline);
 	}
 }
