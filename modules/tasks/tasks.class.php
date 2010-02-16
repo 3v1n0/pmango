@@ -363,9 +363,9 @@ class CTask extends CDpObject {
 			return NULL;
 		// delete linked user tasks
 		if ($this->task_id == $this->task_parent) //project child
-			$sql="UPDATE tasks SET task_wbs_index = task_wbs_index - 1 WHERE task_parent = task_id && task_wbs_index > $this->task_wbs_index && task_id <> $this->task_id && task_project = $this->task_project";
+			$sql="UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) - 1 WHERE task_parent = task_id && CAST(task_wbs_index as UNSIGNED) > $this->task_wbs_index && task_id <> $this->task_id && task_project = $this->task_project";
 		else {
-			$sql="UPDATE tasks SET task_wbs_index = task_wbs_index - 1 WHERE task_parent = $this->task_parent && task_id <> task_parent && task_wbs_index > $this->task_wbs_index && task_id <> $this->task_id && task_project = $this->task_project";
+			$sql="UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) - 1 WHERE task_parent = $this->task_parent && task_id <> task_parent && CAST(task_wbs_index as UNSIGNED) > $this->task_wbs_index && task_id <> $this->task_id && task_project = $this->task_project";
 		}
 		if (!db_exec( $sql )) {
 			return db_error();
@@ -1148,32 +1148,32 @@ class CTask extends CDpObject {
 		if ($this->task_parent == $a) {//echo "111";
 			if ($oldParent != 0 && $this->task_parent == $oldParent) {//cambio di posizione ma non di padre
 				if ($oldWBSi < $this->task_wbs_index)
-					$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index - 1 WHERE task_parent = task_id && task_wbs_index <= $this->task_wbs_index && task_id <> $this->task_id && task_wbs_index >= $oldWBSi && task_project = $this->task_project";
+					$sql = "UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) - 1 WHERE task_parent = task_id && CAST(task_wbs_index as UNSIGNED) <= $this->task_wbs_index && task_id <> $this->task_id && CAST(task_wbs_index as UNSIGNED) >= $oldWBSi && task_project = $this->task_project";
 				elseif ($oldWBSi > $this->task_wbs_index)
-					$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index + 1 WHERE task_parent = task_id && task_wbs_index >= $this->task_wbs_index && task_id <> $this->task_id && task_wbs_index <= $oldWBSi && task_project = $this->task_project";
+					$sql = "UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) + 1 WHERE task_parent = task_id && CAST(task_wbs_index as UNSIGNED) >= $this->task_wbs_index && task_id <> $this->task_id && CAST(task_wbs_index as UNSIGNED) <= $oldWBSi && task_project = $this->task_project";
 			}
 			else //modifica di un task che � figlio di project
-				$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index + 1 WHERE task_parent = task_id && task_wbs_index >= $this->task_wbs_index && task_id <> $this->task_id && task_project = $this->task_project";
+				$sql = "UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) + 1 WHERE task_parent = task_id && CAST(task_wbs_index as UNSIGNED) >= $this->task_wbs_index && task_id <> $this->task_id && task_project = $this->task_project";
 		}
 		else {//echo "222";
 			if ($oldParent != 0 && $this->task_parent == $oldParent) {//echo "333";//cambio di posizione ma non di padre
 				//se lo sposto a destra
 				if ($oldWBSi < $this->task_wbs_index)
-					$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index - 1 WHERE task_parent = $this->task_parent && task_wbs_index <= $this->task_wbs_index && task_id <> $this->task_id && task_wbs_index >= $oldWBSi && task_parent <> task_id && task_project = $this->task_project";
+					$sql = "UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) - 1 WHERE task_parent = $this->task_parent && CAST(task_wbs_index as UNSIGNED) <= $this->task_wbs_index && task_id <> $this->task_id && CAST(task_wbs_index as UNSIGNED) >= $oldWBSi && task_parent <> task_id && task_project = $this->task_project";
 				elseif ($oldWBSi > $this->task_wbs_index)// se lo sposto a sinistra
-						$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index + 1 WHERE task_parent = $this->task_parent && task_wbs_index >= $this->task_wbs_index && task_id <> $this->task_id && task_wbs_index <= $oldWBSi && task_parent <> task_id && task_project = $this->task_project";
+						$sql = "UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) + 1 WHERE task_parent = $this->task_parent && CAST(task_wbs_index as UNSIGNED) >= $this->task_wbs_index && task_id <> $this->task_id && CAST(task_wbs_index as UNSIGNED) <= $oldWBSi && task_parent <> task_id && task_project = $this->task_project";
 			}
 			else
-				$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index + 1 WHERE task_parent = $this->task_parent && task_wbs_index >= $this->task_wbs_index && task_id <> $this->task_id && task_parent <> task_id && task_project = $this->task_project";
+				$sql = "UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) + 1 WHERE task_parent = $this->task_parent && CAST(task_wbs_index as UNSIGNED) >= $this->task_wbs_index && task_id <> $this->task_id && task_parent <> task_id && task_project = $this->task_project";
 		}
 		db_exec( $sql );
 
 		// MODIFICA DEL LIVELLO SUPERIORE
 		if ($this->task_parent != $oldParent && $oldParent != 0 && $oldWBSi != 0) {
 			if ($oldParent == $this->task_id) //era figlio di project
-				$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index - 1 WHERE task_wbs_index >= $oldWBSi && task_parent = task_id && task_id <> $this->task_id && task_project = $this->task_project";
+				$sql = "UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) - 1 WHERE CAST(task_wbs_index as UNSIGNED) >= $oldWBSi && task_parent = task_id && task_id <> $this->task_id && task_project = $this->task_project";
 			else
-				$sql = "UPDATE tasks SET task_wbs_index = task_wbs_index - 1 WHERE task_parent = $oldParent && task_wbs_index >= $oldWBSi && task_parent <> task_id && task_project = $this->task_project";
+				$sql = "UPDATE tasks SET task_wbs_index = CAST(task_wbs_index as UNSIGNED) - 1 WHERE task_parent = $oldParent && CAST(task_wbs_index as UNSIGNED) >= $oldWBSi && task_parent <> task_id && task_project = $this->task_project";
 			db_exec( $sql );// gestire i figli id project*/
 		}
 	}
