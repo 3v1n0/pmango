@@ -1033,9 +1033,9 @@ class PMGantt implements PMGraph {
 			//			}
 
 			if ($task_leaf && !$task_leaf_real)
-			$name = "+".@str_repeat(" ", $level-2).$name;
+				$name = "+".@str_repeat(" ", $level-2).$name;
 			else
-			$name = str_repeat(" ", $level).$name;
+				$name = str_repeat(" ", $level).$name;
 
 			//using new jpGraph determines using Date object instead of string
 			$start = $a["task_start_date"];
@@ -1058,7 +1058,7 @@ class PMGantt implements PMGraph {
 			                      $task_leaf ? intval($title_size*1.6) : intval($title_size*1.2));
 
 			$bar->title->setFont(FF_USERFONT2, FS_NORMAL, $title_size);
-			//TODO use proprtional cut
+
 			if (!$this->pUseColors) {
 				$bar->setColor('black');
 				$bar->setFillColor('white');
@@ -1069,9 +1069,10 @@ class PMGantt implements PMGraph {
 				$tst = new Image();
 				$tst->ttf->setUserFont2('DroidSerif-Regular.ttf');
 
-				$cut = 2;
+				$cut = strlen($name) - (($this->pWidth/6) * strlen($name) / $bar->title->GetWidth($tst));
+
 				while ($bar->title->GetWidth($tst) >= $this->pWidth/6 && $cut < strlen($name)) {
-					$n = substr($name, 0, strlen($name)-(1+$cut))."...";
+					$n = trim(substr($name, 0, strlen($name)-(1+$cut)))."...";
 					$bar->title->set($n);
 					$cut++;
 				}
@@ -1202,21 +1203,26 @@ class PMGantt implements PMGraph {
 					$tst->ttf->setUserFont3('DroidSansMono.ttf');
 
 					$caption = '';
+					$max_res_width = $this->pWidth/(4*count($res));
+					
 					foreach($res as $r) {
+						$fixed = $r['actual_effort'].'/'.$r['planned_effort']."ph,";
 						$cap = trim($r['name'].",".$r['role']).";";
 
 						$bar->caption = new TextProperty($cap);
 						$bar->caption->setFont(FF_USERFONT3, FS_NORMAL, 7);
 
-						$fixed = $r['actual_effort'].'/'.$r['planned_effort']."ph,";
 						$bar->caption->set($fixed);
 						$fixed_size = $bar->caption->GetWidth($tst);
 
-						$cut = 2;
-						while ($bar->caption->GetWidth($tst) + $fixed_size >= $this->pWidth/(3*count($res)) && $cut < strlen($cap)-1) {
-							$cap = substr($cap, 0, strlen($cap)-(1+$cut))."...";
+						$bar->caption->set($cap);
+						$cut = ($max_res_width * strlen($cap) / ($bar->caption->GetWidth($tst) + $fixed_size));
+						
+						while ($bar->caption->GetWidth($tst) + $fixed_size >= $max_res_width &&
+						       $cut < strlen($cap)-1 && strlen($cap) > 1 && $cut > 1) {
+							$cap = trim(substr($cap, 0, $cut))."...";
 							$bar->caption->set($cap);
-							$cut++;
+							$cut -= 1;
 						}
 
 						$caption .= $fixed.$cap;
