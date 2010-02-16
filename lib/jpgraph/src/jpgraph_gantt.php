@@ -102,7 +102,8 @@ define('CONSTRAIN_ENDMIDDLE',5);
 define('CONSTRAIN_MIDDLESTART',6);
 define('CONSTRAIN_MIDDLEEND',7);
 define('CONSTRAIN_MIDDLEMIDDLE',8);
-define('CONSTRAIN_ENDSTARTMIDDLE',9);
+define('CONSTRAIN_ENDSTARTSIDE',9);
+define('CONSTRAIN_ENDSIDEMIDDLE',10);
 
 // Arrow direction for constrain links
 define('ARROW_DOWN',0);
@@ -1101,7 +1102,7 @@ class GanttGraph extends Graph {
                                 }
                                 $link->SetPath(3);
                                 break;
-                            case CONSTRAIN_ENDSTARTMIDDLE:
+                            case CONSTRAIN_ENDSTARTSIDE:
                                 $link = new GanttLink($c1[2],$c1[1]+($c1[3]-$c1[1])/2,$c2[0],$c2[1]+($c2[3]-$c2[1])/2);
                                 $link->SetPath(4);
                                 break;
@@ -1149,6 +1150,14 @@ class GanttGraph extends Graph {
                                     $link = new GanttLink($c1[2],$c1[1],$c2[0]+($c2[2]-$c2[0])/2,$c2[3]);
                                 }
                                 $link->SetPath(0);
+                                break;
+                             case CONSTRAIN_ENDSIDEMIDDLE:
+                                if( $c1[1] < $c2[1] ) {
+                                	$link = new GanttLink($c1[2],$c1[1]+($c1[3]-$c1[1])/2,$c2[0]+($c2[2]-$c2[0])/2,$c2[1]);
+                                } else {
+                                	$link = new GanttLink($c1[2],$c1[1]+($c1[3]-$c1[1])/2,$c2[0]+($c2[2]-$c2[0])/2,$c2[3]);
+                                }
+                                $link->SetPath(5);
                                 break;
                              case CONSTRAIN_MIDDLESTART:
                                 if( $c1[1] < $c2[1] ) {
@@ -3914,6 +3923,14 @@ class GanttLink {
                             
                         $arrowtype = ARROW_RIGHT;
                         break;
+                    case 5:
+	                    $c = array($x1,$y1,
+	                            $x1+$this->iPathExtend,$y1,
+	                            $x1+$this->iPathExtend,$y2-$this->iPathExtend,
+	                            $x2,$y2-$this->iPathExtend,
+	                            $x2,$y2);
+                    	
+                    	break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
                         //('Internal error: Unknown path type (='.$this->iPathType .') specified for link.');
@@ -3957,6 +3974,14 @@ class GanttLink {
                             $x2,$y2);
                         $arrowtype = ARROW_RIGHT;
                         break;
+                    case 5:
+                    	$c = array($x1,$y1,
+	                            $x1+$this->iPathExtend,$y1,
+	                            $x1+$this->iPathExtend,$y2-$this->iPathExtend,
+	                            $x2,$y2-$this->iPathExtend,
+	                            $x2,$y2);
+                    	
+                    	break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
                         //('Internal error: Unknown path type specified for link.');
@@ -4002,6 +4027,14 @@ class GanttLink {
                     	}
                         $arrowtype = ARROW_RIGHT;
                         break;
+                    case 5:
+                    	$c = array($x1,$y1,
+	                            $x1+$this->iPathExtend,$y1,
+	                            $x1+$this->iPathExtend,$y2+$this->iPathExtend,
+	                            $x2,$y2+$this->iPathExtend,
+	                            $x2,$y2);
+                    	
+                    	break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
                         //('Internal error: Unknown path type specified for link.');
@@ -4040,6 +4073,14 @@ class GanttLink {
                             $x2,$y2);
                         $arrowtype = ARROW_RIGHT;
                         break;
+                    case 5:
+                    	$c = array($x1,$y1,
+	                            $x1+$this->iPathExtend,$y1,
+	                            $x1+$this->iPathExtend,$y2+$this->iPathExtend,
+	                            $x2,$y2+$this->iPathExtend,
+	                            $x2,$y2);
+                    	
+                    	break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
                         //('Internal error: Unknown path type specified for link.');
