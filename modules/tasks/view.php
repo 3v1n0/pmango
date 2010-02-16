@@ -269,17 +269,18 @@ function setAMPM( field) {
 function computeTaskProp() {
 
 	var form = $("#frmTaskProp");
-	var properties = $("#task_properties_div");
-	var top_ui_msg = $("#ui_top_message:first");
+	var task_properties = $("#task_properties_div");
 
 	if (!form.size())
 		return;
 
-	properties.hide();
-	properties.html('<img id="prop_loader" src="images/ajax-loader.gif" alt="loader" />')
-              .attr('align', 'center')
-              .css('padding-top', '10px')
-              .fadeIn();
+	addAJAX("#frmTaskProp");
+
+	task_properties.hide();
+	task_properties.html('<img id="task_prop_loader" src="images/ajax-loader.gif" alt="loader" />')
+                   .attr('align', 'center')
+                   .css('padding-top', '10px')
+                   .fadeIn();
 
 	$.ajax({
 	   type: form.attr("method"),
@@ -287,33 +288,26 @@ function computeTaskProp() {
 	   data: form.serialize(),
 	   success: function(html) {
         	$("#task_prop_loader").fadeOut("fast", function() {
-
+        		topMsgUpdate(html);
+        		
         		var data = $(html).find("#task_properties_div");
         		data.hide();
 
         		if (data.size() == 1) {
-        			properties.replaceWith(data);
+        			task_properties.replaceWith(data);
         			data.animate({
         				height: "toggle",
         				opacity: "toggle"
         			});
         		} else {
+        			delAJAX("#frmTaskProp");
             		form.submit();
             		return;
         		}
-
-        		data = $(html).find("#ui_top_message:first");
-        		data.hide();
-
-        		top_ui_msg.fadeOut(function() {
-	        		if (data.size() == 1) {
-	        			top_ui_msg.replaceWith(data);
-	        			data.fadeIn();
-	        		}
-        		});
             });
   	   },
   	   error: function() {
+  		 	delAJAX("#frmTaskProp");
   		 	form.submit();
   	   }
 	});
