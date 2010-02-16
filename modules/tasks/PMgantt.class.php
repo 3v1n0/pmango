@@ -1008,21 +1008,18 @@ class PMGantt implements PMGraph {
 	private function populateGraph() {
 		global $AppUI;
 
-		//		$now = "2009-12-05 12:00:00";//date("y-m-d");
-		$now = $this->pToday;
-
 		for($i = 0, $row = 0; $i < count(@$this->pTasks); $i++) {
 
-			$a     = $this->pTasks[$i];
-			if ($a["task_id"] < 1) continue;
+			$t = $this->pTasks[$i];
+			if ($t["task_id"] < 1) continue;
 
-			$level = CTask::getTaskLevel($a["task_id"]);
+			$level = CTask::getTaskLevel($t["task_id"]);
 			$task_leaf = $this->pTasks[$i]['is_leaf'];
-			$task_leaf_real = CTask::isLeafSt($a["task_id"]);
+			$task_leaf_real = CTask::isLeafSt($t["task_id"]);
 
 			if (!$this->pShowTaskGroups) $level = 0;
 
-			$name = Ctask::getWBS($a["task_id"]).".".($this->pShowNames ? " ".$a["task_name"] : "");
+			$name = Ctask::getWBS($t["task_id"]).".".($this->pShowNames ? " ".$t["task_name"] : "");
 
 			// TODO locale
 			//			if ($locale_char_set=='utf-8' && function_exists("utf8_decode") ) {
@@ -1035,8 +1032,8 @@ class PMGantt implements PMGraph {
 				$name = str_repeat(" ", $level).$name;
 
 			//using new jpGraph determines using Date object instead of string
-			$start = $a["task_start_date"];
-			$end = $a["task_finish_date"];
+			$start = $t["task_start_date"];
+			$end = $t["task_finish_date"];
 
 			$end_date = new CDate($end);
 			//	$start_date->addDays(0);
@@ -1046,7 +1043,7 @@ class PMGantt implements PMGraph {
 			//	$start_date->addDays(0);
 			$start = $start_date->getDate();
 
-			$progress = intval(CTask::getPr($a["task_id"]));
+			$progress = intval(CTask::getPr($t["task_id"]));
 			if ($progress > 100) $progress = 100;
 			else if ($progress < 0) $progress = 0;
 
@@ -1069,14 +1066,14 @@ class PMGantt implements PMGraph {
 				$cut = strlen($name) - (($this->pWidth/6) * strlen($name) / $bar->title->GetWidth($tst));
 
 				while ($bar->title->GetWidth($tst) >= $this->pWidth/6 && $cut < strlen($name)) {
-					$n = trim(substr($name, 0, strlen($name)-(1+$cut)))."...";
+					$n = rtrim(substr($name, 0, strlen($name)-(1+$cut)))."...";
 					$bar->title->set($n);
 					$cut++;
 				}
 			}
 
-			$child = CTask::getChild($a["task_id"], $this->pProjectID);
-			$tstart = CTask::getActualStartDate($a["task_id"], $child);
+			$child = CTask::getChild($t["task_id"], $this->pProjectID);
+			$tstart = CTask::getActualStartDate($t["task_id"], $child);
 
 			$rMarkshow = true;
 			$lMarkshow = true;
@@ -1092,30 +1089,30 @@ class PMGantt implements PMGraph {
 
 				$lMarkshow = (!$plMarkshow);
 
-				$tend = CTask::getActualFinishDate($a["task_id"], $child);
+				$tend = CTask::getActualFinishDate($t["task_id"], $child);
 
 				if (!empty($tend['task_log_finish_date'])) {
 
 					$lend = $tend['task_log_finish_date'];
 
-					if ($progress < 100 && strtotime($lend) < strtotime($now) ||
-					strtotime($end) > strtotime($now) && strtotime($lstart) < strtotime($now)) {
-						$lend = substr($now, 0, 10);
+					if ($progress < 100 && strtotime($lend) < strtotime($this->pToday) ||
+					strtotime($end) > strtotime($this->pToday) && strtotime($lstart) < strtotime($this->pToday)) {
+						$lend = substr($this->pToday, 0, 10);
 					}
 				} else {
-					$lend = substr($now, 0, 10);
+					$lend = substr($this->pToday, 0, 10);
 				}
 
 				if (strtotime($lend) >= strtotime($end))
 					$prMarkshow = true;
 
-				if (strtotime(substr($lend, 0, 10)) == strtotime(substr($now, 0, 10)))
+				if (strtotime(substr($lend, 0, 10)) == strtotime(substr($this->pToday, 0, 10)))
 					$prMarkshow = false;
 
 				$rMarkshow = (!$prMarkshow);
 
-				if ($rMarkshow && strtotime($end) == strtotime(substr($now, 0, 10)) ||
-				     ($progress < 100 && strtotime($end) < strtotime($now))) {
+				if ($rMarkshow && strtotime($end) == strtotime(substr($this->pToday, 0, 10)) ||
+				     ($progress < 100 && strtotime($end) < strtotime($this->pToday))) {
 					$rMarkshow = false;
 				}
 
@@ -1191,10 +1188,10 @@ class PMGantt implements PMGraph {
 
 			if ($this->pShowResources) {
 				if (!$task_leaf_real) {
-					$caption = CTask::getActualEffort($a['task_id'], $child)."/".CTask::getEffort($a['task_id'])." ph";
+					$caption = CTask::getActualEffort($t['task_id'], $child)."/".CTask::getEffort($t['task_id'])." ph";
 				} else {
 
-					$res = $this->getTaskResources($a['task_id']);
+					$res = $this->getTaskResources($t['task_id']);
 
 					$tst = new Image();
 					$tst->ttf->setUserFont3('DroidSansMono.ttf');
@@ -1249,7 +1246,7 @@ class PMGantt implements PMGraph {
 				}
 			}
 
-			if ($a["task_milestone"])
+			if ($t["task_milestone"])
 				$bar->title->setColor("#CC0000");
 
 			$this->pTasks[$i]['bar'] = $bar;
@@ -1258,25 +1255,47 @@ class PMGantt implements PMGraph {
 
 		if ($this->pShowDeps) {
 			foreach ($this->pTasks as $task) {
-				$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE dependencies_req_task_id = " . $task["task_id"];
+				$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE dependencies_req_task_id = ".$task["task_id"];
 				$deps = db_exec($sql);
 
 				while($dep = db_fetch_assoc($deps)) {
-					for($d = 0; $d < count($this->pTasks); $d++ ) {
-						if($this->pTasks[$d]["task_id"] == $dep[0]) {
-							$task['bar']->setConstrain($this->pTasks[$d]['bar']->GetLineNbr(), CONSTRAIN_ENDSTARTMIDDLE, $this->pUseColors ? 'brown' : 'gray4');
-							break;
-						}
+					$found = $this->drawDependency($task, $dep[0]);
+
+					$tid = $dep[0];
+					while (!$found && $tid) {
+						$sql = "SELECT task_parent FROM tasks WHERE task_id = $tid AND task_id != task_parent";
+						$tid = db_loadResult($sql);
+						
+						if ($tid)
+							$found = $this->drawDependency($task, $tid, CONSTRAIN_ENDSIDEMIDDLE); //FOUND!?!?
 					}
 				}
 			}
 		}
 
-		//$today = date("y-m-d");
-		$vline = new GanttVLine(/*$today*/$now, $AppUI->_('Today', UI_OUTPUT_RAW), ($this->pUseColors ? 'darkred' : 'gray3'));
+		$vline = new GanttVLine($this->pToday, $AppUI->_('Today', UI_OUTPUT_RAW), ($this->pUseColors ? 'darkred' : 'gray3'));
 		$vline->title->setFont(FF_USERFONT3, FS_NORMAL, 9);
 		$this->pGraph->Add($vline);
 	}
+	
+	private function drawDependency($taskbar_from, $task_end, $type = CONSTRAIN_ENDSTARTSIDE) {
+		$found = false;
+		
+		for($d = 0; $d < count($this->pTasks); $d++ ) {
+			if($this->pTasks[$d]["task_id"] == $task_end) { //$this->pUseColors ? 'brown' : 'gray4'
+				if ($type == CONSTRAIN_ENDSIDEMIDDLE)
+					$color = 'purple';
+				else
+					$color = 'brown';
+				
+				$taskbar_from['bar']->setConstrain($this->pTasks[$d]['bar']->GetLineNbr(), $type, $color);
+				$found = true;
+				break;
+			}
+		}
+		
+		return $found;
+	} 
 }
 
 ?>
