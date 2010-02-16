@@ -106,12 +106,8 @@ $te = $te[2]."-".$te[1]."-".$te[0];
 $te = strtotime($te);//echo $finishDate."<br>";
 $te = ($te-$ts)/86400;
 
-if (!($obj->project_current == '0')) {
-	$q->addQuery('project_vdate');
-	$q->addTable('passive_project_versions');
-	$q->addWhere("project_id = ".substr($obj->project_current,strrpos($obj->project_current,"p")+1,strrpos($obj->project_current,"v")-strrpos($obj->project_current,"p")-1)." && project_version = ".substr($obj->project_current,strrpos($obj->project_current,"v")+1));
-	$observerDate = $q->loadResult();
-	$observerDate = intval($observerDate) ? new CDate($observerDate) : null;
+if ($obj->project_active == 0) {
+	$observerDate = new CDate($obj->project_today);
 	$observerDate = $observerDate ? $observerDate->format($df) : $AppUI->_('not defined');
 }
 else
@@ -170,7 +166,7 @@ else {
 	else {
 		$n = $t;
 	}*/
-	$n = $te;
+	$n = max($te, $tt);
 
 	// Creo il rettangoloide dell'impegno istantaneo consuntivato.
 	for ($i=0; $i<$n; $i++) {
