@@ -565,32 +565,32 @@ function delIt() {
 			<input type="hidden" name="task_id" value="<?php echo $task_id;?>" />
 			
 			<table cellspacing="1" cellpadding="2" border="0" width="100%">
-					<tr>
-						<td align="right" nowrap><input id="wf" name="wf" type="checkbox" checked="checked" /></td>
-						<td nowrap="nowrap"><label for="wf"><?php echo $AppUI->_('Well Formed');?></label></td>
-						<td class="hilite" width="100%" rowspan="4" valign="top" style="border: outset #d1d1cd 2px">
-							<div id="task_properties_div">
-								<?php echo $AppUI->getProperties(); ?>&nbsp;
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><input id="ce" name="ce" type="checkbox" checked="checked"></td>
-						<td nowrap="nowrap"><label for="ce"><?php echo $AppUI->_('Cost Effective');?></label></td>
-					</tr>
-					<tr>
-						<td><input id="ee" name="ee" type="checkbox" checked="checked"></td>
-						<td nowrap="nowrap"><label for="ee"><?php echo $AppUI->_('Effort Effective');?></label></td>
-					</tr>
-					<tr>
-						<td><input id="te" name="te" type="checkbox" checked="checked"></td>
-						<td nowrap="nowrap"><label for="te"><?php echo $AppUI->_('Time Effective');?></label></td>
-					</tr>
-					<tr>
-						<td valign="bottom" align="right" colspan="3" nowrap>
-							<input type="button" class="button" value="compute" onclick="computeTaskProp();">
-						</td>
-					</tr>
+				<tr>
+					<td align="right" nowrap><input id="wf" name="wf" type="checkbox" checked="checked" /></td>
+					<td nowrap="nowrap"><label for="wf"><?php echo $AppUI->_('Well Formed');?></label></td>
+					<td class="hilite" width="100%" rowspan="5" valign="top" style="border: outset #d1d1cd 2px">
+						<div id="task_properties_div">
+							<?php echo $AppUI->getProperties(); ?>&nbsp;
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td valign="top"><input id="ce" name="ce" type="checkbox" checked="checked"></td>
+					<td valign="top" nowrap="nowrap"><label for="ce"><?php echo $AppUI->_('Cost Effective');?></label></td>
+				</tr>
+				<tr>
+					<td valign="top"><input id="ee" name="ee" type="checkbox" checked="checked"></td>
+					<td valign="top" nowrap="nowrap"><label for="ee"><?php echo $AppUI->_('Effort Effective');?></label></td>
+				</tr>
+				<tr>
+					<td valign="top"><input id="te" name="te" type="checkbox" checked="checked"></td>
+					<td valign="top" nowrap="nowrap"><label for="te"><?php echo $AppUI->_('Time Effective');?></label></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td valign="top" align="center" nowrap>
+						<input type="button" class="button" value="compute" onclick="computeTaskProp();">
+					</td>
 				</tr>
 			</table>
 		</form>
