@@ -438,16 +438,13 @@ class PMGanttBar extends GanttPlotObject {
 				$join_len = $prxt - $xb;
 				$join_x = $xb;
 			} else if ($prxt < $xt && $prxb <= $xt) {
-				$join_len = $xt - $prxb;
+				$join_len = $prxb - $xt;
 				$join_x = $xt;
 			}
 			
 			$join_y = $pryt;
 						
-			if ($join_len > 0) {
-				if ($join_x == $xt)
-					$join_len = -$join_len;
-				
+			if ($join_len != 0) {
 				$x_min = $aScale->TranslateDate($aScale->iStartDate);
 				$x_max = $aScale->TranslateDate($aScale->iEndDate);
 
