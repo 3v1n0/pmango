@@ -188,6 +188,19 @@ class CAppUI {
 	}
 
 /**
+* Used to load a php functions file from the functions directory
+*
+* @param string $name The function file name
+* @return string The path to the include file
+*/
+	function getFunctions( $name=null ) {
+		global $baseDir;
+		if ($name) {
+			return "$baseDir/functions/$name.php";
+		}
+	}
+	
+/**
 * Used to load a php class file from the lib directory
 *
 * @param string $name The class root file name (excluding .class.php)
@@ -202,16 +215,34 @@ class CAppUI {
 
 /**
 * Used to load a php class file from the module directory
-* @param string $name The class root file name (excluding .class.php)
+* @param string $module The module name
+* @param string $filename the class filename (excluding .class.php)
 * @return string The path to the include file
  */
-	function getModuleClass( $name=null ) {
+	function getModuleClass($module=null, $filename=null) {
 		global $baseDir;
-		if ($name) {
-			return "$baseDir/modules/$name/$name.class.php";
+
+		$classname = $filename ? $filename : $module;
+		if ($module) {
+			return "$baseDir/modules/$module/$classname.class.php";
 		}
 	}
 
+/**
+* Used to load a php file from the module directory
+* @param string $module The module name
+* @param string $filename the class filename (excluding .php)
+* @return string The path to the include file
+ */
+	function getModuleFile($module=null, $filename=null) {
+		global $baseDir;
+
+		$include = $filename ? $filename : $module;
+		if ($module) {
+			return "$baseDir/modules/$module/$include.php";
+		}
+	}
+	
 /**
 * Determines the version.
 * @return String value indicating the current PMango version
