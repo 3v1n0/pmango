@@ -57,7 +57,7 @@
 
 -------------------------------------------------------------------------------------------
 */
-include 'modules/report/generatePDF.php';
+include $AppUI->getModuleFile('report', 'generatePDF');
 
 $project_id = intval(dPgetParam($_REQUEST, "project_id", 0 ));
 $msg = '';
@@ -160,10 +160,10 @@ for($i=0;$i<count($AppUI->properties);$i++){
 		}
 }
 
-$sql="SELECT * FROM reports WHERE project_id=".$project_id." AND user_id=".$user_id;
-$exist=db_loadList($sql);
+$sql="SELECT COUNT(*) FROM reports WHERE project_id=".$project_id." AND user_id=".$user_id;
+$exist=db_loadResult($sql);
 
-if(count($exist)==0){
+if(!$exist){
 	$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete` , `p_show_mine`, `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete` , `a_show_mine` , `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary`, `gantt`, `wbs`, `task_network` )
 	VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL, NULL, NULL, NULL, NULL, NULL);";		
 	db_exec( $sql ); db_error();
@@ -602,7 +602,7 @@ if ($canViewTask) {
 	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Inactive)' );
 	//$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtodo", 'Tasks TODO' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewgantt", 'Gantt Chart' );
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewwbs", 'WBS Chart' );
+	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewwbs", 'WBS Tree' );
 	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewtasknetwork", 'Tasks Network' );
  	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_logs", 'Task Logs' );
  	

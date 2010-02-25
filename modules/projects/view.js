@@ -91,11 +91,11 @@ function projectViewSwitch() {
 		pr_c.slideUp(function() { pr.hide(); });
 	}
 	
-//	$("#project_infos").toggle(
+//	pr.toggle(
 //		"1000",
 //
 //		function callback() {
-//			if ($("#project_infos").is(":hidden"))
+//			if (pr.is(":hidden"))
 //				img.src = 'images/icons/expand.gif';
 //			else
 //				img.src = 'images/icons/collapse.gif';

@@ -50,8 +50,11 @@
 -------------------------------------------------------------------------------------------
 */
 
-require_once($AppUI->getSystemClass('dp'));
-require_once($AppUI->getModuleClass('tasks'));
+define('GRAPH_REPORTS_PATH', './modules/report/img/');
+define('GRAPH_REPORTS_EXT', 'png');
+
+require_once $AppUI->getSystemClass('dp');
+require_once $AppUI->getModuleClass('tasks');
 $AppUI->savePlace();
 /**
  * The Reoprt Class
@@ -74,8 +77,53 @@ class CReport extends CDpObject {
 			return NULL;
 		}
 	}
+	
+	private static function getGraphReportName($project_id, $graph_type) {
+		global $AppUI;
+		
+		return $AppUI->user_id."-".$project_id."_".$graph_type.time();
+	}
+	
+	static function addGraphReport($project_id, PMGraph $graph) {
+		global $AppUI;
+		
+		switch ($graph->getType()) {
+			case "TaskNetwork":
+				$graphtype = "task_network";
+				break;
+			case "WBS":
+				$graphtype = "wbs";
+				break;
+			case "GANTT":
+				$graphtype = "gantt";
+				break;
+			default:
+				return null;
+		}
+		
+		$filename = CReport::getGraphReportName($project_id, $graphtype);
+		$imgfile = GRAPH_REPORTS_PATH.'/'.".".GRAPH_REPORTS_EXT;
+		
+		$graph->draw(GRAPH_REPORTS_EXT, $imgfile);
+		//TODO build thumbnail!
+							
+		if (file_exists($imgfile)) {
+			$report = CReport::getGraphReport($project_id, $graphtype);
+			if (!empty($report)) $report .= ';';
+			$report .= $filename;
+			
+			$sql = "UPDATE reports SET $graphtype = '$imgfile' ".
+			       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
+			db_exec($sql);
+			db_error();
+			
+			return $imgfile;
+		}
+		
+		return null;
+	}
 
-	function getTaskReport($project_id, $report_type = PMPDF_PLANNED) {
+	static function getTaskReport($project_id, $report_type = PMPDF_PLANNED) {
 		
 		GLOBAL $AppUI;
 		$user_id = $AppUI->user_id;
@@ -267,7 +315,7 @@ class CReport extends CDpObject {
 		else return null;
 	}
 
-	function getLogReport($pid){
+	static function getLogReport($pid){
 		
 		GLOBAL $AppUI;
 		$user_id = $AppUI->user_id;
@@ -334,7 +382,7 @@ class CReport extends CDpObject {
 		} else return null;
 	}
 	
-	function getProjectReport($pid){
+	static function getProjectReport($pid){
 		
 		GLOBAL $AppUI;
 		$user_id = $AppUI->user_id;
@@ -383,37 +431,26 @@ class CReport extends CDpObject {
 	
 	}
 	
-	function getGanttReport($pid) {
+	private static function getGraphReport($project_id, $graph_type) {
 		GLOBAL $AppUI;
 		$user_id = $AppUI->user_id;
-		$project_id=$pid;
 		
-		$sql="SELECT gantt FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
-		$gantt = db_loadResult($sql);
+		$sql="SELECT $graph_type FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
+		$report = db_loadResult($sql);
 
-		return $gantt;	
+		return $report;
+	} 
+	
+	static function getGanttReport($project_id) {
+		return CReport::getGraphReport($project_id, 'gantt');	
 	}
 	
-	function getWbsReport($pid) {
-		GLOBAL $AppUI;
-		$user_id = $AppUI->user_id;
-		$project_id=$pid;
-		
-		$sql="SELECT wbs FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
-		$gantt = db_loadResult($sql);
-
-		return $gantt;	
+	static function getWbsReport($project_id) {
+		return CReport::getGraphReport($project_id, 'wbs');	
 	}
 	
-	function getTaskNetworkReport($pid) {
-		GLOBAL $AppUI;
-		$user_id = $AppUI->user_id;
-		$project_id=$pid;
-		
-		$sql="SELECT task_network FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
-		$gantt = db_loadResult($sql);
-
-		return $gantt;	
+	static function getTaskNetworkReport($project_id) {
+		return CReport::getGraphReport($project_id, 'task_network');
 	}
 }
 ?>

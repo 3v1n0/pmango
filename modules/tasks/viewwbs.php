@@ -55,6 +55,7 @@
 */
 
 include_once "WBS.class.php";
+include_once $AppUI->getModuleClass('report');
 
 global $m, $a, $tab;
 
@@ -326,15 +327,16 @@ displayItemSwitchPreCallbackARGS = {container: "#resizable_wbs",
 						if (dPgetBoolParam($_POST, 'make_graph_pdf')) {
 	                    	generateGraphPDF($project_id, $wbs, PMPDF_GRAPH_WBS);
 						} else if (dPgetBoolParam($_POST, 'add_graph_report')) {
-							$file = "./modules/report/img/".$project_id.PMPDF_GRAPH_WBS.$AppUI->user_id.".png";
-							$wbs->draw("png", $file);
-							
-							if (file_exists($file)) {
-								$sql = "UPDATE reports SET wbs = '$file' ".
-								       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
-								db_exec($sql);
-								db_error();
-							}
+//							$file = "./modules/report/img/".$project_id.PMPDF_GRAPH_WBS.$AppUI->user_id.".png";
+//							$wbs->draw("png", $file);
+//							
+//							if (file_exists($file)) {
+//								$sql = "UPDATE reports SET wbs = '$file' ".
+//								       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
+//								db_exec($sql);
+//								db_error();
+//							}
+							CReport::addGraphReport($project_id, $wbs);
 						}
 
 	                    ini_restore('memory_limit');

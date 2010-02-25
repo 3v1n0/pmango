@@ -50,7 +50,7 @@
 ---------------------------------------------------------------------------
 */
 
-include_once "modules/report/generatePDF.php";
+include $AppUI->getModuleFile('report', 'generatePDF');
 
 $obj = new CProject();
 if (!$obj->load(dPgetParam($_POST, 'project_id', 0))) {

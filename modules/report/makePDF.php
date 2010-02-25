@@ -1201,7 +1201,7 @@ function PM_makeGraphPDF(PM_FPDF $pdf, PMGraph $graph, $fit = false, $h_center =
 		$w = $graph->getWidth();
 		$h = $graph->getHeight();
 	}
-	
+
 	if ($h_center)
 		$x = ($pdf->w + $pdf->lMargin - $pdf->rMargin - $w)/2;
 
