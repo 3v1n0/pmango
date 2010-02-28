@@ -3929,7 +3929,6 @@ class GanttLink {
 	                            $x1+$this->iPathExtend,$y2-$this->iPathExtend,
 	                            $x2,$y2-$this->iPathExtend,
 	                            $x2,$y2);
-                    	
                     	break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
@@ -3980,7 +3979,6 @@ class GanttLink {
 	                            $x1+$this->iPathExtend,$y2-$this->iPathExtend,
 	                            $x2,$y2-$this->iPathExtend,
 	                            $x2,$y2);
-                    	
                     	break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
@@ -4033,7 +4031,6 @@ class GanttLink {
 	                            $x1+$this->iPathExtend,$y2+$this->iPathExtend,
 	                            $x2,$y2+$this->iPathExtend,
 	                            $x2,$y2);
-                    	
                     	break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
@@ -4079,7 +4076,7 @@ class GanttLink {
 	                            $x1+$this->iPathExtend,$y2+$this->iPathExtend,
 	                            $x2,$y2+$this->iPathExtend,
 	                            $x2,$y2);
-                    	
+                    	$arrowtype = ARROW_UP;
                     	break;
                     default:
                         JpGraphError::RaiseL(6032,$this->iPathType);
