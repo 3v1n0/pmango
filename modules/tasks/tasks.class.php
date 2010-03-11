@@ -2108,6 +2108,9 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 
 	if ($showMine) {
 		$mine_found = false;
+		
+		if (!$a['task_assigned_users'])
+			return '';
 
 		foreach ($a['task_assigned_users'] as $u) {
 			if ($u['user_id'] == $AppUI->user_id) {
