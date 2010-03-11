@@ -168,10 +168,7 @@ if (dPgetBoolParam($_POST, 'addreport')) {
 	$sd = $start_date->format(FMT_DATETIME_MYSQL);
  	$ed = $end_date->format(FMT_DATETIME_MYSQL);
 
-	$sql = "UPDATE reports SET l_hide_complete='$hide_complete', ".
-	       "l_hide_inactive='$hide_inactive', l_user_id='$user_id', ".
-	       "l_report_sdate='$sd', l_report_edate='$ed' ".
-	       "WHERE reports.project_id=".$project_id." AND reports.user_id=".$AppUI->user_id;
+	CReport::addLogReport($project_id, $hide_complete, $hide_inactive, $user_id, $sd, $ed);
 	
 	$db_roles = db_loadList($sql);
 	unsetProjectSubState('PDFReports', PMPDF_REPORT);

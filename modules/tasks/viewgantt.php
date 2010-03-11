@@ -323,6 +323,7 @@ function doSubmit() {
 		$('#graph').empty();
 		$('#graphloader').fadeIn();
 		loadGraph(buildGraphUrl());
+		$("#gantt_report_btn").fadeIn();
 	}
 }
 
@@ -520,17 +521,9 @@ loadGraph('<?php echo $graph_img_src; ?>');
 						$gantt->useColors(!$show_bw);
 						
 						if (dPgetBoolParam($_POST, 'make_graph_pdf')) {
-	                    	generateGraphPDF($project_id, $gantt, PMPDF_GRAPH_GANTT);
+	                    	generateGraphPDF($project_id, $gantt);
 						} else if (dPgetBoolParam($_POST, 'add_graph_report')) {
-	                    	$file = "./modules/report/img/".$project_id.PMPDF_GRAPH_GANTT.$AppUI->user_id.".png";
-							$gantt->draw("png", $file);
-							
-							if (file_exists($file)) {
-								$sql = "UPDATE reports SET gantt = '$file' ".
-								       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
-								db_exec($sql);
-								db_error();
-							}
+	                    	CReport::addGraphReport($project_id, $gantt);
 						}
 
 	                    ini_restore('memory_limit');

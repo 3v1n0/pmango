@@ -55,7 +55,6 @@
 */
 
 include_once "WBS.class.php";
-include_once $AppUI->getModuleClass('report');
 
 global $m, $a, $tab;
 
@@ -149,7 +148,7 @@ function doSubmit() {
 //	document.wbs_options.submit(); //TODO enable on old browsers 
 	viewerLoadPlaceHolder("#wbs_graph", loader);
 	viewerLoadGraph("#wbs_graph", buildGraphUrl(), graph_error);
-	displa
+	$("#wbs_report_btn").fadeIn();
 }
 
 resizeItemToVisible("#wbs_graph", 0.95);
@@ -325,17 +324,8 @@ displayItemSwitchPreCallbackARGS = {container: "#resizable_wbs",
 						$wbs->showActualTimeframe($show_a_time);
 
 						if (dPgetBoolParam($_POST, 'make_graph_pdf')) {
-	                    	generateGraphPDF($project_id, $wbs, PMPDF_GRAPH_WBS);
+	                    	generateGraphPDF($project_id, $wbs);
 						} else if (dPgetBoolParam($_POST, 'add_graph_report')) {
-//							$file = "./modules/report/img/".$project_id.PMPDF_GRAPH_WBS.$AppUI->user_id.".png";
-//							$wbs->draw("png", $file);
-//							
-//							if (file_exists($file)) {
-//								$sql = "UPDATE reports SET wbs = '$file' ".
-//								       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
-//								db_exec($sql);
-//								db_error();
-//							}
 							CReport::addGraphReport($project_id, $wbs);
 						}
 

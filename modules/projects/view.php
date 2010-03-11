@@ -57,7 +57,8 @@
 
 -------------------------------------------------------------------------------------------
 */
-include $AppUI->getModuleFile('report', 'generatePDF');
+include_once $AppUI->getModuleFile('report', 'generatePDF');
+include_once $AppUI->getModuleClass('report');
 
 $project_id = intval(dPgetParam($_REQUEST, "project_id", 0 ));
 $msg = '';
@@ -160,24 +161,14 @@ for($i=0;$i<count($AppUI->properties);$i++){
 		}
 }
 
-$sql="SELECT COUNT(*) FROM reports WHERE project_id=".$project_id." AND user_id=".$user_id;
-$exist=db_loadResult($sql);
-
-if(!$exist){
-	$sql="INSERT INTO `reports` ( `report_id` , `project_id` , `user_id` , `p_is_incomplete` , `p_show_mine`, `p_report_level` , `p_report_roles` , `p_report_sdate` , `p_report_edate` , `p_report_opened` , `p_report_closed` , `a_is_incomplete` , `a_show_mine` , `a_report_level` , `a_report_roles` , `a_report_sdate` , `a_report_edate` , `a_report_opened` , `a_report_closed` , `l_hide_inactive` , `l_hide_complete` , `l_user_id` , `l_report_sdate` , `l_report_edate` , `properties`, `prop_summary`, `gantt`, `wbs`, `task_network` )
-	VALUES ( NULL , ".$project_id." , ".$user_id." , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL , NULL, NULL, NULL, NULL, NULL, NULL, NULL);";		
-	db_exec( $sql ); db_error();
-}
+CReport::initUserReport($project_id);
 
 if (dPgetBoolParam($_POST, 'add_prop_report') && getProjectState('Properties') &&
 	!getProjectState('PropertiesComputed') && !dPgetBoolParam($_POST, 'make_prop_pdf')) {
 	$AppUI->setMsg($AppUI->_('Project Properties added to Reports!'), UI_MSG_OK);
 	$properties = addslashes(getProjectState('Properties'));
-	$summary = addslashes($_POST['summary']);
-	$sql = "UPDATE reports SET properties='$properties', ".
-	       "prop_summary='$summary' WHERE project_id=$project_id ".
-	       "AND reports.user_id=$user_id";
-	$db_roles = db_loadList($sql);	
+	$summary = addslashes($_POST['summary']); //XXX use session for this too!??
+	CReport::addProjectReport($project_id, $properties, $summary);
 	unsetProjectSubState('PDFReports', PMPDF_REPORT);					
 }
 

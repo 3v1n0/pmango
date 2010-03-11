@@ -545,43 +545,15 @@ if(dPgetParam( $_POST, 'addreport', '' )&&dPgetParam( $_POST, 'addreport', '' )!
 	$r_task_opened = implode("/", $tasks_opened);
 	$r_task_closed = implode("/", $tasks_closed);
 
-	if(dPgetParam( $_POST, 'addreport', '' )==1){
-		$sql="UPDATE
-				reports
-			  SET
-			  	p_is_incomplete='$showIncomplete',
-			  	p_show_mine='$showMine',
-				p_report_level=$explodeTasks,
-				p_report_roles='$roles',
-				p_report_sdate='$sd', 
-				p_report_edate='$ed', 
-				p_report_opened='$r_task_opened', 
-				p_report_closed='$r_task_closed' 
-			  WHERE
-			  	reports.project_id=".$project_id."
-			  AND
-			  	reports.user_id=".$user_id;
-		$db_roles = db_loadList($sql);}
-		else if(dPgetParam( $_POST, 'addreport', '' )==2){
-			$sql="UPDATE
-					reports
-				  SET
-				  	a_is_incomplete='$showIncomplete',
-				  	a_show_mine='$showMine',
-					a_report_level=$explodeTasks,
-					a_report_roles='$roles', 
-					a_report_sdate='$sd', 
-					a_report_edate='$ed', 
-					a_report_opened='$r_task_opened', 
-					a_report_closed='$r_task_closed' 
-				  WHERE 
-				  	reports.project_id=".$project_id." 
-				  AND 
-				  	reports.user_id=".$user_id;
-			$db_roles = db_loadList($sql);
-		}
+	if (dPgetParam($_POST, 'addreport') == 1) {
+		CReport::addTaskPlannedReport($project_id, $showIncomplete, $showMine, $explodeTasks,
+	                                  $roles, $sd, $ed, $r_task_opened, $r_task_closed);
+	} else if (dPgetParam($_POST, 'addreport') == 2) {
+		CReport::addTaskActualReport($project_id, $showIncomplete, $showMine, $explodeTasks,
+	                                 $roles, $sd, $ed, $r_task_opened, $r_task_closed);
+	}
 		
-		unsetProjectSubState('PDFReports', PMPDF_REPORT);
+	unsetProjectSubState('PDFReports', PMPDF_REPORT);
 }
 ?>
 <SCRIPT SRC="js/dateControl.js"></SCRIPT>

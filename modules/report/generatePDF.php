@@ -111,9 +111,23 @@ function generatePropertiesPDF($project_id, $properties, $page = 'P') {
 	return $filename;
 }
 
-function generateGraphPDF($project_id, PMGraph $graph, $type) {
+function generateGraphPDF($project_id, PMGraph $graph) {
 
 	$name = getProjectName($project_id);
+	
+	switch ($graph->getType()) {
+		case "TaskNetwork":
+			$type = PMPDF_GRAPH_TN;
+			break;
+		case "WBS":
+			$type = PMPDF_GRAPH_WBS;
+			break;
+		case "GANTT":
+			$type = PMPDF_GRAPH_GANTT;
+			break;
+		default:
+			return null;
+	}
 	
 	if ($graph->getWidth() > $graph->getHeight())
 		$page = 'L';

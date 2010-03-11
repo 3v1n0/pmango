@@ -189,19 +189,11 @@ if (isset($_REQUEST['login'])) {
 if ((isset($old_user_id) && (isset($_GET['logout'])) || $just_logged_in)) {
 	$user = !$AppUI->doLogin() ? $AppUI->user_id : $old_user_id;
 	
-	include_once "$baseDir/modules/report/generatePDF.php";
+	include_once $AppUI->getModuleClass('report');
+	include_once $AppUI->getModuleFile('report', 'generatePDF');
+
     purgeUserPDFs($user);
-    
-    $sql="SELECT gantt, wbs, task_network FROM reports WHERE user_id = $user";
-    $list = db_loadList($sql);
-    foreach (@$list as $item) {
-    	if (file_exists($item['gantt'])) @unlink($item['gantt']);
-    	if (file_exists($item['wbs'])) @unlink($item['wbs']);
-    	if (file_exists($item['task_network'])) @unlink($item['task_network']);
-    }
-    
-    $sql="DELETE FROM reports WHERE user_id = $user";
-    db_exec($sql); db_error();
+   	CReport::deleteUserReports($user);
     
     if (!$just_logged_in)
     	$AppUI->registerLogout($user);

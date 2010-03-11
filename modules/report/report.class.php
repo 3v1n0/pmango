@@ -16,6 +16,8 @@
  Further information at: http://penelope.di.unipi.it
 
  Version history.
+ - 2010.02.15 Marco Trevisan
+   Redisegned version, it is used both for saving and retriving the reports
  - 2007.05.08 Riccardo
    First version, created to manage PDF reports. 
    
@@ -78,6 +80,121 @@ class CReport extends CDpObject {
 		}
 	}
 	
+	static function initUserReport($project_id) {
+		global $AppUI;
+
+		$sql = "SELECT COUNT(*) FROM reports WHERE project_id = $project_id AND user_id = ".$AppUI->user_id;
+		$exist = db_loadResult($sql);
+	
+		if (!$exist) {
+			$sql = "INSERT INTO reports (report_id, project_id, user_id, ".
+			       "p_is_incomplete, p_show_mine, p_report_level, p_report_roles, ".
+			       "p_report_sdate, p_report_edate, p_report_opened, p_report_closed, ".
+			       "a_is_incomplete, a_show_mine, a_report_level, a_report_roles, ".
+			       "a_report_sdate, a_report_edate, a_report_opened, a_report_closed, ".
+			       "l_hide_inactive, l_hide_complete, l_user_id, l_report_sdate, l_report_edate, ".
+			       "properties, prop_summary, gantt, wbs, task_network) ".
+			       "VALUES (NULL, $project_id, ".$AppUI->user_id.", NULL, NULL, NULL, NULL, NULL, ".
+			                "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ".
+			                "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);";
+
+			db_exec($sql); db_error();
+			
+			unsetProjectSubState('PDFReports', PMPDF_REPORT);
+		}
+		
+	}
+	
+	static function deleteUserReports($user) {
+		$sql = "SELECT gantt, wbs, task_network FROM reports WHERE user_id = $user";
+		
+	    $list = db_loadList($sql);
+	    foreach (@$list as $item) {
+	    	$reports = array_merge(explode(';', $item['gantt']), explode(';', $item['wbs']),
+	    	                       explode(';', $item['task_network']));
+
+	    	foreach($reports as $report) {
+	    		if (!$report) continue;
+	    		
+	    		$file = GRAPH_REPORTS_PATH.'/'.$report.".".GRAPH_REPORTS_EXT;
+	    		if (file_exists($file) && is_file($file)) @unlink($file);
+	    		
+	    		$file_tb = GRAPH_REPORTS_PATH.'/'.$report."_tb.".GRAPH_REPORTS_EXT;
+	    		if (file_exists($file_tb) && is_file($file_tb)) @unlink($file_tb);
+	    	}
+   		}
+    
+	    $sql="DELETE FROM reports WHERE user_id = $user";
+	    db_exec($sql); db_error();
+	}
+	
+	static function addTaskPlannedReport($project_id, $showIncomplete, $showMine, $explodeTasks,
+	                                     $roles, $sd, $ed, $r_task_opened, $r_task_closed) {
+		global $AppUI;
+		
+		$sql = "UPDATE reports SET
+				  	p_is_incomplete = '$showIncomplete',
+				  	p_show_mine = '$showMine',
+					p_report_level = $explodeTasks,
+					p_report_roles = '$roles',
+					p_report_sdate = '$sd', 
+					p_report_edate = '$ed', 
+					p_report_opened = '$r_task_opened', 
+					p_report_closed = '$r_task_closed' 
+			    WHERE
+			  		project_id = $project_id
+			    AND
+			  		reports.user_id = ".$AppUI->user_id;
+		
+		db_exec($sql);
+		db_error();
+	}
+	
+	static function addTaskActualReport($project_id, $showIncomplete, $showMine, $explodeTasks,
+	                                    $roles, $sd, $ed, $r_task_opened, $r_task_closed) {                  	
+		global $AppUI;
+		
+		$sql = "UPDATE reports SET
+				  	a_is_incomplete = '$showIncomplete',
+				  	a_show_mine = '$showMine',
+					a_report_level = $explodeTasks,
+					a_report_roles = '$roles', 
+					a_report_sdate = '$sd', 
+					a_report_edate = '$ed', 
+					a_report_opened = '$r_task_opened', 
+					a_report_closed = '$r_task_closed' 
+			  	WHERE 
+			  		reports.project_id = $project_id 
+			  	AND
+			  		reports.user_id = ".$AppUI->user_id;
+		
+		db_exec($sql);
+		db_error();
+	}
+	
+	static function addProjectReport($project_id, $properties, $summary) {
+		global $AppUI;
+		
+		$sql = "UPDATE reports SET properties = '$properties', ".
+	           "prop_summary = '$summary' WHERE project_id = $project_id ".
+	           "AND user_id = ".$AppUI->user_id;
+		
+		db_exec($sql);
+		db_error();
+	}
+	
+	static function addLogReport($project_id, $hide_complete, $hide_inactive, $user_id, $sd, $ed) {
+		global $AppUI;
+		
+		$sql = "UPDATE reports SET l_hide_complete = '$hide_complete', ".
+	           "l_hide_inactive = '$hide_inactive', l_user_id = '$user_id', ".
+	           "l_report_sdate = '$sd', l_report_edate = '$ed' ".
+	           "WHERE project_id = $project_id AND user_id = ".$AppUI->user_id;
+		
+		db_exec($sql);
+		db_error();
+	}
+	
 	private static function getGraphReportName($project_id, $graph_type) {
 		global $AppUI;
 		
@@ -102,17 +219,17 @@ class CReport extends CDpObject {
 		}
 		
 		$filename = CReport::getGraphReportName($project_id, $graphtype);
-		$imgfile = GRAPH_REPORTS_PATH.'/'.".".GRAPH_REPORTS_EXT;
+		$imgfile = GRAPH_REPORTS_PATH.'/'.$filename.".".GRAPH_REPORTS_EXT;
 		
 		$graph->draw(GRAPH_REPORTS_EXT, $imgfile);
 		//TODO build thumbnail!
 							
 		if (file_exists($imgfile)) {
-			$report = CReport::getGraphReport($project_id, $graphtype);
+			$report = CReport::getReportValue($project_id, $graphtype);
 			if (!empty($report)) $report .= ';';
 			$report .= $filename;
 			
-			$sql = "UPDATE reports SET $graphtype = '$imgfile' ".
+			$sql = "UPDATE reports SET $graphtype = '$report' ".
 			       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
 			db_exec($sql);
 			db_error();
@@ -121,6 +238,25 @@ class CReport extends CDpObject {
 		}
 		
 		return null;
+	}
+	
+	private static function getReportValue($project_id, $value) {
+		GLOBAL $AppUI;
+		$user_id = $AppUI->user_id;
+		
+		$sql="SELECT $value FROM reports WHERE project_id = $project_id AND user_id = $user_id";
+		$report = db_loadResult($sql);
+
+		return $report;
+	}
+	
+	private static function unsetReportValue($project_id, $value) {
+		GLOBAL $AppUI;
+		$user_id = $AppUI->user_id;
+		
+		$sql="UPDATE reports SET $value = NULL WHERE project_id = $project_id AND user_id = $user_id";
+		db_exec($sql);
+		db_error();
 	}
 
 	static function getTaskReport($project_id, $report_type = PMPDF_PLANNED) {
@@ -431,26 +567,97 @@ class CReport extends CDpObject {
 	
 	}
 	
-	private static function getGraphReport($project_id, $graph_type) {
-		GLOBAL $AppUI;
-		$user_id = $AppUI->user_id;
+	private static function getGraphViews($project_id, $graph_type) {
+		$graphs = explode(';', CReport::getReportValue($project_id, $graph_type));
 		
-		$sql="SELECT $graph_type FROM reports WHERE reports.project_id=".$project_id." AND user_id=".$user_id;
-		$report = db_loadResult($sql);
-
+		$report = array("tb" => array());
+		
+		foreach ($graphs as $id => $graph) {
+			$report[$id] = GRAPH_REPORTS_PATH.'/'.$graph.'.'.GRAPH_REPORTS_EXT;
+			$tb = GRAPH_REPORTS_PATH.'/'.$graph.'_tb.'.GRAPH_REPORTS_EXT;
+			
+			if (file_exists($tb))
+				$report["tb"][$id] = $tb;
+		}
+		
 		return $report;
-	} 
+	}
 	
-	static function getGanttReport($project_id) {
-		return CReport::getGraphReport($project_id, 'gantt');	
+	static function getGanttReport($project_id) { 		
+		return CReport::getGraphViews($project_id, 'gantt');	
 	}
 	
 	static function getWbsReport($project_id) {
-		return CReport::getGraphReport($project_id, 'wbs');	
+		return CReport::getGraphViews($project_id, 'wbs');	
 	}
 	
 	static function getTaskNetworkReport($project_id) {
-		return CReport::getGraphReport($project_id, 'task_network');
+		return CReport::getGraphViews($project_id, 'task_network');
+	}
+	
+	static function usetTaskPlanned($project_id) {
+		global $AppUI;
+		
+		$sql = "UPDATE reports SET p_is_incomplete = NULL, p_show_mine = NULL, ".
+		                          "p_report_level = NULL, p_report_roles = NULL, ".
+		                          "p_report_sdate = NULL, p_report_edate = NULL, ".
+		                          "p_report_opened = NULL, p_report_closed = NULL ".
+		       "WHERE project_id = $project_id AND user_id = ".$AppUI->user_id;
+		
+		db_exec($sql); db_error();
+	}
+	
+	static function usetTaskActual($project_id) {
+		global $AppUI;
+		
+		$sql = "UPDATE reports SET a_is_incomplete = NULL, a_show_mine = NULL, ".
+		                          "a_report_level = NULL, a_report_roles = NULL, ".
+		                          "a_report_sdate = NULL, a_report_edate = NULL, ".
+		                          "a_report_opened = NULL, a_report_closed = NULL ".
+		       "WHERE project_id = $project_id AND user_id = ".$AppUI->user_id;
+		
+		db_exec($sql); db_error();
+	}
+	
+	static function unsetProperties($project_id) {
+		global $AppUI;
+		
+		$sql = "UPDATE reports SET properties = NULL, prop_summary = NULL ".
+		       "WHERE project_id = $project_id AND user_id = ".$AppUI->user_id;
+		
+		db_exec($sql); db_error();
+	}
+	
+	static function unsetLog($project_id) {
+		global $AppUI;
+		
+		$sql = "UPDATE reports SET l_hide_inactive = NULL, l_hide_complete = NULL, ".
+		                           "l_user_id = NULL, l_report_sdate = NULL, l_report_edate = NULL ".
+		       "WHERE project_id = $project_id AND user_id = ".$AppUI->user_id;
+		
+		db_exec($sql); db_error();
+	}
+	
+	private static function unsetGraph($project_id, $type) {
+		$views = CReport::getGraphViews($project_id, $type);
+		
+		foreach(array_merge($views, $views['tb']) as $view) {
+			if (file_exists($view)) @unlink($view);
+		}
+		
+		CReport::unsetReportValue($project_id, $type);
+	}
+	
+	static function unsetGantt($project_id) {
+		CReport::unsetGraph($project_id, "gantt");
+	}
+	
+	static function unsetWbs($project_id) {
+		CReport::unsetGraph($project_id, "wbs");
+	}
+	
+	static function unsetTaskNetwork($project_id) {
+		CReport::unsetGraph($project_id, "task_network");
 	}
 }
 ?>

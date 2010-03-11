@@ -177,6 +177,7 @@ function doSubmit() {
 //	document.tn_options.submit(); //TODO enable on old browsers 
 	viewerLoadPlaceHolder("#task_network_graph", loader);
 	viewerLoadGraph("#task_network_graph", buildGraphUrl(), graph_error);
+	$("#tasknetwork_report_btn").fadeIn();
 }
 
 resizeItemToVisible("#task_network_graph", 0.95);
@@ -409,17 +410,9 @@ displayItemSwitchPreCallbackARGS = {container: "#resizable_task_network",
 						$TN->setCriticalPathIndex($cr_path_index);
 						
 						if (dPgetBoolParam($_POST, 'make_graph_pdf')) {
-	                    	generateGraphPDF($project_id, $TN, PMPDF_GRAPH_TN);
+	                    	generateGraphPDF($project_id, $TN);
 						} else if (dPgetBoolParam($_POST, 'add_graph_report')) {
-	                    	$file = "./modules/report/img/".$project_id.PMPDF_GRAPH_TN.$AppUI->user_id.".png";
-							$TN->draw("png", $file);
-							
-							if (file_exists($file)) {
-								$sql = "UPDATE reports SET task_network = '$file' ".
-								       "WHERE reports.project_id = $project_id  AND reports.user_id = ".$AppUI->user_id;
-								db_exec($sql);
-								db_error();
-							}
+	                    	CReport::addGraphReport($project_id, $TN);
 						}
 
 	                    ini_restore('memory_limit');
@@ -445,7 +438,7 @@ displayItemSwitchPreCallbackARGS = {container: "#resizable_task_network",
 					<input type="hidden" name="add_graph_report" value="false" />
 					
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Generate PDF' );?>" onclick='makeTNPDF();'>
-					<input id="tasknetwork_report_btn" type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='addTNReport();'>
+					<input type="button" class="button" value="<?php echo $AppUI->_( 'Add to Report' );?>" onclick='addTNReport();' id="tasknetwork_report_btn">
 					<input type="button" class="button" value="<?php echo $AppUI->_( 'Configure' );?>" onclick='settingsTabToggle();'>
 				</td>
 			</tr>
