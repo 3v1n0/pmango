@@ -57,6 +57,8 @@
  */
 include $AppUI->getModuleFile('report', 'makePDF');
 
+define("REPORT_IMAGES_PATH", "modules/report/logos/");
+
 $project_id = intval( dPgetParam( $_GET, "project_id", 0 ) );
 $projects = $AppUI->getState('Projects');
 
@@ -173,7 +175,7 @@ if (dPgetParam($_GET, 'reset', false)) {
 	}
 
 	if ($reset)
-	unsetProjectSubState('PDFReports', PMPDF_REPORT);
+		unsetProjectSubState('PDFReports', PMPDF_REPORT);
 
 	$AppUI->redirect("m=$m&a=$a&project_id=$project_id");
 }
@@ -633,12 +635,11 @@ updateSelectorsState();
 	</tr>
 
 	<?php
-	$image_path='modules/report/logos/';
 
 	if(dPgetBoolParam($_POST, 'delete_image')) {
-		if(file_exists($image_path.$project_id.'.gif')) unlink($image_path.$project_id.".gif");
-		if(file_exists($image_path.$project_id.'.jpg')) unlink($image_path.$project_id.".jpg");
-		if(file_exists($image_path.$project_id.'.png')) unlink($image_path.$project_id.".png");
+		if(file_exists(REPORT_IMAGES_PATH.'/'.$project_id.'.gif')) unlink(REPORT_IMAGES_PATH.$project_id.".gif");
+		if(file_exists(REPORT_IMAGES_PATH.'/'.$project_id.'.jpg')) unlink(REPORT_IMAGES_PATH.$project_id.".jpg");
+		if(file_exists(REPORT_IMAGES_PATH.'/'.$project_id.'.png')) unlink(REPORT_IMAGES_PATH.$project_id.".png");
 	}
 
 	do {
@@ -658,16 +659,16 @@ updateSelectorsState();
 			switch($type){
 				case 1: $ext='.gif';
 				$img = imagecreatefromgif($_FILES['image']['tmp_name']);
-				if(!imagejpeg($img, 'modules/report/logos/'.$project_id.'.jpg'))
+				if(!imagejpeg($img, REPORT_IMAGES_PATH.'/'.$project_id.'.jpg'))
 				$mesg = "<p>Errore nel caricamento dell'immagine!!</p>";
 				break;
 				case 2: $ext='.jpg';
-				if (!move_uploaded_file($_FILES['image']['tmp_name'], 'modules/report/logos/'.$project_id.$ext))
+				if (!move_uploaded_file($_FILES['image']['tmp_name'], REPORT_IMAGES_PATH.'/'.$project_id.$ext))
 				$mesg = "<p>Errore nel caricamento dell'immagine!!</p>";
 				break;
 				case 3: $ext='.png';
 				$img = imagecreatefrompng($_FILES['image']['tmp_name']);
-				if(!imagejpeg($img, 'modules/report/logos/'.$project_id.'.jpg'))
+				if(!imagejpeg($img, REPORT_IMAGES_PATH.'/'.$project_id.'.jpg'))
 				$mesg = "<p>Errore nel caricamento dell'immagine!!</p>";
 				break;
 			}
@@ -676,8 +677,8 @@ updateSelectorsState();
 	} while (false);
 	echo $mesg;
 
-	if(file_exists($image_path.$project_id.'.jpg')) $image_file=$image_path.$project_id.'.jpg';
-	else $image_file=$image_path.'nologo.gif';
+	if(file_exists(REPORT_IMAGES_PATH.'/'.$project_id.'.jpg')) $image_file=REPORT_IMAGES_PATH.'/'.$project_id.'.jpg';
+	else $image_file=REPORT_IMAGES_PATH.'/'.'nologo.gif';
 
 
 	?>
@@ -721,7 +722,7 @@ updateSelectorsState();
 				<td align='center' nowrap="nowrap"><?
 
 				if (dPgetBoolParam($_POST, 'make_report_pdf') && !dPgetBoolParam($_POST, 'load_image')) {
-					if($image_file==$image_path.'nologo.gif') $image_file='';
+					if($image_file==REPORT_IMAGES_PATH.'/'.'nologo.gif') $image_file='';
 					$pdf = PM_headerPdf($name,$page,$border,$group_name,$image_file);
 					$populated = false;
 
