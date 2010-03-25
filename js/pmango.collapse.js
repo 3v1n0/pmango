@@ -139,8 +139,8 @@ function show_tab(i) {
 		$("div[id^=tab_]:first").show();
 		$("td[id^=toptab_]:first").removeClass('taboff').addClass('tabon').show();
 	}
-	
-	if ($("div.tab:visible").id == "tab_"+i)
+
+	if ($("div.tab:visible").attr("id") == "tab_"+i)
 		return;
 	
 	$("td.taboff").removeClass('taboff').addClass('tabon');
