@@ -222,9 +222,18 @@ class CReport extends CDpObject {
 		$imgfile = GRAPH_REPORTS_PATH.'/'.$filename.".".GRAPH_REPORTS_EXT;
 		
 		$graph->draw(GRAPH_REPORTS_EXT, $imgfile);
-		//TODO build thumbnail!
 							
 		if (file_exists($imgfile)) {
+			$thumb = makeThumbnail(imagecreatefrompng($imgfile), 100);
+			$thumbfile = GRAPH_REPORTS_PATH.'/'.$filename."_tb.".GRAPH_REPORTS_EXT;
+			
+			if (GRAPH_REPORTS_EXT == 'png')
+				imagepng($thumb, $thumbfile);
+			else if (GRAPH_REPORTS_EXT == 'jpg' || GRAPH_REPORTS_EXT == 'jpeg')
+				imagejpeg($thumb, $thumbfile);
+			else if (GRAPH_REPORTS_EXT == 'gif') 
+				imagegif($thumb, $thumbfile);
+			
 			$report = CReport::getReportValue($project_id, $graphtype);
 			if (!empty($report)) $report .= ';';
 			$report .= $filename;
