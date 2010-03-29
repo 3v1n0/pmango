@@ -577,16 +577,18 @@ class CReport extends CDpObject {
 	}
 	
 	private static function getGraphViews($project_id, $graph_type) {
-		$graphs = explode(';', CReport::getReportValue($project_id, $graph_type));
-		
-		$report = array("tb" => array());
+		$value = CReport::getReportValue($project_id, $graph_type);
+		if (!$value)
+			return array();
+			
+		$graphs = explode(';', $value);
 		
 		foreach ($graphs as $id => $graph) {
-			$report[$id] = GRAPH_REPORTS_PATH.'/'.$graph.'.'.GRAPH_REPORTS_EXT;
+			$report[$id]['graph'] = GRAPH_REPORTS_PATH.'/'.$graph.'.'.GRAPH_REPORTS_EXT;
 			$tb = GRAPH_REPORTS_PATH.'/'.$graph.'_tb.'.GRAPH_REPORTS_EXT;
 			
 			if (file_exists($tb))
-				$report["tb"][$id] = $tb;
+				$report[$id]['tb'] = $tb;
 		}
 		
 		return $report;
@@ -602,6 +604,34 @@ class CReport extends CDpObject {
 	
 	static function getTaskNetworkReport($project_id) {
 		return CReport::getGraphViews($project_id, 'task_network');
+	}
+	
+	static function getGraphReport($graph_view) {
+		if (count($graph_view)) {
+			?>
+			<table border="0" cellspacing="3">
+				<tr>
+			<?
+				foreach (@$graph_view as $graph) {
+					?>
+					<td style="border: thin solid black; background-color: white; vertical-align: middle; text-align: center;">
+					<?
+						if (file_exists($graph['graph'])) {
+						?>
+							<a href="<? echo $graph['graph'] ?>" target="_blank">
+								<img src="<? echo ($graph['tb'] ? $graph['tb'] : $graph['graph']) ?>"/>
+							</a>
+						<?
+						}
+					?>
+					</td>
+					<?
+				}
+				?>
+				</tr>
+			</table>
+			<?
+		}
 	}
 	
 	static function usetTaskPlanned($project_id) {
@@ -650,8 +680,9 @@ class CReport extends CDpObject {
 	private static function unsetGraph($project_id, $type) {
 		$views = CReport::getGraphViews($project_id, $type);
 		
-		foreach(array_merge($views, $views['tb']) as $view) {
-			if (file_exists($view)) @unlink($view);
+		foreach($views as $view) {
+			if (file_exists($view['graph'])) @unlink($view['graph']);
+			if (file_exists($view['tb'])) @unlink($view['tb']);
 		}
 		
 		CReport::unsetReportValue($project_id, $type);

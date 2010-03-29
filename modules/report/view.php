@@ -508,16 +508,12 @@ updateSelectorsState();
 			</tr>
 			<tr>
 				<td nowrap='nowrap'></td>
-				<td nowrap='nowrap'><?
-				$gantt_views = CReport::getGanttReport($project_id);
-				foreach (@$gantt_views as $id => $gantt) {
-					if (file_exists($gantt)) {
-						?> <a href="<? echo $gantt ?>" target="_blank"> <img
-					src="<? echo ($gantt_views['tb'][$id] ? $gantt_views['tb'][$id] : $gantt) ?>"
-					height="100" width="100" /> </a> <?
-					}
-				}
-				?></td>
+				<td>
+				<?
+					$gantt_views = CReport::getGanttReport($project_id);
+					CReport::getGraphReport($gantt_views);
+				?>
+				</td>
 				<td nowrap='nowrap' colspan="4"></td>
 			</tr>
 			<tr>
@@ -561,16 +557,12 @@ updateSelectorsState();
 			</tr>
 			<tr>
 				<td nowrap='nowrap'></td>
-				<td nowrap='nowrap'><?
-				$wbs_views = CReport::getWbsReport($project_id);
-				foreach (@$wbs_views as $id => $wbs) {
-					if (file_exists($wbs)) {
-						?> <a href="<? echo $wbs ?>" target="_blank"> <img
-					src="<? echo ($wbs_views['tb'][$id] ? $wbs_views['tb'][$id] : $wbs) ?>"
-					height="100" width="100" /> </a> <?
-					}
-				}
-				?></td>
+				<td>
+				<?
+					$wbs_views = CReport::getWbsReport($project_id);
+					CReport::getGraphReport($wbs_views);
+				?>
+				</td>
 				<td nowrap='nowrap' colspan="4"></td>
 			</tr>
 			<tr>
@@ -614,16 +606,12 @@ updateSelectorsState();
 			</tr>
 			<tr>
 				<td nowrap='nowrap'></td>
-				<td nowrap='nowrap'><?
-				$tasknetwork_views = CReport::getTaskNetworkReport($project_id);
-				foreach (@$tasknetwork_views as $id => $tasknetwork) {
-					if (file_exists($tasknetwork)) {
-						?> <a href="<? echo $tasknetwork ?>" target="_blank"> <img
-					src="<? echo ($tasknetwork_views['tb'][$id] ? $tasknetwork_views['tb'][$id] : $tasknetwork) ?>"
-					height="100" width="100" /> </a> <?
-					}
-				}
-				?></td>
+				<td>
+				<?
+					$tasknetwork_views = CReport::getTaskNetworkReport($project_id);
+					CReport::getGraphReport($tasknetwork_views);
+				?>
+				</td>
 				<td nowrap='nowrap' colspan="4"></td>
 			</tr>
 			<tr>
@@ -784,13 +772,13 @@ updateSelectorsState();
 
 						if ($add_gantt && ($_POST['append_order_e'] == $k)) {
 							foreach ($gantt_views as $gantt) {
-								if (file_exists($gantt)) {
+								if (file_exists($gantt['graph'])) {
 									
 									if ($populated)
 										$pdf->AddPage($page);
 									
 									$populated = true;
-									PM_makeImgPDF($pdf, $gantt, false, true, false);
+									PM_makeImgPDF($pdf, $gantt['graph'], false, true, false);
 
 								} else $msg.="No GANTT Report defined!";
 							}
@@ -798,13 +786,13 @@ updateSelectorsState();
 
 						if ($add_wbs && ($_POST['append_order_f'] == $k)) {
 							foreach ($wbs_views as $wbs) {
-								if (file_exists($wbs)) {
+								if (file_exists($wbs['graph'])) {
 									
 									if ($populated)
 										$pdf->AddPage($page);
 										
 									$populated = true;
-									PM_makeImgPDF($pdf, $wbs, false, true, true);
+									PM_makeImgPDF($pdf, $wbs['graph'], false, true, true);
 
 								} else $msg.="No WBS Report defined!";
 							}
@@ -812,13 +800,13 @@ updateSelectorsState();
 
 						if ($add_tasknetwork && ($_POST['append_order_g'] == $k)) {
 							foreach ($tasknetwork_views as $tasknetwork) {
-								if (file_exists($tasknetwork)) {
+								if (file_exists($tasknetwork['graph'])) {
 									
 									if ($populated)
 										$pdf->AddPage($page); //XXX use P for vertical view?
 									
 									$populated = true;
-									PM_makeImgPDF($pdf, $tasknetwork, false, true, true);
+									PM_makeImgPDF($pdf, $tasknetwork['graph'], false, true, true);
 
 								} else $msg.="No TaskNetwork Report defined!";
 							}
