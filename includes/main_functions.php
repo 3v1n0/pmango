@@ -73,6 +73,29 @@ function bestColor( $bg, $lt='#ffffff', $dk='#000000' ) {
 }
 
 ##
+## Returns the resized GD image
+##
+function makeThumbnail($img, $maxside) {
+	$w = imagesx($img);
+	$h = imagesy($img);
+	
+	$mside = max($w, $h);
+	
+	if (!$maxside || $mside <= $maxside || !$w || !$h)
+		return $img;
+		
+	$ratio = $maxside / $mside;
+		
+	$new_w = $w * $ratio;
+	$new_h = $h * $ratio;
+	
+	$thumb = imagecreatetruecolor($new_w, $new_h);
+	imagecopyresampled($thumb, $img, 0, 0, 0, 0, $new_w, $new_h, $w, $h);
+	
+	return $thumb;
+}
+
+##
 ## returns a select box based on an key,value array where selected is based on key
 ##
 function arraySelect( &$arr, $select_name, $select_attribs, $selected, $translate=false ) {
