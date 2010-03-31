@@ -70,7 +70,7 @@ function getProjectSubState($parent, $label, $default_value = null) {
 	if (!is_null($state)) {
 		return $state;
 	} else if (!is_null($default_value)) {
-		setProjectSubState($label, $default_value);
+		setProjectSubState($parent, $label, $default_value);
 		return $default_value;
 	} else  {
 		return NULL;
