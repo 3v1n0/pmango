@@ -274,6 +274,8 @@ function computeProp() {
 	  	   }
 		});
 	});
+
+	delAJAX("#frmProp");
 }
 
 </script>

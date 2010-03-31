@@ -143,6 +143,8 @@ function generatePDF(form_id, parent_id) {
   		 	form.submit();
   	   }
 	});
+	
+	delAJAX("#"+form_id);
 }
 
 function addReport(form_id, button_id) {
@@ -188,6 +190,8 @@ function addReport(form_id, button_id) {
   		   form.submit();
   	   }
 	});
+	
+	delAJAX("#"+form_id);
 }
 
 function updateTabContent(form_id, content_id, pdf_span_id, report_button_id) {
@@ -251,4 +255,6 @@ function updateTabContent(form_id, content_id, pdf_span_id, report_button_id) {
 			});
 		}
 	);
+	
+	delAJAX("#"+form_id);
 }
