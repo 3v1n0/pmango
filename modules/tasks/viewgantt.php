@@ -288,7 +288,7 @@ function loadGraph(src) {
 			})
 			.attr('src', graph_load_error);
 
-	    	$(errimg).wrap("<a href='"+graphSrc+"' target='_blank' />");
+	    	graph.wrapInner("<a href='"+graphSrc+"' target='_blank' />");
 	    })
 	    .attr('src', graphSrc);
 	});
