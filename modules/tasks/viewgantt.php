@@ -16,6 +16,8 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
+ - 2010.01.27
+   0.5 use jquery and code/interface redesign 
  - 2006.07.30 Lorenzo
    Second version, modified to view PMango Gantt.
  - 2006.07.30 Lorenzo
@@ -61,8 +63,8 @@ $min_view = defVal(@$min_view, false);
 $project_id = defVal($_REQUEST['project_id'], 0);
 $tab = dPgetParam($_REQUEST, 'tab', 0);
 
-if (!empty($_POST)) {
-	$task_level = $AppUI->getState('Tasks', 'Explode');
+if (!empty($_POST) && !dPgetBoolParam($_POST, 'make_graph_pdf') && !dPgetBoolParam($_POST, 'add_graph_report')) {
+	$task_level = getProjectSubState('Tasks', 'Explode');
 	$new_task_level = dPgetParam($_POST, 'explode_tasks', '1');
 
 	if ($task_level != $new_task_level) {
@@ -160,7 +162,7 @@ $graph_img_src = "?m=tasks&a=gantt&suppressHeaders=1&project_id=$project_id".
 
 <script language="javascript">
 var projectID = <?php  echo $project_id ?>;
-var graphWidth = (navigator.appName == 'Netscape' ? window.innerWidth : document.body.offsetWidth) * 0.95;
+var graphWidth = $(window).width() * 0.95;
 var calendarField = '';
 var graph_load_error = './style/default/images/graph_loading_error.png';
 
@@ -260,6 +262,8 @@ $(function(){
 });
 
 function loadGraph(src) {
+	var graphSrc = src+'&width='+graphWidth;
+	
 	$(function () {
 		var img = new Image();
 		var loader = $('#graphloader');
@@ -272,7 +276,6 @@ function loadGraph(src) {
 			graph.show();
 	      	$(this).fadeIn();
 		})
-
 	    .error(function () {
 	    	var errimg = new Image();
 
@@ -283,11 +286,11 @@ function loadGraph(src) {
 				graph.show();
 		      	$(this).fadeIn();
 			})
-
 			.attr('src', graph_load_error);
-	    })
 
-	    .attr('src', src+'&width='+graphWidth);
+	    	$(errimg).wrap("<a href='"+graphSrc+"' target='_blank' />");
+	    })
+	    .attr('src', graphSrc);
 	});
 }
 
