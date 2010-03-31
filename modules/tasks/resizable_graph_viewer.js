@@ -125,7 +125,7 @@ function createResizableViewer(container, content) {
 		$(container).resizable({
 				minHeight: 300,
 				minWidth: 400,
-				alsoResize: "#task_network_graph",
+				alsoResize: content,
 	
 				stop: function(event, ui) {
 					updateIvewerStatus();					
