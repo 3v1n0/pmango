@@ -16,6 +16,8 @@
  Further information at: http://penelope.di.unipi.it
 
  Version history.
+ - 2010.02.25 Marco Trevisan
+   Fixed properties summary computation, using session for it as well
  - 2010.02.09 Marco Trevisan
    Ajax based project properties and PDF computation
  - 2007.10.20 Marco
@@ -154,20 +156,13 @@ $titleBlock->addCrumb( "?m=report&a=view&project_id=$project_id", "Project Repor
 if ($canEdit) 
 	$titleBlock->addCrumb("?m=tasks&a=addedit&task_project=$project_id", "New task");
 
-for($i=0;$i<count($AppUI->properties);$i++){
-	if(strstr($AppUI->properties[$i], "Project isn't")!=false)
-		{
-		$message.=$AppUI->properties[$i]."|";
-		}
-}
-
 CReport::initUserReport($project_id);
 
 if (dPgetBoolParam($_POST, 'add_prop_report') && getProjectState('Properties') &&
 	!getProjectState('PropertiesComputed') && !dPgetBoolParam($_POST, 'make_prop_pdf')) {
 	$AppUI->setMsg($AppUI->_('Project Properties added to Reports!'), UI_MSG_OK);
 	$properties = addslashes(getProjectState('Properties'));
-	$summary = addslashes($_POST['summary']); //XXX use session for this too!??
+	$summary = addslashes(getProjectState('PropertiesSummary'));
 	CReport::addProjectReport($project_id, $properties, $summary);
 	unsetProjectSubState('PDFReports', PMPDF_REPORT);					
 }
@@ -297,7 +292,7 @@ function computeProp() {
 	<?php
 		if (empty($AppUI->properties) && empty($_POST['properties']) &&
 		      empty($_REQUEST['make_prop_pdf']) &&
-		      db_loadResult("SELECT COUNT(*) FROM tasks WHERE task_project=$project_id"))
+		      db_loadResult("SELECT COUNT(*) FROM tasks WHERE task_project = $project_id"))
 			$project_collapsed = true;
 		
 		echo '<img id="project_expander_img" src="images/icons/'.($project_collapsed ? 'expand' : 'collapse').'.gif" border="0" />&nbsp;';
@@ -522,14 +517,20 @@ function computeProp() {
 									<div id="properties_div">
 								<?php
 									if (getProjectState('Properties') && !getProjectState('PropertiesComputed')) {
+										$summary = getProjectState('PropertiesSummary');
 										$properties = stripslashes(getProjectState('Properties'));
-										echo $properties;
-									} else{
+									} else {
+										foreach (@$AppUI->properties as $prop) {
+								 			if (strstr($prop, "Project isn't"))
+								 				$summary .= $prop."|";
+								 		}
+								 		setProjectState('PropertiesSummary', $summary);
+										
 								 		$properties = $AppUI->getProperties();
 								 		setProjectState('Properties', $properties);
 								 		setProjectState('PropertiesComputed', false);
-								 		echo $properties;
 									}
+									echo $properties;
 								?>&nbsp;
 									</div>
 								</td>
@@ -560,11 +561,7 @@ function computeProp() {
 									
 								</td>
 								<td width="0%">
-									<? 
-									$string = urlencode($string);
-									?>
-									
-									<input type="hidden" name="summary" value="<?php echo $message;?>" />
+									<input type="hidden" name="summary" value="<?php echo $summary;?>" />
 									<input type="hidden" name="add_prop_report" value="false">
 									<input onclick="addProjectReport();" id="project_to_report" type="button" class="button" value="<?php echo $AppUI->_('Add to Report');?>">
 								</td>
