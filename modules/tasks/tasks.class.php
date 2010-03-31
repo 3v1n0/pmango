@@ -2030,48 +2030,47 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 	WHERE user_tasks.user_id=users.user_id AND user_tasks.proles_id=project_roles.proles_id AND user_tasks.task_id=".$a['task_id'];
 	$db_roles = db_loadList($sql);
 
+		$s .= '<div class="users_data_A"'.($roles != "A" ? ' style="display: none;"' : '').'>';
 		if(count( $db_roles )>0){
-			if($roles=="A"){
-				$s .=  $db_roles[0][0].": ".$db_roles[0][1];
-				for ( $i = 1; $i < count( $db_roles ); $i++) {
-					$s .= '<br />';
-					$s .= $db_roles[$i][0].": ".$db_roles[$i][1];
-				}
-			}
-
-			if($roles=="N"){
-				$s .= " <a href=\"javascript:void(0);\" onclick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
-			}
-
-			if($roles=="R"){
-				$s .= $db_roles[0][1];
-				for ( $i = 1; $i < count( $db_roles ); $i++) {
-					$s .= '<br />';
-					$s .= $db_roles[$i][1];
-				}
+			$s .=  $db_roles[0][0].": ".$db_roles[0][1];
+			for ( $i = 1; $i < count( $db_roles ); $i++) {
+				$s .= '<br />';
+				$s .= $db_roles[$i][0].": ".$db_roles[$i][1];
 			}
 		}else{$s .="No Worker";}
+		$s .= '</div>';
 
+		$s .= '<div class="users_data_R"'.($roles != "R" ? ' style="display: none;"' : '').'>';
+		if(count( $db_roles )>0){
+			$s .= $db_roles[0][1];
+			for ( $i = 1; $i < count( $db_roles ); $i++) {
+				$s .= '<br />';
+				$s .= $db_roles[$i][1];
+			}
+			$s .= '</div>';
+		}else{$s .="No Worker";}
+
+		$s .= '<div class="users_data_P"'.($roles != "P" ? ' style="display: none;"' : '').'>';
 		if(count( $assigned_users )>0){
-			if($roles=="P"){
-				$s .= $assigned_users[0]['user_first_name']." ".$assigned_users[0]['user_last_name'] ;
-				for ( $i = 1; $i < count( $assigned_users ); $i++) {
-         			$s .= '<br />';
-         			$s .= $assigned_users[$i]['user_first_name']." ".$assigned_users[$i]['user_last_name'] ;
-				}
+			$s .= $assigned_users[0]['user_first_name']." ".$assigned_users[0]['user_last_name'] ;
+			for ( $i = 1; $i < count( $assigned_users ); $i++) {
+         		$s .= '<br />';
+         		$s .= $assigned_users[$i]['user_first_name']." ".$assigned_users[$i]['user_last_name'] ;
 			}
 		}else{$s .="No Worker";}
+		$s .= '</div>';
 
-		if($roles=="N") {
-	        $s .= '<div style="display: none" id="users_' . $id . '">';
-	        $a_u_tmp_array[] = $assigned_users[0]['user_last_name'];
-			for ( $i = 0; $i < count( $assigned_users ); $i++) {
-	             $a_u_tmp_array[] = $assigned_users[$i]['user_last_name'];
-	             $s .= '<br />';
-	             $s .= $assigned_users[$i]['user_last_name'] ;
-			}
-	        $s .= '</div>';
+		$s .= '<div class="users_data_N"'.($roles != "N" ? ' style="display: none;"' : '').'>';
+		$s .= " <a href=\"javascript:void(0);\" onclick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
+        $s .= ' <div style="display: none" id="users_' . $id . '">';
+        $a_u_tmp_array[] = $assigned_users[0]['user_last_name'];
+		for ( $i = 0; $i < count( $assigned_users ); $i++) {
+             $a_u_tmp_array[] = $assigned_users[$i]['user_last_name'];
+             $s .= '<br />';
+             $s .= $assigned_users[$i]['user_last_name'] ;
 		}
+        $s .= ' </div>';
+        $s .= '</div>';
 		$s .= '</td>';
 	} else if (! $today_view) {
 		// No users asigned to task
@@ -2276,48 +2275,47 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 	WHERE user_tasks.user_id=users.user_id AND user_tasks.proles_id=project_roles.proles_id AND user_tasks.task_id=".$a['task_id'];
 	$db_roles = db_loadList($sql);
 
+		$s .= '<div class="users_data_A"'.($roles != "A" ? ' style="display: none;"' : '').'>';
 		if(count( $db_roles )>0){
-			if($roles=="A"){
-				$s .=  $db_roles[0][0].": ".$db_roles[0][1];
-				for ( $i = 1; $i < count( $db_roles ); $i++) {
-					$s .= '<br />';
-					$s .= $db_roles[$i][0].": ".$db_roles[$i][1];
-				}
-			}
-
-			if($roles=="N"){
-				$s .= " <a href=\"javascript:void(0);\" onclick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
-			}
-
-			if($roles=="R"){
-				$s .= $db_roles[0][1];
-				for ( $i = 1; $i < count( $db_roles ); $i++) {
-					$s .= '<br />';
-					$s .= $db_roles[$i][1];
-				}
+			$s .=  $db_roles[0][0].": ".$db_roles[0][1];
+			for ( $i = 1; $i < count( $db_roles ); $i++) {
+				$s .= '<br />';
+				$s .= $db_roles[$i][0].": ".$db_roles[$i][1];
 			}
 		}else{$s .="No Worker";}
+		$s .= '</div>';
 
+		$s .= '<div class="users_data_R"'.($roles != "R" ? ' style="display: none;"' : '').'>';
+		if(count( $db_roles )>0){
+			$s .= $db_roles[0][1];
+			for ( $i = 1; $i < count( $db_roles ); $i++) {
+				$s .= '<br />';
+				$s .= $db_roles[$i][1];
+			}
+		}else{$s .="No Worker";}
+		$s .= '</div>';
+	
+		$s .= '<div class="users_data_P"'.($roles != "P" ? ' style="display: none;"' : '').'>';
 		if(count( $assigned_users )>0){
-			if($roles=="P"){
-				$s .= $assigned_users[0]['user_first_name']." ".$assigned_users[0]['user_last_name'] ;
-				for ( $i = 1; $i < count( $assigned_users ); $i++) {
-         			$s .= '<br />';
-         			$s .= $assigned_users[$i]['user_first_name']." ".$assigned_users[$i]['user_last_name'] ;
-				}
+			$s .= $assigned_users[0]['user_first_name']." ".$assigned_users[0]['user_last_name'] ;
+			for ( $i = 1; $i < count( $assigned_users ); $i++) {
+         		$s .= '<br />';
+         		$s .= $assigned_users[$i]['user_first_name']." ".$assigned_users[$i]['user_last_name'] ;
 			}
 		}else{$s .="No Worker";}
+		$s .= '</div>';
 
-		if($roles=="N") {
-	        $s .= '<div style="display: none" id="users_' . $id . '">';
-	        $a_u_tmp_array[] = $assigned_users[0]['user_last_name'];
-			for ( $i = 0; $i < count( $assigned_users ); $i++) {
-	             $a_u_tmp_array[] = $assigned_users[$i]['user_last_name'];
-	             $s .= '<br />';
-	             $s .= $assigned_users[$i]['user_last_name'] ;
-			}
-	        $s .= '</div>';
+		$s .= '<div class="users_data_N"'.($roles != "N" ? ' style="display: none;"' : '').'>';
+		$s .= " <a href=\"javascript:void(0);\" onclick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
+        $s .= ' <div style="display: none" id="users_' . $id . '">';
+        $a_u_tmp_array[] = $assigned_users[0]['user_last_name'];
+		for ( $i = 0; $i < count( $assigned_users ); $i++) {
+             $a_u_tmp_array[] = $assigned_users[$i]['user_last_name'];
+             $s .= '<br />';
+             $s .= $assigned_users[$i]['user_last_name'] ;
 		}
+        $s .= ' </div>';
+        $s .= '</div>';
 		$s .= '</td>';
 	} else if (! $today_view) {
 		// No users asigned to task
