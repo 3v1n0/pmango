@@ -2023,8 +2023,8 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 //	$s .= '<td nowrap="nowrap" align="center">'. $a["user_username"] .'</td>';
 	if ( isset($a['task_assigned_users']) && ($assigned_users = $a['task_assigned_users'])) {
 		$a_u_tmp_array = array();
-		$s .= '<td align="center" nowrap="nowrap">';
-        $id = $a['task_id'];
+		$id = $a['task_id'];
+		$s .= '<td align="center" nowrap="nowrap" class="task_users" id="task_user_'.$id.'">';
 
 	$sql="SELECT users.user_last_name, project_roles.proles_name FROM users,project_roles,user_tasks
 	WHERE user_tasks.user_id=users.user_id AND user_tasks.proles_id=project_roles.proles_id AND user_tasks.task_id=".$a['task_id'];
@@ -2040,7 +2040,7 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 			}
 
 			if($roles=="N"){
-				$s .= " <a href=\"javascript: void(0);\"  onClick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
+				$s .= " <a href=\"javascript:void(0);\" onclick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
 			}
 
 			if($roles=="R"){
@@ -2062,14 +2062,16 @@ function showTaskPlanned( &$a, $level=0, $is_opened = true, $today_view = false,
 			}
 		}else{$s .="No Worker";}
 
-        $s .= '<span style="display: none" id="users_' . $id . '">';
-        $a_u_tmp_array[] = $assigned_users[0]['user_last_name'];
-		for ( $i = 0; $i < count( $assigned_users ); $i++) {
-             $a_u_tmp_array[] = $assigned_users[$i]['user_last_name'];
-             $s .= '<br />';
-             $s .= $assigned_users[$i]['user_last_name'] ;
+		if($roles=="N") {
+	        $s .= '<div style="display: none" id="users_' . $id . '">';
+	        $a_u_tmp_array[] = $assigned_users[0]['user_last_name'];
+			for ( $i = 0; $i < count( $assigned_users ); $i++) {
+	             $a_u_tmp_array[] = $assigned_users[$i]['user_last_name'];
+	             $s .= '<br />';
+	             $s .= $assigned_users[$i]['user_last_name'] ;
+			}
+	        $s .= '</div>';
 		}
-        $s .= '</span>';
 		$s .= '</td>';
 	} else if (! $today_view) {
 		// No users asigned to task
@@ -2267,8 +2269,8 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 //	$s .= '<td nowrap="nowrap" align="center">'. $a["user_username"] .'</td>';
 	if ( isset($a['task_assigned_users']) && ($assigned_users = $a['task_assigned_users'])) {
 		$a_u_tmp_array = array();
-		$s .= '<td align="center" nowrap="nowrap">';
-        $id = $a['task_id'];
+		$id = $a['task_id'];
+		$s .= '<td align="center" nowrap="nowrap" class="task_users" id="task_user_'.$id.'">';
 
 	$sql="SELECT users.user_last_name, project_roles.proles_name FROM users,project_roles,user_tasks
 	WHERE user_tasks.user_id=users.user_id AND user_tasks.proles_id=project_roles.proles_id AND user_tasks.task_id=".$a['task_id'];
@@ -2284,7 +2286,7 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 			}
 
 			if($roles=="N"){
-				$s .= " <a href=\"javascript: void(0);\"  onClick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
+				$s .= " <a href=\"javascript:void(0);\" onclick=\"toggle_users('users_$id');\" title=\"" . join ( ', ', $a_u_tmp_array ) ."\">persons: ". (count( $db_roles )) ."</a>";
 			}
 
 			if($roles=="R"){
@@ -2306,14 +2308,16 @@ function showTaskActual( &$a, $level=0, $is_opened = true, $today_view = false, 
 			}
 		}else{$s .="No Worker";}
 
-        $s .= '<span style="display: none" id="users_' . $id . '">';
-        $a_u_tmp_array[] = $assigned_users[0]['user_last_name'];
-		for ( $i = 0; $i < count( $assigned_users ); $i++) {
-             $a_u_tmp_array[] = $assigned_users[$i]['user_last_name'];
-             $s .= '<br />';
-             $s .= $assigned_users[$i]['user_last_name'] ;
+		if($roles=="N") {
+	        $s .= '<div style="display: none" id="users_' . $id . '">';
+	        $a_u_tmp_array[] = $assigned_users[0]['user_last_name'];
+			for ( $i = 0; $i < count( $assigned_users ); $i++) {
+	             $a_u_tmp_array[] = $assigned_users[$i]['user_last_name'];
+	             $s .= '<br />';
+	             $s .= $assigned_users[$i]['user_last_name'] ;
+			}
+	        $s .= '</div>';
 		}
-        $s .= '</span>';
 		$s .= '</td>';
 	} else if (! $today_view) {
 		// No users asigned to task

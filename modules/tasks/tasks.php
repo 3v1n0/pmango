@@ -402,8 +402,43 @@ $canEdit = false;
 ?>
 
 <script type="text/JavaScript">
+
 function toggle_users(id){
   $("#"+id).slideToggle();
+}
+
+function switch_task_user_view(type) {
+	var form = document.task_list_options;
+	form.reset_level.value = "";
+	form.roles.value = type;
+	//form.submit();
+	
+	addAJAX("#task_list_options");
+	$(".task_users").html('<img class="ajax_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
+	
+	$.ajax({
+	   type: $(form).attr('method'),
+	   url: $(form).attr('action'),
+	   data: $(form).serialize(),
+	   success: function(html) {
+		   $(".task_users").each(function() {
+			   var new_item = $(html).find('#'+$(this).attr('id'));
+
+			   if (!new_item.size()) {
+				   delAJAX("#task_list_options");
+				   $(form).submit();
+			   } else {
+				   $(this).replaceWith(new_item);
+			   }
+		   });
+  	   },
+	   error: function() {
+  		   delAJAX("#task_list_options");
+  		   $(form).submit();
+  	   }
+	});
+
+	delAJAX("#task_list_options");
 }
 
 <?php
@@ -772,19 +807,12 @@ if ($project_id) {
 		<th width="10" align="center">&nbsp;</th>
 		<th width="40" align="center" nowrap><?php echo $AppUI->_('WBS') ?></th>
 		<th width="100%" align="center"><?php echo $AppUI->_('Task name');?></th>
-		<th nowrap="nowrap" align="center"><?if ($min_view) {?> <input
-			type="button" class="button2" value="N"
-			onclick='document.task_list_options.roles.value="N"; document.task_list_options.reset_level.value=""; document.task_list_options.submit();'
-			title="Show Person number"> <input type="button" class="button2"
-			value="P"
-			onclick='document.task_list_options.roles.value="P"; document.task_list_options.reset_level.value=""; document.task_list_options.submit();'
-			title="Show Person Name"> <input type="button" class="button2"
-			value="R"
-			onclick='document.task_list_options.roles.value="R"; document.task_list_options.reset_level.value=""; document.task_list_options.submit();'
-			title="Show Person Role"> <input type="button" class="button2"
-			value="A"
-			onclick='document.task_list_options.roles.value="A"; document.task_list_options.reset_level.value=""; document.task_list_options.submit();'
-			title="Show Person Name and Role"> <?}else echo $AppUI->_( 'Persons' );?>
+		<th nowrap="nowrap" align="center"><?if ($min_view) {?>
+		    <input type="button" class="button2" value="N" onclick='switch_task_user_view(this.value);' title="Show Person number">
+		    <input type="button" class="button2" value="P" onclick='switch_task_user_view(this.value);' title="Show Person Name">
+		    <input type="button" class="button2" value="R" onclick='switch_task_user_view(this.value);' title="Show Person Role">
+		    <input type="button" class="button2" value="A" onclick='switch_task_user_view(this.value);' title="Show Person Name and Role">
+		    <?}else echo $AppUI->_( 'Persons' );?>
 		</th>
 		<?php if ($tview) {?>
 		<th align="center" nowrap="nowrap" width="110"><?php echo $AppUI->_('First Log Date');?></th>
