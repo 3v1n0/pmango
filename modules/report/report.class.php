@@ -16,6 +16,8 @@
  Further information at: http://penelope.di.unipi.it
 
  Version history.
+ - 2010.03.25 Marco Trevisan
+   Support for thumbnails in graph reports, and some code cleanup
  - 2010.02.15 Marco Trevisan
    Redisegned version, it is used both for saving and retriving the reports
  - 2007.05.08 Riccardo
