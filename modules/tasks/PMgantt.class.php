@@ -16,14 +16,16 @@
  Further information at: http://pmango.sourceforge.net
 
  Version history.
+   2010.03.10 Marco Trevisan
+    0.5, improved the support for any kind of dependency
  - 2010.02.09 Marco Trevisan
- 0.4, added PMProgressBar and improvements in PMGanttBar
+    0.4, added PMProgressBar and improvements in PMGanttBar
  - 2010.01.27 Marco Trevisan
- 0.3, bars joiners
- 0.2, captions work
+    0.3, bars joiners
+    0.2, captions work
  - 2010.01.15 Marco Trevisan
- 0.1, created the class based on the work by Lorenzo Ballini (2005.09.30)
- and on my previous patched non-classed version (2009.11.04)
+    0.1, created the class based on the work by Lorenzo Ballini (2005.09.30)
+    and on my previous patched non-classed version (2009.11.04)
 
  ---------------------------------------------------------------------------
 
@@ -937,10 +939,10 @@ class PMGantt implements PMGraph {
 		// This configuration variable may be obsolete
 		$jpLocale = dPgetConfig('jpLocale');
 		if ($jpLocale)
-		$this->pGraph->scale->setDateLocale($jpLocale);
+			$this->pGraph->scale->setDateLocale($jpLocale);
 
 		if ($this->pStartDate && $this->pEndDate)
-		$this->pGraph->setDateRange($this->pStartDate, $this->pEndDate);
+			$this->pGraph->setDateRange($this->pStartDate, $this->pEndDate);
 
 		$this->pGraph->scale->actinfo->vgrid->setColor('gray');
 		$this->pGraph->scale->actinfo->setColor('darkgray');
@@ -1002,8 +1004,6 @@ class PMGantt implements PMGraph {
 
 		return $min_d_start->dateDiff($max_d_end);
 	}
-
-
 
 	private function populateGraph() {
 		global $AppUI;
@@ -1255,19 +1255,31 @@ class PMGantt implements PMGraph {
 
 		if ($this->pShowDeps) {
 			foreach ($this->pTasks as $task) {
-				$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE dependencies_req_task_id = ".$task["task_id"];
+				if ($task['is_leaf'] && !CTask::isLeafSt($task["task_id"])) {
+					$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE ".
+					       "dependencies_req_task_id in (".CTask::getChild($task["task_id"], $this->pProjectID).")";
+					$leaf_taskbar = false;
+				} else {
+					$sql = "SELECT dependencies_task_id FROM task_dependencies WHERE ".
+					       "dependencies_req_task_id = ".$task["task_id"];
+					$leaf_taskbar = true;
+				}
 				$deps = db_exec($sql);
 
-				while($dep = db_fetch_assoc($deps)) {
-					$found = $this->drawDependency($task, $dep[0]);
-
+				while ($dep = db_fetch_assoc($deps)) {				
+					$found = $this->drawDependency($task, $dep[0], $leaf_taskbar ? CONSTRAIN_ENDSIDESTARTSIDE : CONSTRAIN_MIDDLESTARTSIDE);
 					$tid = $dep[0];
-					while (!$found && $tid) {
-						$sql = "SELECT task_parent FROM tasks WHERE task_id = $tid AND task_id != task_parent";
-						$tid = db_loadResult($sql);
+
+					while (!$found) {
+						$sql = "SELECT task_parent FROM tasks WHERE task_id = $tid";
+						$parent = db_loadResult($sql);
+
+						$found = $this->drawDependency($task, $parent, $leaf_taskbar ? CONSTRAIN_ENDSIDEMIDDLE : CONSTRAIN_MIDDLEMIDDLE);
 						
-						if ($tid)
-							$found = $this->drawDependency($task, $tid, CONSTRAIN_ENDSIDEMIDDLE); //FOUND!?!?
+						if ($tid == $parent || $task["task_id"] == $parent)
+							break;
+						
+						$tid = $parent;
 					}
 				}
 			}
@@ -1277,25 +1289,26 @@ class PMGantt implements PMGraph {
 		$vline->title->setFont(FF_USERFONT3, FS_NORMAL, 9);
 		$this->pGraph->Add($vline);
 	}
-	
-	private function drawDependency($taskbar_from, $task_end, $type = CONSTRAIN_ENDSTARTSIDE) {
+
+	private function drawDependency($task_from, $task_end, $type = CONSTRAIN_ENDSIDESTARTSIDE) {
 		$found = false;
 		
-		for($d = 0; $d < count($this->pTasks); $d++ ) {
-			if($this->pTasks[$d]["task_id"] == $task_end) { //$this->pUseColors ? 'brown' : 'gray4'
-				if ($type == CONSTRAIN_ENDSIDEMIDDLE)
-					$color = 'purple';
-				else
-					$color = 'brown';
+		if ($task_from['task_id'] == $task_end)
+			return $found;
+		
+		$color = $this->pUseColors ? 'brown' : 'gray4';
+
+		for ($d = 0; $d < count($this->pTasks); $d++ ) {
+			if ($this->pTasks[$d]["task_id"] == $task_end) {
 				
-				$taskbar_from['bar']->setConstrain($this->pTasks[$d]['bar']->GetLineNbr(), $type, $color);
+				$task_from['bar']->setConstrain($this->pTasks[$d]['bar']->GetLineNbr(), $type, $color);
 				$found = true;
 				break;
 			}
 		}
-		
+
 		return $found;
-	} 
+	}
 }
 
 ?>
