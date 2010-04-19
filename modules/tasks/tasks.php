@@ -413,17 +413,7 @@ function switch_task_user_view(type) {
 	form.roles.value = type;
 	//form.submit();
 	
-	var active_items = $("[class^=users_data_]:visible");
-	
-	if (active_items.first().attr("class") == "users_data_"+type)
-		return;
-	
-	active_items.hide();
-	$(".users_data_"+type).fadeIn();
-
-	//TODO save new PersonsRoles Tasks substatus with a proper AJAX call...
-	
-	/* AJAX version
+	/* AJAX version */
 	addAJAX("#task_list_options");
 	$(".task_users").html('<img class="ajax_loader" src="images/ajax-loader.gif" alt="loader" />').fadeIn();
 	
@@ -450,7 +440,18 @@ function switch_task_user_view(type) {
 	});
 
 	delAJAX("#task_list_options");
-	*/
+
+	/* JS + AJAX version 
+	
+	var active_items = $("[class^=users_data_]:visible");
+	
+	if (active_items.first().attr("class") == "users_data_"+type)
+		return;
+	
+	active_items.hide();
+	$(".users_data_"+type).fadeIn(); */
+
+	//TODO save new PersonsRoles Tasks substatus with a proper AJAX call...
 }
 
 <?php
